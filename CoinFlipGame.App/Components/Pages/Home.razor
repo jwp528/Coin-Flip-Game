@@ -1,0 +1,36 @@
+﻿@page "/"
+@rendermode InteractiveServer
+
+<PageTitle>Coin Flip Game</PageTitle>
+
+<div class="coin-flip-game">
+    <div class="stats">
+        <div class="stat-item">
+            <span class="stat-label">Heads</span>
+            <span class="stat-value">@headsCount</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Tails</span>
+            <span class="stat-value">@tailsCount</span>
+        </div>
+    </div>
+    
+    <div class="coin-container">
+        <div class="coin @flipResult @(isDragging ? "dragging" : "")" 
+             @onclick="HandleClick"
+             @onpointerdown="OnPointerDown"
+             @onpointermove="OnPointerMove"
+             @onpointerup="OnPointerUp"
+             @onpointercancel="OnPointerCancel"
+             style="@GetCoinTransform()">
+            <div class="coin-face coin-heads @(showLandingFlash ? "landing-flash" : "")">
+                <div class="coin-shine" style="@GetShineTransform()"></div>
+                <img src="/img/coins/logo.png" alt="Heads" draggable="false" />
+            </div>
+            <div class="coin-face coin-tails @(showLandingFlash ? "landing-flash" : "")">
+                <div class="coin-shine" style="@GetShineTransform()"></div>
+                <img src="/img/coins/logo.png" alt="Tails" draggable="false" />
+            </div>
+        </div>
+    </div>
+</div>
