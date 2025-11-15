@@ -1,3 +1,8 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".github/workflows/azure-static-web-apps-zealous-coast-081e41310.yml" />
+    <File Path=".gitignore" />
+    <File Path="README.md" />
+  </Folder>
   <Project Path="CoinFlipGame.App/CoinFlipGame.App.csproj" />
 </Solution>
