@@ -3,7 +3,10 @@
 
 <PageTitle>Coin Flip Game</PageTitle>
 
-<div class="coin-flip-game">
+<div class="coin-flip-game" 
+     @onpointermove="OnPointerMove"
+     @onpointerup="OnPointerUp"
+     @onpointercancel="OnPointerCancel">
     <div class="stats">
         <div class="stat-item">
             <span class="stat-label">Heads</span>
@@ -16,12 +19,9 @@
     </div>
     
     <div class="coin-container">
-        <div class="coin @flipResult @(isDragging ? "dragging" : "")" 
+        <div @ref="coinElement" class="coin @flipResult @(isDragging ? "dragging" : "")" 
              @onclick="HandleClick"
              @onpointerdown="OnPointerDown"
-             @onpointermove="OnPointerMove"
-             @onpointerup="OnPointerUp"
-             @onpointercancel="OnPointerCancel"
              style="@GetCoinTransform()">
             <div class="coin-face coin-heads @(showLandingFlash ? "landing-flash" : "")">
                 <div class="coin-shine" style="@GetShineTransform()"></div>
@@ -33,4 +33,47 @@
             </div>
         </div>
     </div>
+    
+    <div class="instruction-prompt">
+        <svg class="instruction-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M2 12h20"/>
+        </svg>
+        <span class="instruction-text">Click or drag to flip the coin</span>
+        <svg class="instruction-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M2 12h20"/>
+        </svg>
+    </div>
 </div>
+
+<script>
+    window.coinDragHandler = {
+        coinElement: null,
+        
+        startDrag: function(centerX, centerY, baseRotationX) {
+            this.coinElement = document.querySelector('.coin');
+            if (this.coinElement) {
+                // Remove any existing transitions for immediate response
+                this.coinElement.style.transition = 'none';
+            }
+        },
+        
+        updateTransform: function(rotationX, rotationY) {
+            if (this.coinElement && !this.coinElement.classList.contains('flip-heads') && !this.coinElement.classList.contains('flip-tails')) {
+                // Use requestAnimationFrame for smooth, synchronized updates
+                requestAnimationFrame(() => {
+                    if (this.coinElement) {
+                        this.coinElement.style.transform = `rotateX(${rotationX.toFixed(2)}deg) rotateY(${rotationY.toFixed(2)}deg)`;
+                    }
+                });
+            }
+        },
+        
+        resetTransform: function(rotationX, rotationY) {
+            if (this.coinElement) {
+                // Re-enable transitions for smooth return
+                this.coinElement.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                this.coinElement.style.transform = `rotateX(${rotationX.toFixed(2)}deg) rotateY(${rotationY.toFixed(2)}deg)`;
+            }
+        }
+    };
+</script>

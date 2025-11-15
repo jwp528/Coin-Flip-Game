@@ -1,10 +1,15 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 
 namespace CoinFlipGame.App.Components.Pages;
 
 public partial class Home : ComponentBase
 {
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+    
+    private ElementReference coinElement;
     private bool isFlipping = false;
     private bool isDragging = false;
     private bool showLandingFlash = false;
@@ -31,7 +36,12 @@ public partial class Home : ComponentBase
         {
             return "";
         }
-        if (isDragging || (rotationX != 0 || rotationY != 0))
+        if (isDragging)
+        {
+            // During drag, transform is handled by JS for smoothness
+            return "";
+        }
+        if (rotationX != 0 || rotationY != 0)
         {
             return $"transform: rotateX({rotationX:F2}deg) rotateY({rotationY:F2}deg);";
         }
@@ -60,7 +70,7 @@ public partial class Home : ComponentBase
         return $"transform: translate3d({shineX:F2}%, {shineY:F2}%, 0);";
     }
     
-    private void OnPointerDown(PointerEventArgs e)
+    private async Task OnPointerDown(PointerEventArgs e)
     {
         if (isFlipping) return;
         
@@ -76,9 +86,12 @@ public partial class Home : ComponentBase
         // Keep the base rotation (landed side), only reset the Y rotation
         rotationX = baseRotationX;
         rotationY = 0;
+        
+        // Initialize JS drag handling
+        await JSRuntime.InvokeVoidAsync("coinDragHandler.startDrag", coinCenterX, coinCenterY, baseRotationX);
     }
     
-    private void OnPointerMove(PointerEventArgs e)
+    private async Task OnPointerMove(PointerEventArgs e)
     {
         if (!isDragging || isFlipping) return;
         
@@ -89,14 +102,13 @@ public partial class Home : ComponentBase
         double offsetY = currentY - coinCenterY;
         
         // Invert Y rotation based on which side the coin is on
-        // When on tails (180°), the rotation direction should be reversed
         double rotationMultiplier = baseRotationX == 180 ? -1 : 1;
         
         rotationY = Math.Clamp(offsetX * 0.2 * rotationMultiplier, -MAX_ROTATION, MAX_ROTATION);
-        // Apply tilt on top of the base rotation (landed side)
         rotationX = Math.Clamp(baseRotationX + (-offsetY * 0.2), baseRotationX - MAX_ROTATION, baseRotationX + MAX_ROTATION);
         
-        StateHasChanged();
+        // Use JS to update transform directly without Blazor re-render
+        await JSRuntime.InvokeVoidAsync("coinDragHandler.updateTransform", rotationX, rotationY);
     }
     
     private async void OnPointerUp(PointerEventArgs e)
@@ -116,16 +128,18 @@ public partial class Home : ComponentBase
             // Return to the landed side position
             rotationX = baseRotationX;
             rotationY = 0;
+            await JSRuntime.InvokeVoidAsync("coinDragHandler.resetTransform", rotationX, rotationY);
             StateHasChanged();
         }
     }
     
-    private void OnPointerCancel(PointerEventArgs e)
+    private async void OnPointerCancel(PointerEventArgs e)
     {
         isDragging = false;
         // Return to the landed side position
         rotationX = baseRotationX;
         rotationY = 0;
+        await JSRuntime.InvokeVoidAsync("coinDragHandler.resetTransform", rotationX, rotationY);
         StateHasChanged();
     }
     
