@@ -83,12 +83,12 @@ public partial class Home : ComponentBase
         coinCenterX = e.ClientX;
         coinCenterY = e.ClientY;
         
-        // Keep the base rotation (landed side), only reset the Y rotation
-        rotationX = baseRotationX;
+        // Reset to neutral position at start of drag
+        rotationX = 0;
         rotationY = 0;
         
         // Initialize JS drag handling
-        await JSRuntime.InvokeVoidAsync("coinDragHandler.startDrag", coinCenterX, coinCenterY, baseRotationX);
+        await JSRuntime.InvokeVoidAsync("coinDragHandler.startDrag", coinCenterX, coinCenterY, 0);
     }
     
     private async Task OnPointerMove(PointerEventArgs e)
@@ -101,11 +101,8 @@ public partial class Home : ComponentBase
         double offsetX = currentX - coinCenterX;
         double offsetY = currentY - coinCenterY;
         
-        // Invert Y rotation based on which side the coin is on
-        double rotationMultiplier = baseRotationX == 180 ? -1 : 1;
-        
-        rotationY = Math.Clamp(offsetX * 0.2 * rotationMultiplier, -MAX_ROTATION, MAX_ROTATION);
-        rotationX = Math.Clamp(baseRotationX + (-offsetY * 0.2), baseRotationX - MAX_ROTATION, baseRotationX + MAX_ROTATION);
+        rotationY = Math.Clamp(offsetX * 0.2, -MAX_ROTATION, MAX_ROTATION);
+        rotationX = Math.Clamp(-offsetY * 0.2, -MAX_ROTATION, MAX_ROTATION);
         
         // Use JS to update transform directly without Blazor re-render
         await JSRuntime.InvokeVoidAsync("coinDragHandler.updateTransform", rotationX, rotationY);
@@ -125,10 +122,10 @@ public partial class Home : ComponentBase
         }
         else
         {
-            // Return to the landed side position
-            rotationX = baseRotationX;
+            // Return to neutral position
+            rotationX = 0;
             rotationY = 0;
-            await JSRuntime.InvokeVoidAsync("coinDragHandler.resetTransform", rotationX, rotationY);
+            await JSRuntime.InvokeVoidAsync("coinDragHandler.resetTransform", 0, 0);
             StateHasChanged();
         }
     }
@@ -136,10 +133,10 @@ public partial class Home : ComponentBase
     private async void OnPointerCancel(PointerEventArgs e)
     {
         isDragging = false;
-        // Return to the landed side position
-        rotationX = baseRotationX;
+        // Return to neutral position
+        rotationX = 0;
         rotationY = 0;
-        await JSRuntime.InvokeVoidAsync("coinDragHandler.resetTransform", rotationX, rotationY);
+        await JSRuntime.InvokeVoidAsync("coinDragHandler.resetTransform", 0, 0);
         StateHasChanged();
     }
     
@@ -153,8 +150,11 @@ public partial class Home : ComponentBase
     private async Task FlipCoin()
     {
         isFlipping = true;
+        
+        // Clear any previous rotation state before starting flip
         rotationX = 0;
         rotationY = 0;
+        await JSRuntime.InvokeVoidAsync("coinDragHandler.clearTransform");
         
         Random random = new Random();
         bool isHeads = random.Next(2) == 0;
@@ -162,8 +162,19 @@ public partial class Home : ComponentBase
         
         StateHasChanged();
         
-        // Wait for animation to complete (1.2 seconds now)
+        // Wait for animation to complete (1.2 seconds)
         await Task.Delay(1200);
+        
+        // Remove the animation class first to prevent any transition conflicts
+        flipResult = "";
+        
+        // Reset to neutral position (centered)
+        baseRotationX = 0;
+        rotationX = 0;
+        rotationY = 0;
+        
+        // Clear all inline transform styles to ensure neutral position
+        await JSRuntime.InvokeVoidAsync("coinDragHandler.clearTransform");
         
         // Show landing flash
         showLandingFlash = true;
@@ -180,14 +191,6 @@ public partial class Home : ComponentBase
         // Remove flash after animation completes
         await Task.Delay(500);
         showLandingFlash = false;
-        StateHasChanged();
-        
-        // Keep the coin on the landed side by maintaining the final rotation
-        // Remove the animation class but apply the final static rotation
-        flipResult = "";
-        baseRotationX = isHeads ? 0 : 180; // Store the landed side
-        rotationX = baseRotationX; // 0 for heads, 180 for tails
-        rotationY = 0;
         StateHasChanged();
     }
 }

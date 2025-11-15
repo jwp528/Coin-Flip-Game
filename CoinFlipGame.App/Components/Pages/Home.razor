@@ -74,6 +74,14 @@
                 this.coinElement.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
                 this.coinElement.style.transform = `rotateX(${rotationX.toFixed(2)}deg) rotateY(${rotationY.toFixed(2)}deg)`;
             }
+        },
+        
+        clearTransform: function() {
+            if (this.coinElement) {
+                // Clear inline styles completely to return to neutral
+                this.coinElement.style.transform = '';
+                this.coinElement.style.transition = '';
+            }
         }
     };
 </script>
