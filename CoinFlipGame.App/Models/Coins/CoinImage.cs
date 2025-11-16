@@ -1,3 +1,5 @@
+using CoinFlipGame.App.Models.Unlocks;
+
 namespace CoinFlipGame.App.Models;
 
 /// <summary>

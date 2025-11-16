@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using CoinFlipGame.App.Services;
 using CoinFlipGame.App.Models;
+using CoinFlipGame.App.Models.Unlocks;
 
 namespace CoinFlipGame.App.Components.Pages;
 
@@ -41,9 +42,24 @@ public partial class Home : ComponentBase
     private string selectingFor = ""; // "heads" or "tails"
     private string selectedHeadsImage = "/img/coins/logo.png";
     private string selectedTailsImage = "/img/coins/logo.png";
+    private bool isHeadsRandom = true; // Default to random
+    private bool isTailsRandom = true; // Default to random
     private string faceShowing = "/img/coins/logo.png"; // The current face displayed
     private Dictionary<CoinType, List<CoinImage>>? availableCoins;
     private bool showCustomizeTip = true;
+    
+    // Super flip state
+    private bool isSuperFlipCharging = false;
+    private bool isSuperFlipReady = false;
+    private DateTime? chargeStartTime = null;
+    private const double SUPER_FLIP_CHARGE_TIME = 1500; // 1.5 seconds (reduced from 3 seconds)
+    private const double SUPER_FLIP_UNLOCK_MULTIPLIER = 2.0; // Double unlock chance
+    private CancellationTokenSource? chargeCancellationTokenSource = null;
+    
+    // Unlock achievement state
+    private bool showUnlockAchievement = false;
+    private CoinImage? currentlyUnlockedCoin = null;
+    private Queue<CoinImage> pendingUnlockAchievements = new Queue<CoinImage>();
     
     private double startY = 0;
     private double currentY = 0;
@@ -80,46 +96,6 @@ public partial class Home : ComponentBase
     private async Task<Dictionary<CoinType, List<CoinImage>>> LoadCoinsWithConditions()
     {
         var coins = await CoinService.GetAllAvailableCoinsAsync();
-        
-        // Apply unlock conditions to specific coins
-        foreach (var (coinType, coinList) in coins)
-        {
-            if (coinType is ZodiakCoinType)
-            {
-                // Example: Lock zodiac coins behind conditions
-                foreach (var coin in coinList)
-                {
-                    if (coin.Name == "Gemini.png")
-                    {
-                        coin.UnlockCondition = new UnlockCondition
-                        {
-                            Type = UnlockConditionType.TotalFlips,
-                            RequiredCount = 10,
-                            Description = "Flip 10 times to unlock"
-                        };
-                    }
-                    else if (coin.Name == "Ram.png")
-                    {
-                        coin.UnlockCondition = new UnlockCondition
-                        {
-                            Type = UnlockConditionType.HeadsFlips,
-                            RequiredCount = 20,
-                            Description = "Get 20 heads to unlock"
-                        };
-                    }
-                    else if (coin.Name == "Tauros.png")
-                    {
-                        coin.UnlockCondition = new UnlockCondition
-                        {
-                            Type = UnlockConditionType.Streak,
-                            RequiredCount = 5,
-                            Description = "Get a 5 streak to unlock"
-                        };
-                    }
-                }
-            }
-        }
-        
         return coins;
     }
     
@@ -145,6 +121,7 @@ public partial class Home : ComponentBase
         if (selectingFor == "heads")
         {
             selectedHeadsImage = coin.Path;
+            isHeadsRandom = false; // Disable random when specific coin selected
             // Update face if currently showing heads
             if (faceShowing == selectedHeadsImage || headsCount + tailsCount == 0)
             {
@@ -154,6 +131,7 @@ public partial class Home : ComponentBase
         else if (selectingFor == "tails")
         {
             selectedTailsImage = coin.Path;
+            isTailsRandom = false; // Disable random when specific coin selected
             // Update face if currently showing tails
             if (faceShowing == selectedTailsImage)
             {
@@ -198,6 +176,16 @@ public partial class Home : ComponentBase
         return $"transform: translate3d({shineX:F2}%, {shineY:F2}%, 0);";
     }
     
+    private double GetChargeProgress()
+    {
+        if (!chargeStartTime.HasValue)
+            return 0;
+        
+        double elapsed = (DateTime.Now - chargeStartTime.Value).TotalMilliseconds;
+        double progress = Math.Min(100, (elapsed / SUPER_FLIP_CHARGE_TIME) * 100);
+        return progress;
+    }
+    
     private async Task OnPointerDown(PointerEventArgs e)
     {
         if (isFlipping) return;
@@ -216,6 +204,9 @@ public partial class Home : ComponentBase
         rotationY = 0;
         velocityX = 0;
         velocityY = 0;
+        
+        // Start super flip charging
+        StartSuperFlipCharge();
         
         await JSRuntime.InvokeVoidAsync("coinDragHandler.startDrag");
         await JSRuntime.InvokeVoidAsync("coinPhysics.startDrag", coinCenterX, coinCenterY);
@@ -257,12 +248,17 @@ public partial class Home : ComponentBase
         if (!isDragging || isFlipping) return;
         
         isDragging = false;
+        
+        // Stop super flip charging
+        bool wasSuperFlipReady = isSuperFlipReady;
+        StopSuperFlipCharge();
+        
         double deltaY = currentY - startY;
         double speed = Math.Sqrt(velocityX * velocityX + velocityY * velocityY);
         
         if (Math.Abs(deltaY) > DRAG_THRESHOLD || speed > VELOCITY_THRESHOLD)
         {
-            await FlipCoin(speed);
+            await FlipCoin(speed, wasSuperFlipReady);
         }
         else
         {
@@ -277,6 +273,7 @@ public partial class Home : ComponentBase
     private async void OnPointerCancel(PointerEventArgs e)
     {
         isDragging = false;
+        StopSuperFlipCharge();
         // Return to neutral position
         rotationX = 0;
         rotationY = 0;
@@ -299,7 +296,7 @@ public partial class Home : ComponentBase
         await FlipCoin(5.0);
     }
     
-    private async Task FlipCoin(double velocity = 5.0)
+    private async Task FlipCoin(double velocity = 5.0, bool isSuperFlip = false)
     {
         isFlipping = true;
         
@@ -319,24 +316,46 @@ public partial class Home : ComponentBase
         Random random = new Random();
         bool isHeads = random.Next(2) == 0;
         string result = isHeads ? "heads" : "tails";
-        flipResult = isHeads ? "flip-heads" : "flip-tails";
+        flipResult = isHeads ? (isSuperFlip ? "flip-heads super-flip" : "flip-heads") : (isSuperFlip ? "flip-tails super-flip" : "flip-tails");
         
-        // Trigger particles at coin position
-        await JSRuntime.InvokeVoidAsync("triggerSparkle", coinCenterX, coinCenterY, 15);
+        // Trigger particles at coin position (more particles for super flip)
+        int particleCount = isSuperFlip ? 30 : 15;
+        await JSRuntime.InvokeVoidAsync("triggerSparkle", coinCenterX, coinCenterY, particleCount);
         await JSRuntime.InvokeVoidAsync("playFlipSound");
         await JSRuntime.InvokeVoidAsync("triggerHaptic", "medium");
         
         StateHasChanged();
         
-        await Task.Delay(600); // Wait for animation to complete
+        // Wait for animation duration (shorter for super flip)
+        int animationDuration = isSuperFlip ? 750 : 600;
+        await Task.Delay(animationDuration);
         
         // Remove animation class and FORCE neutral rotation
         flipResult = "";
         rotationX = 0;  // FORCE neutral X rotation
         rotationY = 0;  // FORCE neutral Y rotation
         
+        // Determine coin image to show - apply random selection if enabled
+        string landedCoinPath;
+        if (isHeads && isHeadsRandom)
+        {
+            // Select random coin by rarity for heads
+            var randomCoin = GetRandomCoinByRarity();
+            landedCoinPath = randomCoin != null ? randomCoin.Path : selectedHeadsImage;
+        }
+        else if (!isHeads && isTailsRandom)
+        {
+            // Select random coin by rarity for tails
+            var randomCoin = GetRandomCoinByRarity();
+            landedCoinPath = randomCoin != null ? randomCoin.Path : selectedTailsImage;
+        }
+        else
+        {
+            // Use selected coin images
+            landedCoinPath = isHeads ? selectedHeadsImage : selectedTailsImage;
+        }
+        
         // Update the face showing based on result
-        string landedCoinPath = isHeads ? selectedHeadsImage : selectedTailsImage;
         faceShowing = landedCoinPath;
         
         // Update counts and streaks
@@ -347,8 +366,20 @@ public partial class Home : ComponentBase
             
         UpdateStreak(result);
         
-        // Track coin landing for unlock progress
-        UnlockProgress.TrackCoinLanding(landedCoinPath, isHeads, currentStreak);
+        // Track coin landing for unlock progress and check for newly unlocked coins
+        var allCoins = GetAllCoinsFlat();
+        var newlyUnlocked = UnlockProgress.TrackCoinLanding(landedCoinPath, isHeads, currentStreak, allCoins);
+        
+        // Try random unlocks based on the landed coin (with double chance for super flip)
+        double unlockMultiplier = isSuperFlip ? SUPER_FLIP_UNLOCK_MULTIPLIER : 1.0;
+        var randomUnlocked = UnlockProgress.TryRandomUnlocks(landedCoinPath, allCoins, unlockMultiplier);
+        newlyUnlocked.AddRange(randomUnlocked);
+        
+        // Queue up any newly unlocked coins for achievement display
+        foreach (var unlockedCoin in newlyUnlocked)
+        {
+            pendingUnlockAchievements.Enqueue(unlockedCoin);
+        }
         
         // Explicitly reset transform via JS to ensure neutral position
         await JSRuntime.InvokeVoidAsync("coinDragHandler.resetTransform");
@@ -358,9 +389,9 @@ public partial class Home : ComponentBase
         showLandingFlash = true;
         StateHasChanged();
         
-        // Trigger landing effects
-        await JSRuntime.InvokeVoidAsync("triggerParticleBurst", coinCenterX, coinCenterY, 20, new { });
-        await JSRuntime.InvokeVoidAsync("playLandSound");
+        // Trigger landing effects (bigger burst for super flip)
+        int burstCount = isSuperFlip ? 40 : 20;
+        await JSRuntime.InvokeVoidAsync("triggerParticleBurst", coinCenterX, coinCenterY, burstCount, new { });
         await JSRuntime.InvokeVoidAsync("triggerHaptic", "heavy");
         
         // Set isFlipping to false BEFORE checking achievements so player can continue flipping
@@ -372,6 +403,65 @@ public partial class Home : ComponentBase
         
         // Check achievements AFTER gameplay is unlocked (non-blocking for player)
         _ = CheckAchievements();
+        
+        // Show unlock achievements if any are pending
+        _ = ShowPendingUnlockAchievements();
+    }
+    
+    private async Task ShowPendingUnlockAchievements()
+    {
+        // Process achievements one at a time
+        while (pendingUnlockAchievements.Count > 0)
+        {
+            currentlyUnlockedCoin = pendingUnlockAchievements.Dequeue();
+            showUnlockAchievement = true;
+            StateHasChanged();
+            
+            // Wait for user to dismiss this achievement
+            while (showUnlockAchievement)
+            {
+                await Task.Delay(100);
+            }
+            
+            // Small delay between multiple achievements
+            if (pendingUnlockAchievements.Count > 0)
+            {
+                await Task.Delay(300);
+            }
+        }
+        
+        currentlyUnlockedCoin = null;
+    }
+    
+    private void DismissUnlockAchievement()
+    {
+        showUnlockAchievement = false;
+        StateHasChanged();
+    }
+    
+    private string GetRarityClass(UnlockRarity rarity)
+    {
+        return rarity switch
+        {
+            UnlockRarity.Common => "common",
+            UnlockRarity.Uncommon => "uncommon",
+            UnlockRarity.Rare => "rare",
+            UnlockRarity.Legendary => "legendary",
+            _ => "common"
+        };
+    }
+    
+    private List<CoinImage> GetAllCoinsFlat()
+    {
+        var allCoins = new List<CoinImage>();
+        if (availableCoins != null)
+        {
+            foreach (var coinTypeGroup in availableCoins.Values)
+            {
+                allCoins.AddRange(coinTypeGroup);
+            }
+        }
+        return allCoins;
     }
     
     private void UpdateStreak(string result)
@@ -429,5 +519,116 @@ public partial class Home : ComponentBase
     {
         showAchievement = false;
         StateHasChanged();
+    }
+    
+    private void SelectRandomOption()
+    {
+        if (selectingFor == "heads")
+        {
+            isHeadsRandom = true;
+            // Set a question mark icon or keep current for display
+            selectedHeadsImage = "/img/coins/logo.png"; // Fallback display
+        }
+        else if (selectingFor == "tails")
+        {
+            isTailsRandom = true;
+            // Set a question mark icon or keep current for display
+            selectedTailsImage = "/img/coins/logo.png"; // Fallback display
+        }
+        
+        CloseCoinSelector();
+    }
+    
+    private CoinImage? GetRandomCoinByRarity()
+    {
+        // Get all unlocked coins
+        var unlockedCoins = GetAllCoinsFlat()
+            .Where(c => UnlockProgress.IsUnlocked(c))
+            .ToList();
+        
+        if (!unlockedCoins.Any())
+            return null;
+        
+        // Calculate total weight based on rarity
+        // Rarity weights: Common=1, Uncommon=0.5, Rare=0.25, Legendary=0.1
+        var weightedCoins = unlockedCoins.Select(coin =>
+        {
+            double weight = (coin.UnlockCondition?.Rarity ?? UnlockRarity.Common) switch
+            {
+                UnlockRarity.Common => 1.0,
+                UnlockRarity.Uncommon => 0.5,
+                UnlockRarity.Rare => 0.25,
+                UnlockRarity.Legendary => 0.1,
+                _ => 1.0
+            };
+            return new { Coin = coin, Weight = weight };
+        }).ToList();
+        
+        double totalWeight = weightedCoins.Sum(wc => wc.Weight);
+        Random random = new Random();
+        double randomValue = random.NextDouble() * totalWeight;
+        
+        // Select coin based on weighted random
+        double cumulativeWeight = 0;
+        foreach (var weightedCoin in weightedCoins)
+        {
+            cumulativeWeight += weightedCoin.Weight;
+            if (randomValue <= cumulativeWeight)
+            {
+                return weightedCoin.Coin;
+            }
+        }
+        
+        // Fallback to last coin (shouldn't happen)
+        return weightedCoins.Last().Coin;
+    }
+    
+    private async void StartSuperFlipCharge()
+    {
+        chargeStartTime = DateTime.Now;
+        isSuperFlipCharging = true;
+        isSuperFlipReady = false;
+        
+        // Cancel any existing charge timer
+        chargeCancellationTokenSource?.Cancel();
+        chargeCancellationTokenSource = new CancellationTokenSource();
+        
+        try
+        {
+            // Update UI every 100ms for smooth progress bar
+            while (isSuperFlipCharging && !chargeCancellationTokenSource.Token.IsCancellationRequested)
+            {
+                double elapsed = (DateTime.Now - chargeStartTime.Value).TotalMilliseconds;
+                
+                if (elapsed >= SUPER_FLIP_CHARGE_TIME && !isSuperFlipReady)
+                {
+                    isSuperFlipReady = true;
+                    isSuperFlipCharging = false;
+                    
+                    // Trigger visual shake and haptic feedback
+                    await JSRuntime.InvokeVoidAsync("coinDragHandler.startShake");
+                    await JSRuntime.InvokeVoidAsync("triggerHaptic", "heavy");
+                    await InvokeAsync(StateHasChanged);
+                    break;
+                }
+                
+                await InvokeAsync(StateHasChanged);
+                await Task.Delay(100, chargeCancellationTokenSource.Token);
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            // Expected when cancellation is requested
+        }
+    }
+    
+    private void StopSuperFlipCharge()
+    {
+        chargeCancellationTokenSource?.Cancel();
+        chargeCancellationTokenSource?.Dispose();
+        chargeCancellationTokenSource = null;
+        isSuperFlipCharging = false;
+        isSuperFlipReady = false;
+        chargeStartTime = null;
     }
 }

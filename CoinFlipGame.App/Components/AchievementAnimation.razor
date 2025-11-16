@@ -1,0 +1,53 @@
+@using CoinFlipGame.App.Models
+@using CoinFlipGame.App.Models.Unlocks
+
+<div class="unlock-achievement-overlay @(IsVisible ? "visible" : "") @GetRarityClass()" @onclick="Dismiss">
+    <div class="unlock-achievement-content" @onclick:stopPropagation="true">
+        <div class="unlock-achievement-icon @GetRarityClass()">
+            <img src="@UnlockedCoin?.Path" alt="@UnlockedCoin?.DisplayName" class="unlocked-coin-image" />
+            <div class="unlock-achievement-glow"></div>
+        </div>
+        
+        <h2 class="unlock-achievement-title">@GetRarityTitle()</h2>
+        <p class="unlock-achievement-coin-name">@UnlockedCoin?.DisplayName</p>
+        <p class="unlock-achievement-description">@UnlockedCoin?.UnlockCondition?.Description</p>
+        
+        <button class="unlock-achievement-dismiss" @onclick="Dismiss">Continue</button>
+    </div>
+    
+    <div class="unlock-achievement-particles"></div>
+</div>
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+    
+    [Parameter]
+    public CoinImage? UnlockedCoin { get; set; }
+    
+    [Parameter]
+    public EventCallback OnDismiss { get; set; }
+    
+    private string GetRarityClass()
+    {
+        return UnlockedCoin?.UnlockCondition?.Rarity.ToString().ToLower() ?? "common";
+    }
+    
+    private string GetRarityTitle()
+    {
+        var rarity = UnlockedCoin?.UnlockCondition?.Rarity ?? UnlockRarity.Common;
+        return rarity switch
+        {
+            UnlockRarity.Common => "Coin Unlocked!",
+            UnlockRarity.Uncommon => "Uncommon Coin Unlocked!",
+            UnlockRarity.Rare => "Rare Coin Unlocked!",
+            UnlockRarity.Legendary => "LEGENDARY COIN UNLOCKED!",
+            _ => "Coin Unlocked!"
+        };
+    }
+    
+    private async Task Dismiss()
+    {
+        await OnDismiss.InvokeAsync();
+    }
+}

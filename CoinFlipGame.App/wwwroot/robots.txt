@@ -1,0 +1,8 @@
+# robots.txt for Coin Flip Game
+User-agent: *
+Allow: /
+Disallow: /_framework/
+Disallow: /service-worker.js
+
+# Sitemaps
+Sitemap: https://coinflipgame.app/sitemap.xml
