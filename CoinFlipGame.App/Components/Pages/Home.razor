@@ -1,6 +1,6 @@
 ﻿@page "/"
-
-<PageTitle>Coin Flip Game</PageTitle>
+@using CoinFlipGame.App.Models
+@using CoinFlipGame.App.Models.Unlocks
 
 <div class="coin-flip-game" 
      @onpointermove="OnPointerMove"
@@ -22,7 +22,7 @@
         </div>
         
         <!-- Streak Counter - Top Center -->
-        @if (currentStreak > 3)
+        @if (currentStreak > 2)
         {
             <div class="streak-counter">
                 <span class="streak-icon">🔥</span>
@@ -34,7 +34,8 @@
     <!-- Main Coin Container -->
     <div class="coin-container">
         <div class="coin-glow"></div>
-        <div @ref="coinElement" class="coin @flipResult @(isDragging ? "dragging" : "")" 
+        <div @ref="coinElement" 
+             class="coin @flipResult @(isDragging ? "dragging" : "") @(isSuperFlipReady ? "super-flip-ready shake" : "")" 
              @onclick="HandleClick"
              @onpointerdown="OnPointerDown"
              style="@GetCoinTransform()">
@@ -44,21 +45,26 @@
                 <img src="@faceShowing" alt="Coin" draggable="false" />
             </div>
         </div>
-    </div>
-    
-    <!-- Achievement Label - Passive Under Playing Area -->
-    @if (showAchievement)
-    {
-        <div class="achievement-label">
-            <span class="achievement-icon">🎉</span>
-            <span class="achievement-text">@achievementText</span>
-        </div>
-    }
-    
-    <!-- Total Flips Counter -->
-    <div class="total-flips">
-        <span class="total-label">Total Flips</span>
-        <span class="total-value">@(headsCount + tailsCount)</span>
+        
+        <!-- Super Flip Charging Indicator -->
+        @if (isSuperFlipCharging || isSuperFlipReady)
+        {
+            <div class="super-flip-indicator @(isSuperFlipReady ? "ready" : "")">
+                @if (isSuperFlipReady)
+                {
+                    <span class="super-flip-text">⚡ SUPER FLIP READY! ⚡</span>
+                }
+                else
+                {
+                    <div class="super-flip-progress">
+                        <span class="super-flip-label">Charging Super Flip...</span>
+                        <div class="super-flip-bar">
+                            <div class="super-flip-fill" style="width: @GetChargeProgress()%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
     </div>
 </div>
 
@@ -67,14 +73,28 @@
     IsVisible="@showCoinSelector" 
     Side="@selectingFor"
     AvailableCoins="@availableCoins"
+    SelectedCoinPath="@(selectingFor == "heads" ? selectedHeadsImage : selectedTailsImage)"
+    IsRandomSelected="@(selectingFor == "heads" ? isHeadsRandom : isTailsRandom)"
     OnClose="@CloseCoinSelector"
-    OnCoinSelected="@SelectCoin" />
+    OnCoinSelected="@SelectCoin"
+    OnRandomSelected="@SelectRandomOption" />
 
-<!-- Achievement Animation for Coin Unlocks -->
-<AchievementAnimation
-    IsVisible="@showUnlockAchievement"
-    UnlockedCoin="@currentlyUnlockedCoin"
-    OnDismiss="@DismissUnlockAchievement" />
+<!-- Passive Coin Unlock Notification - Bottom of Screen -->
+@if (showUnlockAchievement && currentlyUnlockedCoin != null)
+{
+    <div class="coin-unlock-notification @GetRarityClass(currentlyUnlockedCoin.UnlockCondition?.Rarity ?? UnlockRarity.Common)" 
+         @onclick="DismissUnlockAchievement">
+        <span class="coin-unlock-sparkle">✨</span>
+        <div class="coin-unlock-icon-wrapper">
+            <img src="@currentlyUnlockedCoin.Path" alt="@currentlyUnlockedCoin.DisplayName" class="coin-unlock-icon" />
+        </div>
+        <div class="coin-unlock-content">
+            <div class="coin-unlock-label">Coin Unlocked!</div>
+            <div class="coin-unlock-name">@currentlyUnlockedCoin.DisplayName</div>
+        </div>
+        <span class="coin-unlock-sparkle">✨</span>
+    </div>
+}
 
 <script>
     window.coinDragHandler = {
@@ -112,6 +132,14 @@
                 // Clear inline styles completely to return to neutral
                 this.coinElement.style.transform = '';
                 this.coinElement.style.transition = '';
+            }
+        },
+        
+        startShake: function() {
+            this.coinElement = document.querySelector('.coin');
+            if (this.coinElement) {
+                // The shake animation is handled by CSS classes
+                // This function is just to ensure we have the element reference
             }
         }
     };

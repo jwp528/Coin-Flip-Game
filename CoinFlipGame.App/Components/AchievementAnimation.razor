@@ -1,4 +1,5 @@
 @using CoinFlipGame.App.Models
+@using CoinFlipGame.App.Models.Unlocks
 
 <div class="unlock-achievement-overlay @(IsVisible ? "visible" : "") @GetRarityClass()" @onclick="Dismiss">
     <div class="unlock-achievement-content" @onclick:stopPropagation="true">
@@ -37,10 +38,10 @@
         var rarity = UnlockedCoin?.UnlockCondition?.Rarity ?? UnlockRarity.Common;
         return rarity switch
         {
-            UnlockRarity.Common => "🪙 Coin Unlocked!",
-            UnlockRarity.Uncommon => "✨ Uncommon Coin Unlocked!",
-            UnlockRarity.Rare => "💎 Rare Coin Unlocked!",
-            UnlockRarity.Legendary => "👑 LEGENDARY COIN UNLOCKED!",
+            UnlockRarity.Common => "Coin Unlocked!",
+            UnlockRarity.Uncommon => "Uncommon Coin Unlocked!",
+            UnlockRarity.Rare => "Rare Coin Unlocked!",
+            UnlockRarity.Legendary => "LEGENDARY COIN UNLOCKED!",
             _ => "Coin Unlocked!"
         };
     }

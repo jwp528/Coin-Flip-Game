@@ -1,0 +1,89 @@
+@using CoinFlipGame.App.Models
+@using CoinFlipGame.App.Models.Unlocks
+
+<div class="unlock-tooltip @(IsVisible ? "visible" : "")" style="@GetPositionStyle()">
+    <div class="unlock-tooltip-arrow"></div>
+    <div class="unlock-tooltip-content">
+        <div class="unlock-tooltip-header">
+            <span class="unlock-tooltip-icon">??</span>
+            <span class="unlock-tooltip-title">@CoinImage?.DisplayName</span>
+        </div>
+        
+        @if (CoinImage?.UnlockCondition != null)
+        {
+            <div class="unlock-tooltip-rarity @GetRarityClass()">
+                @GetRarityLabel()
+            </div>
+            
+            <div class="unlock-tooltip-description">
+                @CoinImage.UnlockCondition.Description
+            </div>
+            
+            @if (ProgressText != null)
+            {
+                <div class="unlock-tooltip-progress">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar-fill" style="width: @(ProgressPercentage)%"></div>
+                    </div>
+                    <div class="progress-text">@ProgressText</div>
+                </div>
+            }
+            
+            @if (CoinImage.UnlockCondition.Prerequisites != null && CoinImage.UnlockCondition.Prerequisites.Any())
+            {
+                <div class="unlock-tooltip-prerequisites">
+                    <div class="prerequisites-label">Prerequisites:</div>
+                    @foreach (var prereq in CoinImage.UnlockCondition.Prerequisites)
+                    {
+                        <div class="prerequisite-item">
+                            <span class="prerequisite-bullet">•</span>
+                            <span>@prereq.Description</span>
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+    
+    [Parameter]
+    public CoinImage? CoinImage { get; set; }
+    
+    [Parameter]
+    public string? ProgressText { get; set; }
+    
+    [Parameter]
+    public double ProgressPercentage { get; set; }
+    
+    [Parameter]
+    public double X { get; set; }
+    
+    [Parameter]
+    public double Y { get; set; }
+    
+    private string GetPositionStyle()
+    {
+        return $"left: {X}px; top: {Y}px;";
+    }
+    
+    private string GetRarityClass()
+    {
+        return CoinImage?.UnlockCondition?.Rarity.ToString().ToLower() ?? "common";
+    }
+    
+    private string GetRarityLabel()
+    {
+        return CoinImage?.UnlockCondition?.Rarity switch
+        {
+            UnlockRarity.Common => "? Common",
+            UnlockRarity.Uncommon => "?? Uncommon",
+            UnlockRarity.Rare => "?? Rare",
+            UnlockRarity.Legendary => "?? Legendary",
+            _ => "Common"
+        };
+    }
+}

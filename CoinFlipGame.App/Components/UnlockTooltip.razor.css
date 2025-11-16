@@ -1,0 +1,201 @@
+/* Unlock Tooltip Styles */
+.unlock-tooltip {
+    position: fixed;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(51, 65, 85, 0.98) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    max-width: 320px;
+    min-width: 250px;
+    box-shadow: 
+        0 12px 40px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.unlock-tooltip.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+
+.unlock-tooltip-arrow {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(51, 65, 85, 0.98) 100%);
+    border-left: 1px solid rgba(255, 255, 255, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    transform: translateX(-50%) rotate(45deg);
+}
+
+.unlock-tooltip-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.unlock-tooltip-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.unlock-tooltip-icon {
+    font-size: 20px;
+    line-height: 1;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
+}
+
+.unlock-tooltip-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.unlock-tooltip-rarity {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    align-self: flex-start;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.unlock-tooltip-rarity.common {
+    background: rgba(156, 163, 175, 0.2);
+    border: 1px solid rgba(156, 163, 175, 0.4);
+    color: #d1d5db;
+}
+
+.unlock-tooltip-rarity.uncommon {
+    background: rgba(34, 197, 94, 0.2);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    color: #86efac;
+}
+
+.unlock-tooltip-rarity.rare {
+    background: rgba(168, 85, 247, 0.2);
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    color: #c4b5fd;
+}
+
+.unlock-tooltip-rarity.legendary {
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.2) 0%, rgba(239, 68, 68, 0.2) 100%);
+    border: 1px solid rgba(251, 146, 60, 0.5);
+    color: #fde047;
+    animation: legendaryGlow 2s ease-in-out infinite;
+}
+
+@keyframes legendaryGlow {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(251, 146, 60, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(251, 146, 60, 0.6);
+    }
+}
+
+.unlock-tooltip-description {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.5;
+}
+
+.unlock-tooltip-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #818cf8 0%, #c084fc 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 8px rgba(129, 140, 248, 0.5);
+}
+
+.progress-text {
+    font-size: 0.85rem;
+    color: rgba(129, 140, 248, 0.9);
+    font-weight: 600;
+    text-align: center;
+}
+
+.unlock-tooltip-prerequisites {
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.prerequisites-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(251, 146, 60, 0.9);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.prerequisite-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.4;
+    margin-top: 4px;
+}
+
+.prerequisite-bullet {
+    color: rgba(251, 146, 60, 0.7);
+    font-weight: 700;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .unlock-tooltip {
+        max-width: 90vw;
+        min-width: 280px;
+    }
+}
+
+@media (max-width: 480px) {
+    .unlock-tooltip {
+        max-width: 95vw;
+        min-width: 260px;
+        padding: 14px;
+    }
+    
+    .unlock-tooltip-title {
+        font-size: 1rem;
+    }
+    
+    .unlock-tooltip-description {
+        font-size: 0.9rem;
+    }
+}

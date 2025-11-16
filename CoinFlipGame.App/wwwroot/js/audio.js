@@ -29,11 +29,41 @@ class AudioSystem {
         }
     }
     
-    // Synthesize coin flip sound (whoosh with metallic ringing)
-    playFlip() {
+    // Load and play coin flip sound from audio file
+    async playFlip() {
         if (this.isMuted || !this.audioContext) return;
         
-        this.resumeContext();
+        await this.resumeContext();
+        
+        try {
+            // Load the coin-flip.mp3 file if not already loaded
+            if (!this.sounds['coinFlip']) {
+                const response = await fetch('/sounds/coin-flip.mp3');
+                const arrayBuffer = await response.arrayBuffer();
+                this.sounds['coinFlip'] = await this.audioContext.decodeAudioData(arrayBuffer);
+            }
+            
+            // Create and play the sound
+            const source = this.audioContext.createBufferSource();
+            source.buffer = this.sounds['coinFlip'];
+            
+            const gainNode = this.audioContext.createGain();
+            gainNode.gain.value = 0.7; // Adjust volume as needed
+            
+            source.connect(gainNode);
+            gainNode.connect(this.masterGain);
+            
+            source.start(0);
+        } catch (error) {
+            console.warn('Failed to play coin flip sound:', error);
+            // Fallback to synthesized sound if file fails to load
+            this.playFlipSynthesized();
+        }
+    }
+    
+    // Fallback: Synthesize coin flip sound (whoosh with metallic ringing)
+    playFlipSynthesized() {
+        if (this.isMuted || !this.audioContext) return;
         
         const now = this.audioContext.currentTime;
         

@@ -1,4 +1,5 @@
 @using CoinFlipGame.App.Models
+@using CoinFlipGame.App.Models.Unlocks
 @using CoinFlipGame.App.Services
 @inject UnlockProgressService UnlockProgress
 
@@ -19,6 +20,41 @@
         <div class="coin-selector-content">
             @if (AvailableCoins != null)
             {
+                <!-- Random Option Section -->
+                <div class="coin-type-section">
+                    <h3 class="coin-type-header">
+                        <span class="coin-type-category">Special</span>
+                        <span class="coin-type-divider">/</span>
+                        <span class="coin-type-name">Random</span>
+                    </h3>
+                    
+                    <div class="coin-grid">
+                        <div class="coin-option random-option @(IsRandomSelected ? "selected" : "")" @onclick="HandleRandomSelection">
+                            <div class="coin-option-image-wrapper">
+                                <div class="random-coin-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                    </svg>
+                                    <span class="random-sparkle">?</span>
+                                    <span class="random-sparkle">?</span>
+                                </div>
+                                @if (IsRandomSelected)
+                                {
+                                    <div class="coin-selected-indicator">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                    </div>
+                                }
+                            </div>
+                            <div class="coin-option-name random-label">Random</div>
+                            <div class="random-description">Rarity-weighted selection</div>
+                        </div>
+                    </div>
+                </div>
+                
                 @foreach (var coinTypeGroup in AvailableCoins)
                 {
                     <div class="coin-type-section">
@@ -33,18 +69,33 @@
                             {
                                 var isUnlocked = UnlockProgress.IsUnlocked(coin);
                                 var landCount = UnlockProgress.GetCoinLandCount(coin.Path);
+                                var isSelected = IsSelectedCoin(coin.Path);
                                 
-                                <div class="coin-option @(isUnlocked ? "" : "locked")" @onclick="@(() => HandleCoinSelection(coin))">
+                                <div class="coin-option @(isUnlocked ? "" : "locked") @(isSelected ? "selected" : "")" 
+                                     @onclick="@(() => HandleCoinSelection(coin))"
+                                     @onmouseenter="@((MouseEventArgs e) => HandleCoinHover(coin, e, true))"
+                                     @onmouseleave="@(() => HideTooltip())">
                                     <div class="coin-option-image-wrapper">
                                         <img src="@coin.Path" alt="@coin.DisplayName" class="coin-option-image @(isUnlocked ? "" : "grayscale")" />
                                         
                                         @if (isUnlocked)
                                         {
-                                            <div class="coin-option-overlay">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                                </svg>
-                                            </div>
+                                            @if (isSelected)
+                                            {
+                                                <div class="coin-selected-indicator">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="coin-option-overlay">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                                    </svg>
+                                                </div>
+                                            }
                                             
                                             @if (landCount > 0)
                                             {
@@ -83,6 +134,15 @@
     </div>
 </div>
 
+<!-- Unlock Tooltip -->
+<UnlockTooltip 
+    IsVisible="@showTooltip"
+    CoinImage="@hoveredCoin"
+    ProgressText="@tooltipProgressText"
+    ProgressPercentage="@tooltipProgressPercentage"
+    X="@tooltipX"
+    Y="@tooltipY" />
+
 @code {
     [Parameter]
     public bool IsVisible { get; set; }
@@ -94,17 +154,83 @@
     public Dictionary<CoinType, List<CoinImage>>? AvailableCoins { get; set; }
     
     [Parameter]
+    public string? SelectedCoinPath { get; set; }
+    
+    [Parameter]
+    public bool IsRandomSelected { get; set; }
+    
+    [Parameter]
     public EventCallback OnClose { get; set; }
     
     [Parameter]
     public EventCallback<CoinImage> OnCoinSelected { get; set; }
+    
+    [Parameter]
+    public EventCallback OnRandomSelected { get; set; }
+    
+    private bool showTooltip = false;
+    private CoinImage? hoveredCoin = null;
+    private string? tooltipProgressText = null;
+    private double tooltipProgressPercentage = 0;
+    private double tooltipX = 0;
+    private double tooltipY = 0;
     
     private async Task HandleCoinSelection(CoinImage coin)
     {
         // Only allow selection if unlocked
         if (UnlockProgress.IsUnlocked(coin))
         {
+            HideTooltip();
             await OnCoinSelected.InvokeAsync(coin);
         }
+    }
+    
+    private async Task HandleRandomSelection()
+    {
+        await OnRandomSelected.InvokeAsync();
+    }
+    
+    private bool IsSelectedCoin(string coinPath)
+    {
+        return !string.IsNullOrEmpty(SelectedCoinPath) && SelectedCoinPath == coinPath && !IsRandomSelected;
+    }
+    
+    private void HandleCoinHover(CoinImage coin, MouseEventArgs e, bool isHovering)
+    {
+        if (!UnlockProgress.IsUnlocked(coin) && coin.UnlockCondition != null)
+        {
+            if (isHovering)
+            {
+                hoveredCoin = coin;
+                tooltipProgressText = UnlockProgress.GetProgressDescription(coin);
+                tooltipProgressPercentage = CalculateProgressPercentage(coin);
+                tooltipX = e.ClientX;
+                tooltipY = e.ClientY + 20; // Offset below cursor
+                showTooltip = true;
+            }
+        }
+    }
+    
+    private void HideTooltip()
+    {
+        showTooltip = false;
+        hoveredCoin = null;
+    }
+    
+    private double CalculateProgressPercentage(CoinImage coin)
+    {
+        if (coin.UnlockCondition == null) return 0;
+        
+        return coin.UnlockCondition.Type switch
+        {
+            UnlockConditionType.TotalFlips => Math.Min(100, (UnlockProgress.GetTotalFlips() / (double)coin.UnlockCondition.RequiredCount) * 100),
+            UnlockConditionType.HeadsFlips => Math.Min(100, (UnlockProgress.GetHeadsFlips() / (double)coin.UnlockCondition.RequiredCount) * 100),
+            UnlockConditionType.TailsFlips => Math.Min(100, (UnlockProgress.GetTailsFlips() / (double)coin.UnlockCondition.RequiredCount) * 100),
+            UnlockConditionType.Streak => Math.Min(100, (UnlockProgress.GetLongestStreak() / (double)coin.UnlockCondition.RequiredCount) * 100),
+            UnlockConditionType.LandOnCoin => coin.UnlockCondition.RequiredCoinPath != null 
+                ? Math.Min(100, (UnlockProgress.GetCoinLandCount(coin.UnlockCondition.RequiredCoinPath) / (double)coin.UnlockCondition.RequiredCount) * 100)
+                : 0,
+            _ => 0
+        };
     }
 }
