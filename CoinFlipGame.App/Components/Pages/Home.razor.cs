@@ -85,49 +85,6 @@ public partial class Home : ComponentBase
     private async Task<Dictionary<CoinType, List<CoinImage>>> LoadCoinsWithConditions()
     {
         var coins = await CoinService.GetAllAvailableCoinsAsync();
-        
-        // Apply unlock conditions to specific coins
-        foreach (var (coinType, coinList) in coins)
-        {
-            if (coinType is ZodiakCoinType)
-            {
-                // Example: Lock zodiac coins behind conditions with different rarities
-                foreach (var coin in coinList)
-                {
-                    if (coin.Name == "Gemini.png")
-                    {
-                        coin.UnlockCondition = new UnlockCondition
-                        {
-                            Type = UnlockConditionType.TotalFlips,
-                            RequiredCount = 10,
-                            Description = "Flip 10 times to unlock",
-                            Rarity = UnlockRarity.Common
-                        };
-                    }
-                    else if (coin.Name == "Ram.png")
-                    {
-                        coin.UnlockCondition = new UnlockCondition
-                        {
-                            Type = UnlockConditionType.HeadsFlips,
-                            RequiredCount = 20,
-                            Description = "Get 20 heads to unlock",
-                            Rarity = UnlockRarity.Uncommon
-                        };
-                    }
-                    else if (coin.Name == "Tauros.png")
-                    {
-                        coin.UnlockCondition = new UnlockCondition
-                        {
-                            Type = UnlockConditionType.Streak,
-                            RequiredCount = 5,
-                            Description = "Get a 5 streak to unlock",
-                            Rarity = UnlockRarity.Rare
-                        };
-                    }
-                }
-            }
-        }
-        
         return coins;
     }
     

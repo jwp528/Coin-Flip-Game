@@ -27,7 +27,8 @@ public class ZodiakCoinType : CoinType
             { 
                 Type = UnlockConditionType.TotalFlips, 
                 RequiredCount = 10, 
-                Description = "Flip 10 times to unlock" 
+                Description = "Flip 10 times to unlock",
+                Rarity = UnlockRarity.Common
             } 
         },
         { 
@@ -35,7 +36,8 @@ public class ZodiakCoinType : CoinType
             { 
                 Type = UnlockConditionType.HeadsFlips, 
                 RequiredCount = 5, 
-                Description = "Get 5 heads to unlock" 
+                Description = "Get 5 heads to unlock",
+                Rarity = UnlockRarity.Common
             } 
         },
         { 
@@ -43,7 +45,8 @@ public class ZodiakCoinType : CoinType
             { 
                 Type = UnlockConditionType.TailsFlips, 
                 RequiredCount = 5, 
-                Description = "Get 5 tails to unlock" 
+                Description = "Get 5 tails to unlock",
+                Rarity = UnlockRarity.Common
             } 
         },
         { 
@@ -51,7 +54,8 @@ public class ZodiakCoinType : CoinType
             { 
                 Type = UnlockConditionType.Streak, 
                 RequiredCount = 3, 
-                Description = "Get a 3-flip streak to unlock" 
+                Description = "Get a 3-flip streak to unlock",
+                Rarity = UnlockRarity.Uncommon
             } 
         },
         { 
@@ -60,7 +64,8 @@ public class ZodiakCoinType : CoinType
                 Type = UnlockConditionType.LandOnCoin, 
                 RequiredCount = 10,
                 RequiredCoinPath = "/img/coins/AI/Zodiak/Ram.png",
-                Description = "Use Ram coin 10 times to unlock" 
+                Description = "Use Ram coin 10 times to unlock",
+                Rarity = UnlockRarity.Uncommon
             } 
         },
         { 
@@ -76,7 +81,8 @@ public class ZodiakCoinType : CoinType
                     "/img/coins/AI/Zodiak/Rooster.png",
                     "/img/coins/AI/Zodiak/Pig.png"
                 },
-                Description = "Use each other Zodiak coin 10 times to unlock" 
+                Description = "Use each other Zodiak coin 10 times to unlock",
+                Rarity = UnlockRarity.Rare
             } 
         },
         { 
@@ -86,7 +92,8 @@ public class ZodiakCoinType : CoinType
                 RequiredCount = 1,
                 RequiredCoinPath = "/img/coins/AI/Zodiak/Dragon.png",
                 UnlockChance = 0.00005, // 0.005% chance
-                Description = "Ultra rare! 0.005% chance when using Dragon coin" 
+                Description = "Ultra rare! 0.005% chance when using Dragon coin",
+                Rarity = UnlockRarity.Legendary
             } 
         }
     };
