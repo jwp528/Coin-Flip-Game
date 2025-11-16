@@ -35,6 +35,7 @@ window.coinPhysics = {
         this.isDragging = false;
         if (this.coinElement) {
             this.coinElement.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            // Always reset to neutral position
             this.coinElement.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)';
         }
     },

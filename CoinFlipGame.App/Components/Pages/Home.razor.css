@@ -743,116 +743,100 @@
     }
 }
 
-/* Achievement Animations */
-.achievement-popup {
-    position: fixed;
-    top: 120px;
+/* Achievement Label - Simple Passive Notification */
+.achievement-label {
+    position: absolute;
+    bottom: 120px;
     left: 50%;
-    transform: translateX(-50%) translateY(-150%);
-    z-index: 1000;
-    animation: achievementSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
-               achievementSlideOut 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) 2.5s forwards;
-}
-
-.achievement-content {
+    transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 20px 36px;
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%);
+    gap: 12px;
+    padding: 14px 28px;
+    background: rgba(16, 185, 129, 0.12);
     backdrop-filter: blur(10px);
     border-radius: 50px;
-    border: 2px solid rgba(16, 185, 129, 0.5);
+    border: 1px solid rgba(16, 185, 129, 0.3);
     box-shadow: 
-        0 8px 32px rgba(16, 185, 129, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        0 4px 16px rgba(16, 185, 129, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    z-index: 5;
+    animation: achievementFadeIn 0.3s ease-out;
+    pointer-events: none;
 }
 
 .achievement-icon {
-    font-size: 32px;
-    animation: achievementBounce 0.8s ease-in-out infinite;
-    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+    font-size: 1.5rem;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .achievement-text {
-    font-size: 16px;
-    font-weight: 700;
-    color: white;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    letter-spacing: 0.5px;
-}
-
-@keyframes achievementSlideIn {
-    from {
-        transform: translateX(-50%) translateY(-150%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(-50%) translateY(0);
-        opacity: 1;
-    }
-}
-
-@keyframes achievementSlideOut {
-    from {
-        transform: translateX(-50%) translateY(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateX(-50%) translateY(-150%);
-        opacity: 0;
-    }
-}
-
-@keyframes achievementBounce {
-    0%, 100% { transform: scale(1) rotate(0deg); }
-    25% { transform: scale(1.2) rotate(-5deg); }
-    50% { transform: scale(0.9) rotate(5deg); }
-    75% { transform: scale(1.1) rotate(-3deg); }
-}
-
-/* Total Flips Counter */
-.total-flips {
-    position: absolute;
-    bottom: 40px;
-    right: 40px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 4px;
-    padding: 16px 24px;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    z-index: 10;
-}
-
-.total-label {
-    font-size: 10px;
-    color: rgba(255, 255, 255, 0.6);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
+    font-size: 15px;
     font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
 }
 
-.total-value {
-    font-size: 24px;
-    font-weight: 700;
-    background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+@keyframes achievementFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
 }
 
-.coin-inner-ring {
-    position: absolute;
-    width: 85%;
-    height: 85%;
-    border: 2px solid rgba(218, 165, 32, 0.5);
-    border-radius: 50%;
-    z-index: 0;
+/* Mobile adjustments for achievement label */
+@media (max-width: 768px) {
+    .achievement-label {
+        bottom: 100px;
+        padding: 12px 24px;
+        gap: 10px;
+    }
+    
+    .achievement-icon {
+        font-size: 1.35rem;
+    }
+    
+    .achievement-text {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .achievement-label {
+        bottom: 90px;
+        padding: 10px 20px;
+        gap: 8px;
+        max-width: 90%;
+    }
+    
+    .achievement-icon {
+        font-size: 1.25rem;
+    }
+    
+    .achievement-text {
+        font-size: 13px;
+        white-space: normal;
+        text-align: center;
+    }
+}
+
+/* Remove old toast styles */
+.achievement-toast-container,
+.achievement-toast-container .toast,
+.achievement-toast-container .toast-body,
+.achievement-emoji,
+.achievement-message,
+.achievement-toast-container .btn-close-white {
+    /* Removed - no longer using Bootstrap toasts */
+}
+
+@keyframes slideInFromBottom {
+    /* Removed - no longer needed */
 }

@@ -41,19 +41,17 @@
             <div class="coin-face @(showLandingFlash ? "landing-flash" : "")">
                 <div class="coin-shine" style="@GetShineTransform()"></div>
                 <div class="coin-inner-ring"></div>
-                <img src="@GetCurrentCoinImage()" alt="Coin" draggable="false" />
+                <img src="@faceShowing" alt="Coin" draggable="false" />
             </div>
         </div>
     </div>
     
-    <!-- Achievement Notification -->
+    <!-- Achievement Label - Passive Under Playing Area -->
     @if (showAchievement)
     {
-        <div class="achievement-popup">
-            <div class="achievement-content">
-                <div class="achievement-icon">🎉</div>
-                <div class="achievement-text">@achievementText</div>
-            </div>
+        <div class="achievement-label">
+            <span class="achievement-icon">🎉</span>
+            <span class="achievement-text">@achievementText</span>
         </div>
     }
     
@@ -76,7 +74,7 @@
     window.coinDragHandler = {
         coinElement: null,
         
-        startDrag: function(centerX, centerY, baseRotationX) {
+        startDrag: function() {
             this.coinElement = document.querySelector('.coin');
             if (this.coinElement) {
                 // Remove any existing transitions for immediate response
@@ -95,11 +93,11 @@
             }
         },
         
-        resetTransform: function(rotationX, rotationY) {
+        resetTransform: function() {
             if (this.coinElement) {
-                // Re-enable transitions for smooth return
+                // Re-enable transitions for smooth return to neutral
                 this.coinElement.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
-                this.coinElement.style.transform = `rotateX(${rotationX.toFixed(2)}deg) rotateY(${rotationY.toFixed(2)}deg)`;
+                this.coinElement.style.transform = 'rotateX(0deg) rotateY(0deg)';
             }
         },
         

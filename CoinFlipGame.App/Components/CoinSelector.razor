@@ -1,4 +1,6 @@
 @using CoinFlipGame.App.Models
+@using CoinFlipGame.App.Services
+@inject UnlockProgressService UnlockProgress
 
 <div class="coin-selector-overlay @(IsVisible ? "visible" : "")" @onclick="OnClose">
     <div class="coin-selector-modal" @onclick:stopPropagation="true">
@@ -29,16 +31,41 @@
                         <div class="coin-grid">
                             @foreach (var coin in coinTypeGroup.Value)
                             {
-                                <div class="coin-option" @onclick="@(() => HandleCoinSelection(coin))">
+                                var isUnlocked = UnlockProgress.IsUnlocked(coin);
+                                var landCount = UnlockProgress.GetCoinLandCount(coin.Path);
+                                
+                                <div class="coin-option @(isUnlocked ? "" : "locked")" @onclick="@(() => HandleCoinSelection(coin))">
                                     <div class="coin-option-image-wrapper">
-                                        <img src="@coin.Path" alt="@coin.DisplayName" class="coin-option-image" />
-                                        <div class="coin-option-overlay">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                                <polyline points="20 6 9 17 4 12"></polyline>
-                                            </svg>
-                                        </div>
+                                        <img src="@coin.Path" alt="@coin.DisplayName" class="coin-option-image @(isUnlocked ? "" : "grayscale")" />
+                                        
+                                        @if (isUnlocked)
+                                        {
+                                            <div class="coin-option-overlay">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            </div>
+                                            
+                                            @if (landCount > 0)
+                                            {
+                                                <div class="coin-land-count">@landCount</div>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <div class="coin-locked-overlay">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                                </svg>
+                                            </div>
+                                        }
                                     </div>
                                     <div class="coin-option-name">@coin.DisplayName</div>
+                                    @if (!isUnlocked && coin.UnlockCondition != null)
+                                    {
+                                        <div class="coin-unlock-progress">@UnlockProgress.GetProgressDescription(coin)</div>
+                                    }
                                 </div>
                             }
                         </div>
@@ -74,6 +101,10 @@
     
     private async Task HandleCoinSelection(CoinImage coin)
     {
-        await OnCoinSelected.InvokeAsync(coin);
+        // Only allow selection if unlocked
+        if (UnlockProgress.IsUnlocked(coin))
+        {
+            await OnCoinSelected.InvokeAsync(coin);
+        }
     }
 }

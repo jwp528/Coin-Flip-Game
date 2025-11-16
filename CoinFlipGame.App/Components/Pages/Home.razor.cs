@@ -20,6 +20,9 @@ public partial class Home : ComponentBase
     [Inject]
     private CoinService CoinService { get; set; } = default!;
     
+    [Inject]
+    private UnlockProgressService UnlockProgress { get; set; } = default!;
+    
     private ElementReference coinElement;
     private bool isFlipping = false;
     private bool isDragging = false;
@@ -38,6 +41,7 @@ public partial class Home : ComponentBase
     private string selectingFor = ""; // "heads" or "tails"
     private string selectedHeadsImage = "/img/coins/logo.png";
     private string selectedTailsImage = "/img/coins/logo.png";
+    private string faceShowing = "/img/coins/logo.png"; // The current face displayed
     private Dictionary<CoinType, List<CoinImage>>? availableCoins;
     private bool showCustomizeTip = true;
     
@@ -49,7 +53,6 @@ public partial class Home : ComponentBase
     private double coinCenterY = 0;
     private double rotationX = 0;
     private double rotationY = 0;
-    private double baseRotationX = 0; // Store the coin's base rotation (0 for heads, 180 for tails)
     private double velocityY = 0;
     private double velocityX = 0;
     private DateTime? lastPointerTime = null;
@@ -57,7 +60,6 @@ public partial class Home : ComponentBase
     private const double MAX_ROTATION = 45.0;
     private const double DRAG_THRESHOLD = 50.0;
     private const double VELOCITY_THRESHOLD = 3.0;
-    private const double FRICTION = 0.95;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -66,10 +68,59 @@ public partial class Home : ComponentBase
             await JSRuntime.InvokeVoidAsync("initParticleSystem");
             await JSRuntime.InvokeVoidAsync("initCoinPhysics");
             
-            // Load available coins
-            availableCoins = await CoinService.GetAllAvailableCoinsAsync();
+            // Load available coins with unlock conditions
+            availableCoins = await LoadCoinsWithConditions();
+            
+            // Set initial face to heads
+            faceShowing = selectedHeadsImage;
             StateHasChanged();
         }
+    }
+    
+    private async Task<Dictionary<CoinType, List<CoinImage>>> LoadCoinsWithConditions()
+    {
+        var coins = await CoinService.GetAllAvailableCoinsAsync();
+        
+        // Apply unlock conditions to specific coins
+        foreach (var (coinType, coinList) in coins)
+        {
+            if (coinType is ZodiakCoinType)
+            {
+                // Example: Lock zodiac coins behind conditions
+                foreach (var coin in coinList)
+                {
+                    if (coin.Name == "Gemini.png")
+                    {
+                        coin.UnlockCondition = new UnlockCondition
+                        {
+                            Type = UnlockConditionType.TotalFlips,
+                            RequiredCount = 10,
+                            Description = "Flip 10 times to unlock"
+                        };
+                    }
+                    else if (coin.Name == "Ram.png")
+                    {
+                        coin.UnlockCondition = new UnlockCondition
+                        {
+                            Type = UnlockConditionType.HeadsFlips,
+                            RequiredCount = 20,
+                            Description = "Get 20 heads to unlock"
+                        };
+                    }
+                    else if (coin.Name == "Tauros.png")
+                    {
+                        coin.UnlockCondition = new UnlockCondition
+                        {
+                            Type = UnlockConditionType.Streak,
+                            RequiredCount = 5,
+                            Description = "Get a 5 streak to unlock"
+                        };
+                    }
+                }
+            }
+        }
+        
+        return coins;
     }
     
     private void OpenCoinSelector(string side)
@@ -87,31 +138,30 @@ public partial class Home : ComponentBase
     
     private void SelectCoin(CoinImage coin)
     {
+        // Check if coin is unlocked
+        if (!UnlockProgress.IsUnlocked(coin))
+            return; // Don't allow selection of locked coins
+        
         if (selectingFor == "heads")
         {
             selectedHeadsImage = coin.Path;
+            // Update face if currently showing heads
+            if (faceShowing == selectedHeadsImage || headsCount + tailsCount == 0)
+            {
+                faceShowing = selectedHeadsImage;
+            }
         }
         else if (selectingFor == "tails")
         {
             selectedTailsImage = coin.Path;
+            // Update face if currently showing tails
+            if (faceShowing == selectedTailsImage)
+            {
+                faceShowing = selectedTailsImage;
+            }
         }
         
         CloseCoinSelector();
-    }
-    
-    private string GetCoinDisplayName(string imagePath)
-    {
-        if (string.IsNullOrEmpty(imagePath))
-            return "Default";
-            
-        // Extract filename from path
-        var fileName = imagePath.Split('/').LastOrDefault() ?? "Default";
-        
-        // Remove extension and format
-        return fileName.Replace(".png", "")
-                      .Replace(".jpg", "")
-                      .Replace(".jpeg", "")
-                      .Replace("logo", "JP Logo");
     }
     
     private string GetCoinTransform()
@@ -121,19 +171,13 @@ public partial class Home : ComponentBase
             return "";
         }
         
-        // When dragging, apply the drag rotation
-        if (isDragging && (rotationX != 0 || rotationY != 0))
+        // Apply drag rotation
+        if (rotationX != 0 || rotationY != 0)
         {
             return $"transform: rotateX({rotationX:F2}deg) rotateY({rotationY:F2}deg);";
         }
         
         return "";
-    }
-    
-    private string GetCurrentCoinImage()
-    {
-        // Show tails when rotationX is 180, otherwise show heads
-        return (rotationX == 180) ? selectedTailsImage : selectedHeadsImage;
     }
     
     private string GetShineTransform()
@@ -168,12 +212,12 @@ public partial class Home : ComponentBase
         coinCenterX = e.ClientX;
         coinCenterY = e.ClientY;
         
-        // Store the current rotation as the base (0 for heads, 180 for tails)
-        baseRotationX = rotationX;
+        rotationX = 0;
         rotationY = 0;
         velocityX = 0;
         velocityY = 0;
         
+        await JSRuntime.InvokeVoidAsync("coinDragHandler.startDrag");
         await JSRuntime.InvokeVoidAsync("coinPhysics.startDrag", coinCenterX, coinCenterY);
         await JSRuntime.InvokeVoidAsync("triggerHaptic", "light");
     }
@@ -202,10 +246,9 @@ public partial class Home : ComponentBase
         double offsetY = currentY - coinCenterY;
         
         rotationY = Math.Clamp(offsetX * 0.25, -MAX_ROTATION, MAX_ROTATION);
-        // Add the drag rotation to the base rotation (preserves heads/tails state)
-        double dragRotationX = Math.Clamp(-offsetY * 0.25, -MAX_ROTATION, MAX_ROTATION);
-        rotationX = baseRotationX + dragRotationX;
+        rotationX = Math.Clamp(-offsetY * 0.25, -MAX_ROTATION, MAX_ROTATION);
         
+        await JSRuntime.InvokeVoidAsync("coinDragHandler.updateTransform", rotationX, rotationY);
         await JSRuntime.InvokeVoidAsync("coinPhysics.updateDrag", rotationX, rotationY, offsetX, offsetY);
     }
     
@@ -215,7 +258,6 @@ public partial class Home : ComponentBase
         
         isDragging = false;
         double deltaY = currentY - startY;
-        double deltaX = currentX - startX;
         double speed = Math.Sqrt(velocityX * velocityX + velocityY * velocityY);
         
         if (Math.Abs(deltaY) > DRAG_THRESHOLD || speed > VELOCITY_THRESHOLD)
@@ -224,10 +266,10 @@ public partial class Home : ComponentBase
         }
         else
         {
-            // Return to the base rotation (keeps coin on its current side)
-            rotationX = baseRotationX;
+            // Return to neutral position
+            rotationX = 0;
             rotationY = 0;
-            await JSRuntime.InvokeVoidAsync("coinPhysics.resetTransform");
+            await JSRuntime.InvokeVoidAsync("coinDragHandler.resetTransform");
             StateHasChanged();
         }
     }
@@ -235,10 +277,10 @@ public partial class Home : ComponentBase
     private async void OnPointerCancel(PointerEventArgs e)
     {
         isDragging = false;
-        // Return to the base rotation (keeps coin on its current side)
-        rotationX = baseRotationX;
+        // Return to neutral position
+        rotationX = 0;
         rotationY = 0;
-        await JSRuntime.InvokeVoidAsync("coinPhysics.resetTransform");
+        await JSRuntime.InvokeVoidAsync("coinDragHandler.resetTransform");
         StateHasChanged();
     }
     
@@ -269,9 +311,10 @@ public partial class Home : ComponentBase
             coinCenterY = windowSize.Height / 2;
         }
         
+        // Clear any drag transforms and ensure neutral starting position
         rotationX = 0;
         rotationY = 0;
-        await JSRuntime.InvokeVoidAsync("coinPhysics.clearTransform");
+        await JSRuntime.InvokeVoidAsync("coinDragHandler.clearTransform");
         
         Random random = new Random();
         bool isHeads = random.Next(2) == 0;
@@ -285,30 +328,16 @@ public partial class Home : ComponentBase
         
         StateHasChanged();
         
-        await Task.Delay(600); // Updated to match 0.6s animation duration
+        await Task.Delay(600); // Wait for animation to complete
         
-        // Remove animation class but keep the final rotation
+        // Remove animation class and FORCE neutral rotation
         flipResult = "";
+        rotationX = 0;  // FORCE neutral X rotation
+        rotationY = 0;  // FORCE neutral Y rotation
         
-        // Set final rotation based on result
-        // Heads = rotateX(0deg) - show front face
-        // Tails = rotateX(180deg) - show back face
-        if (isHeads)
-        {
-            rotationX = 0;  // Show heads face
-            baseRotationX = 0;
-        }
-        else
-        {
-            rotationX = 180;  // Show tails face
-            baseRotationX = 180;
-        }
-        rotationY = 0;
-        
-        StateHasChanged();
-        
-        showLandingFlash = true;
-        StateHasChanged();
+        // Update the face showing based on result
+        string landedCoinPath = isHeads ? selectedHeadsImage : selectedTailsImage;
+        faceShowing = landedCoinPath;
         
         // Update counts and streaks
         if (isHeads)
@@ -317,18 +346,32 @@ public partial class Home : ComponentBase
             tailsCount++;
             
         UpdateStreak(result);
-        await CheckAchievements();
         
-        // Trigger landing effects (pass empty object for options)
+        // Track coin landing for unlock progress
+        UnlockProgress.TrackCoinLanding(landedCoinPath, isHeads, currentStreak);
+        
+        // Explicitly reset transform via JS to ensure neutral position
+        await JSRuntime.InvokeVoidAsync("coinDragHandler.resetTransform");
+        
+        StateHasChanged();
+        
+        showLandingFlash = true;
+        StateHasChanged();
+        
+        // Trigger landing effects
         await JSRuntime.InvokeVoidAsync("triggerParticleBurst", coinCenterX, coinCenterY, 20, new { });
         await JSRuntime.InvokeVoidAsync("playLandSound");
         await JSRuntime.InvokeVoidAsync("triggerHaptic", "heavy");
         
+        // Set isFlipping to false BEFORE checking achievements so player can continue flipping
         isFlipping = false;
         
         await Task.Delay(500);
         showLandingFlash = false;
         StateHasChanged();
+        
+        // Check achievements AFTER gameplay is unlocked (non-blocking for player)
+        _ = CheckAchievements();
     }
     
     private void UpdateStreak(string result)
@@ -375,9 +418,16 @@ public partial class Home : ComponentBase
             await JSRuntime.InvokeVoidAsync("triggerConfetti", coinCenterX, coinCenterY, 60);
             await JSRuntime.InvokeVoidAsync("playAchievementSound");
             
-            await Task.Delay(3000);
+            // Auto-dismiss after 4 seconds
+            await Task.Delay(4000);
             showAchievement = false;
             StateHasChanged();
         }
+    }
+    
+    private void DismissAchievement()
+    {
+        showAchievement = false;
+        StateHasChanged();
     }
 }

@@ -71,34 +71,33 @@ public class CoinService
         
         try
         {
-            // For JP Logo (default), return the logo.png
-            if (coinType is JpLogoCoinType)
-            {
-                var logoCoins = new List<CoinImage>
-                {
-                    new CoinImage
-                    {
-                        Name = "logo.png",
-                        Path = "/img/coins/logo.png",
-                        Type = coinType
-                    }
-                };
-                _coinImageCache[cacheKey] = logoCoins;
-                return logoCoins;
-            }
+            // Get files from the coin type's registry
+            var files = coinType.GetCoinFiles();
             
-            // For other types, scan the directory using JS interop
-            var files = await _jsRuntime.InvokeAsync<string[]>("listCoinFiles", coinType.BasePath);
+            // Get unlock conditions from the coin type
+            var unlockConditions = coinType.GetUnlockConditions();
             
             var coinImages = files
                 .Where(f => f.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
                            f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
                            f.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase))
-                .Select(fileName => new CoinImage
+                .Select(fileName =>
                 {
-                    Name = fileName,
-                    Path = $"{coinType.BasePath}/{fileName}",
-                    Type = coinType
+                    var path = $"{coinType.BasePath}/{fileName}";
+                    var coinImage = new CoinImage
+                    {
+                        Name = fileName,
+                        Path = path,
+                        Type = coinType
+                    };
+                    
+                    // Apply unlock condition if one exists for this coin
+                    if (unlockConditions.TryGetValue(fileName, out var unlockCondition))
+                    {
+                        coinImage.UnlockCondition = unlockCondition;
+                    }
+                    
+                    return coinImage;
                 })
                 .ToList();
             
@@ -107,7 +106,7 @@ public class CoinService
         }
         catch
         {
-            // If directory doesn't exist or error occurs, return empty list
+            // If error occurs, return empty list
             var emptyList = new List<CoinImage>();
             _coinImageCache[cacheKey] = emptyList;
             return emptyList;
