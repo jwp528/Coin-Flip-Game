@@ -21,4 +21,9 @@ public class UnlockCondition
     /// Each coin in this list must be landed on RequiredCount times
     /// </summary>
     public List<string>? RequiredCoinPaths { get; set; }
+    
+    /// <summary>
+    /// Rarity level of the unlock, determines achievement animation style
+    /// </summary>
+    public UnlockRarity Rarity { get; set; } = UnlockRarity.Common;
 }

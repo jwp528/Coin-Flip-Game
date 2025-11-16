@@ -23,9 +23,10 @@ public class UnlockProgressService
     }
     
     /// <summary>
-    /// Track a coin landing
+    /// Track a coin landing and check for newly unlocked coins
+    /// Returns list of coins that were newly unlocked as a result of this landing
     /// </summary>
-    public void TrackCoinLanding(string coinPath, bool isHeads, int currentStreak)
+    public List<CoinImage> TrackCoinLanding(string coinPath, bool isHeads, int currentStreak, List<CoinImage> allCoins)
     {
         // Track total flips
         _totalFlips++;
@@ -47,6 +48,76 @@ public class UnlockProgressService
         _coinLandCounts[coinPath]++;
         
         SaveProgress();
+        
+        // Check for newly unlocked coins
+        return CheckNewlyUnlockedCoins(allCoins);
+    }
+    
+    /// <summary>
+    /// Check which coins have been newly unlocked based on current progress
+    /// </summary>
+    private List<CoinImage> CheckNewlyUnlockedCoins(List<CoinImage> allCoins)
+    {
+        var newlyUnlocked = new List<CoinImage>();
+        
+        foreach (var coin in allCoins)
+        {
+            // Skip if already unlocked or no unlock condition
+            if (coin.UnlockCondition == null)
+                continue;
+            
+            // Check if this coin was just unlocked
+            if (IsUnlocked(coin) && !_randomUnlockedCoins.Contains(coin.Path))
+            {
+                // For non-random unlocks, we need to check if this is the first time meeting the condition
+                bool justUnlocked = false;
+                
+                switch (coin.UnlockCondition.Type)
+                {
+                    case UnlockConditionType.TotalFlips:
+                        justUnlocked = _totalFlips == coin.UnlockCondition.RequiredCount;
+                        break;
+                    case UnlockConditionType.HeadsFlips:
+                        justUnlocked = _headsFlips == coin.UnlockCondition.RequiredCount;
+                        break;
+                    case UnlockConditionType.TailsFlips:
+                        justUnlocked = _tailsFlips == coin.UnlockCondition.RequiredCount;
+                        break;
+                    case UnlockConditionType.Streak:
+                        justUnlocked = _longestStreak == coin.UnlockCondition.RequiredCount;
+                        break;
+                    case UnlockConditionType.LandOnCoin:
+                        if (!string.IsNullOrEmpty(coin.UnlockCondition.RequiredCoinPath))
+                        {
+                            justUnlocked = _coinLandCounts.TryGetValue(coin.UnlockCondition.RequiredCoinPath, out int count)
+                                && count == coin.UnlockCondition.RequiredCount;
+                        }
+                        break;
+                    case UnlockConditionType.LandOnMultipleCoins:
+                        if (coin.UnlockCondition.RequiredCoinPaths != null)
+                        {
+                            // Check if all required coins just reached the required count
+                            justUnlocked = coin.UnlockCondition.RequiredCoinPaths.Any(path =>
+                                _coinLandCounts.TryGetValue(path, out int count) && count == coin.UnlockCondition.RequiredCount);
+                        }
+                        break;
+                }
+                
+                if (justUnlocked)
+                {
+                    newlyUnlocked.Add(coin);
+                    // Mark as seen to avoid showing again
+                    _randomUnlockedCoins.Add(coin.Path);
+                }
+            }
+        }
+        
+        if (newlyUnlocked.Any())
+        {
+            SaveProgress();
+        }
+        
+        return newlyUnlocked;
     }
     
     /// <summary>

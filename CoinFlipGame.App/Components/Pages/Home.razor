@@ -70,6 +70,12 @@
     OnClose="@CloseCoinSelector"
     OnCoinSelected="@SelectCoin" />
 
+<!-- Achievement Animation for Coin Unlocks -->
+<AchievementAnimation
+    IsVisible="@showUnlockAchievement"
+    UnlockedCoin="@currentlyUnlockedCoin"
+    OnDismiss="@DismissUnlockAchievement" />
+
 <script>
     window.coinDragHandler = {
         coinElement: null,

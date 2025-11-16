@@ -45,6 +45,11 @@ public partial class Home : ComponentBase
     private Dictionary<CoinType, List<CoinImage>>? availableCoins;
     private bool showCustomizeTip = true;
     
+    // Unlock achievement state
+    private bool showUnlockAchievement = false;
+    private CoinImage? currentlyUnlockedCoin = null;
+    private Queue<CoinImage> pendingUnlockAchievements = new Queue<CoinImage>();
+    
     private double startY = 0;
     private double currentY = 0;
     private double startX = 0;
@@ -86,7 +91,7 @@ public partial class Home : ComponentBase
         {
             if (coinType is ZodiakCoinType)
             {
-                // Example: Lock zodiac coins behind conditions
+                // Example: Lock zodiac coins behind conditions with different rarities
                 foreach (var coin in coinList)
                 {
                     if (coin.Name == "Gemini.png")
@@ -95,7 +100,8 @@ public partial class Home : ComponentBase
                         {
                             Type = UnlockConditionType.TotalFlips,
                             RequiredCount = 10,
-                            Description = "Flip 10 times to unlock"
+                            Description = "Flip 10 times to unlock",
+                            Rarity = UnlockRarity.Common
                         };
                     }
                     else if (coin.Name == "Ram.png")
@@ -104,7 +110,8 @@ public partial class Home : ComponentBase
                         {
                             Type = UnlockConditionType.HeadsFlips,
                             RequiredCount = 20,
-                            Description = "Get 20 heads to unlock"
+                            Description = "Get 20 heads to unlock",
+                            Rarity = UnlockRarity.Uncommon
                         };
                     }
                     else if (coin.Name == "Tauros.png")
@@ -113,7 +120,8 @@ public partial class Home : ComponentBase
                         {
                             Type = UnlockConditionType.Streak,
                             RequiredCount = 5,
-                            Description = "Get a 5 streak to unlock"
+                            Description = "Get a 5 streak to unlock",
+                            Rarity = UnlockRarity.Rare
                         };
                     }
                 }
@@ -347,8 +355,15 @@ public partial class Home : ComponentBase
             
         UpdateStreak(result);
         
-        // Track coin landing for unlock progress
-        UnlockProgress.TrackCoinLanding(landedCoinPath, isHeads, currentStreak);
+        // Track coin landing for unlock progress and check for newly unlocked coins
+        var allCoins = GetAllCoinsFlat();
+        var newlyUnlocked = UnlockProgress.TrackCoinLanding(landedCoinPath, isHeads, currentStreak, allCoins);
+        
+        // Queue up any newly unlocked coins for achievement display
+        foreach (var unlockedCoin in newlyUnlocked)
+        {
+            pendingUnlockAchievements.Enqueue(unlockedCoin);
+        }
         
         // Explicitly reset transform via JS to ensure neutral position
         await JSRuntime.InvokeVoidAsync("coinDragHandler.resetTransform");
@@ -372,6 +387,53 @@ public partial class Home : ComponentBase
         
         // Check achievements AFTER gameplay is unlocked (non-blocking for player)
         _ = CheckAchievements();
+        
+        // Show unlock achievements if any are pending
+        _ = ShowPendingUnlockAchievements();
+    }
+    
+    private async Task ShowPendingUnlockAchievements()
+    {
+        // Process achievements one at a time
+        while (pendingUnlockAchievements.Count > 0)
+        {
+            currentlyUnlockedCoin = pendingUnlockAchievements.Dequeue();
+            showUnlockAchievement = true;
+            StateHasChanged();
+            
+            // Wait for user to dismiss this achievement
+            while (showUnlockAchievement)
+            {
+                await Task.Delay(100);
+            }
+            
+            // Small delay between multiple achievements
+            if (pendingUnlockAchievements.Count > 0)
+            {
+                await Task.Delay(300);
+            }
+        }
+        
+        currentlyUnlockedCoin = null;
+    }
+    
+    private void DismissUnlockAchievement()
+    {
+        showUnlockAchievement = false;
+        StateHasChanged();
+    }
+    
+    private List<CoinImage> GetAllCoinsFlat()
+    {
+        var allCoins = new List<CoinImage>();
+        if (availableCoins != null)
+        {
+            foreach (var coinTypeGroup in availableCoins.Values)
+            {
+                allCoins.AddRange(coinTypeGroup);
+            }
+        }
+        return allCoins;
     }
     
     private void UpdateStreak(string result)
