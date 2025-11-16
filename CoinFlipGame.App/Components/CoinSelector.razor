@@ -1,0 +1,79 @@
+@using CoinFlipGame.App.Models
+
+<div class="coin-selector-overlay @(IsVisible ? "visible" : "")" @onclick="OnClose">
+    <div class="coin-selector-modal" @onclick:stopPropagation="true">
+        <div class="coin-selector-header">
+            <h2 class="coin-selector-title">
+                Choose @(Side == "heads" ? "Heads" : "Tails") Coin
+            </h2>
+            <button class="coin-selector-close" @onclick="OnClose">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="coin-selector-content">
+            @if (AvailableCoins != null)
+            {
+                @foreach (var coinTypeGroup in AvailableCoins)
+                {
+                    <div class="coin-type-section">
+                        <h3 class="coin-type-header">
+                            <span class="coin-type-category">@coinTypeGroup.Key.Category</span>
+                            <span class="coin-type-divider">/</span>
+                            <span class="coin-type-name">@coinTypeGroup.Key.Name</span>
+                        </h3>
+                        
+                        <div class="coin-grid">
+                            @foreach (var coin in coinTypeGroup.Value)
+                            {
+                                <div class="coin-option" @onclick="@(() => HandleCoinSelection(coin))">
+                                    <div class="coin-option-image-wrapper">
+                                        <img src="@coin.Path" alt="@coin.DisplayName" class="coin-option-image" />
+                                        <div class="coin-option-overlay">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="coin-option-name">@coin.DisplayName</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="coin-selector-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading coins...</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+    
+    [Parameter]
+    public string Side { get; set; } = "heads";
+    
+    [Parameter]
+    public Dictionary<CoinType, List<CoinImage>>? AvailableCoins { get; set; }
+    
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+    
+    [Parameter]
+    public EventCallback<CoinImage> OnCoinSelected { get; set; }
+    
+    private async Task HandleCoinSelection(CoinImage coin)
+    {
+        await OnCoinSelected.InvokeAsync(coin);
+    }
+}

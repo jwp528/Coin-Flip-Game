@@ -1,5 +1,4 @@
 ﻿@page "/"
-@rendermode InteractiveServer
 
 <PageTitle>Coin Flip Game</PageTitle>
 
@@ -7,43 +6,71 @@
      @onpointermove="OnPointerMove"
      @onpointerup="OnPointerUp"
      @onpointercancel="OnPointerCancel">
-    <div class="stats">
-        <div class="stat-item">
-            <span class="stat-label">Heads</span>
-            <span class="stat-value">@headsCount</span>
+    
+    <!-- Mobile Game Style Stats -->
+    <div class="stats-container">
+        <!-- Heads Counter - Top Left -->
+        <div class="stat-counter heads-counter" @onclick='() => OpenCoinSelector("heads")'>
+            <img src="@selectedHeadsImage" alt="Heads" class="counter-icon" />
+            <span class="counter-value">@headsCount</span>
         </div>
-        <div class="stat-item">
-            <span class="stat-label">Tails</span>
-            <span class="stat-value">@tailsCount</span>
+        
+        <!-- Tails Counter - Top Right -->
+        <div class="stat-counter tails-counter" @onclick='() => OpenCoinSelector("tails")'>
+            <img src="@selectedTailsImage" alt="Tails" class="counter-icon" />
+            <span class="counter-value">@tailsCount</span>
         </div>
+        
+        <!-- Streak Counter - Top Center -->
+        @if (currentStreak > 3)
+        {
+            <div class="streak-counter">
+                <span class="streak-icon">🔥</span>
+                <span class="streak-value">@currentStreak</span>
+            </div>
+        }
     </div>
     
+    <!-- Main Coin Container -->
     <div class="coin-container">
+        <div class="coin-glow"></div>
         <div @ref="coinElement" class="coin @flipResult @(isDragging ? "dragging" : "")" 
              @onclick="HandleClick"
              @onpointerdown="OnPointerDown"
              style="@GetCoinTransform()">
-            <div class="coin-face coin-heads @(showLandingFlash ? "landing-flash" : "")">
+            <div class="coin-face @(showLandingFlash ? "landing-flash" : "")">
                 <div class="coin-shine" style="@GetShineTransform()"></div>
-                <img src="/img/coins/logo.png" alt="Heads" draggable="false" />
-            </div>
-            <div class="coin-face coin-tails @(showLandingFlash ? "landing-flash" : "")">
-                <div class="coin-shine" style="@GetShineTransform()"></div>
-                <img src="/img/coins/logo.png" alt="Tails" draggable="false" />
+                <div class="coin-inner-ring"></div>
+                <img src="@GetCurrentCoinImage()" alt="Coin" draggable="false" />
             </div>
         </div>
     </div>
     
-    <div class="instruction-prompt">
-        <svg class="instruction-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2v20M2 12h20"/>
-        </svg>
-        <span class="instruction-text">Click or drag to flip the coin</span>
-        <svg class="instruction-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2v20M2 12h20"/>
-        </svg>
+    <!-- Achievement Notification -->
+    @if (showAchievement)
+    {
+        <div class="achievement-popup">
+            <div class="achievement-content">
+                <div class="achievement-icon">🎉</div>
+                <div class="achievement-text">@achievementText</div>
+            </div>
+        </div>
+    }
+    
+    <!-- Total Flips Counter -->
+    <div class="total-flips">
+        <span class="total-label">Total Flips</span>
+        <span class="total-value">@(headsCount + tailsCount)</span>
     </div>
 </div>
+
+<!-- Coin Selector Modal -->
+<CoinSelector 
+    IsVisible="@showCoinSelector" 
+    Side="@selectingFor"
+    AvailableCoins="@availableCoins"
+    OnClose="@CloseCoinSelector"
+    OnCoinSelected="@SelectCoin" />
 
 <script>
     window.coinDragHandler = {

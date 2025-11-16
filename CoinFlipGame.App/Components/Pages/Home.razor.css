@@ -83,21 +83,22 @@
 }
 
 .stat-label {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.7);
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     font-weight: 600;
 }
 
 .stat-value {
-    font-size: 42px;
-    font-weight: 700;
+    font-size: 28px;
+    font-weight: 800;
     background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     text-shadow: 0 2px 20px rgba(255, 255, 255, 0.3);
+    line-height: 1;
 }
 
 /* Coin Container & Coin */
@@ -110,6 +111,27 @@
     perspective: 1000px;
     pointer-events: none;
     z-index: 2;
+}
+
+.coin-glow {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%);
+    pointer-events: none;
+    animation: glowPulse 3s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.4;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.6;
+    }
 }
 
 .coin {
@@ -143,7 +165,7 @@
 
 .coin.flip-heads,
 .coin.flip-tails {
-    animation: coinFlipWeighted 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    animation: coinFlipWeighted 0.6s cubic-bezier(0.33, 0.0, 0.2, 1) forwards;
     pointer-events: none;
     cursor: default;
     transition: none !important;
@@ -153,13 +175,12 @@
     animation-name: coinFlipWeightedTails;
 }
 
-/* Coin Face & Edge Styling */
+/* Coin Face & Edge Styling - SIMPLIFIED VERSION */
 .coin-face {
     position: absolute;
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    backface-visibility: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -171,6 +192,7 @@
         inset 0 -2px 4px rgba(0, 0, 0, 0.2);
     border: 2px solid #e6c200;
     overflow: hidden;
+    transition: opacity 0.1s;
 }
 
 .coin::before {
@@ -254,7 +276,7 @@
 
 .flip-heads .coin-shine,
 .flip-tails .coin-shine {
-    animation: shineFlipWeighted 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    animation: shineFlipWeighted 0.6s cubic-bezier(0.33, 0.0, 0.2, 1) forwards;
 }
 
 .coin-face img {
@@ -268,75 +290,384 @@
     z-index: 1;
 }
 
-.coin-heads {
-    transform: rotateX(0deg) translateZ(5px);
-}
-
-.coin-tails {
-    transform: rotateX(180deg) translateZ(5px);
-}
-
-/* Instruction Prompt */
-.instruction-prompt {
+/* Premium Stats Display */
+.stats-container {
     position: absolute;
-    bottom: 80px;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    z-index: 100;
+    pointer-events: none;
+}
+
+/* Individual Stat Counters */
+.stat-counter {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    pointer-events: auto;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.stat-counter:hover {
+    background: rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 215, 0, 0.3);
+    transform: scale(1.02);
+}
+
+.stat-counter:active {
+    transform: scale(0.98);
+}
+
+/* Heads Counter - Top Left */
+.heads-counter {
+    top: 20px;
+    left: 20px;
+}
+
+/* Tails Counter - Top Right */
+.tails-counter {
+    top: 20px;
+    right: 20px;
+}
+
+/* Counter Icon */
+.counter-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 215, 0, 0.7);
+    box-shadow: 
+        0 0 8px rgba(255, 215, 0, 0.4),
+        inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+    padding: 2px;
+}
+
+/* Counter Value */
+.counter-value {
+    font-size: 26px;
+    font-weight: 900;
+    color: white;
+    text-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.7),
+        0 0 12px rgba(255, 255, 255, 0.3);
+    font-variant-numeric: tabular-nums;
+    min-width: 32px;
+    letter-spacing: -0.5px;
+}
+
+/* Streak Counter - Top Center */
+.streak-counter {
+    position: absolute;
+    top: 20px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 16px 32px;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border-radius: 50px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 6px;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.95), rgba(239, 68, 68, 0.95));
+    backdrop-filter: blur(12px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    z-index: 10;
-    animation: fadeInUp 1s ease-out 0.5s both, floatPrompt 3s ease-in-out infinite;
+        0 4px 16px rgba(251, 146, 60, 0.5),
+        0 2px 4px rgba(0, 0, 0, 0.3);
+    animation: streakPulse 2s ease-in-out infinite;
 }
 
-.instruction-text {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
+@keyframes streakPulse {
+    0%, 100% {
+        box-shadow: 
+            0 4px 16px rgba(251, 146, 60, 0.5),
+            0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    50% {
+        box-shadow: 
+            0 6px 24px rgba(251, 146, 60, 0.7),
+            0 2px 4px rgba(0, 0, 0, 0.3);
+    }
 }
 
+.streak-icon {
+    font-size: 20px;
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+    animation: streakFlicker 1.5s ease-in-out infinite;
+}
+
+@keyframes streakFlicker {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.streak-value {
+    font-size: 20px;
+    font-weight: 900;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+    letter-spacing: -0.5px;
+}
+
+/* Remove all old stat styling and instruction prompt styles */
+.stat-item,
+.stat-icon-wrapper,
+.stat-icon-img,
+.stat-count,
+.streak-badge,
+.streak-fire,
+.streak-count,
+.instruction-prompt,
+.instruction-container,
+.instruction-glass,
+.instruction-text,
 .instruction-icon {
-    width: 18px;
-    height: 18px;
-    color: rgba(255, 255, 255, 0.6);
-    animation: pulse 2s ease-in-out infinite;
+    /* Old styles removed */
 }
 
-/* Animations */
+/* Responsive Design - Minimal Stats */
+@media (max-width: 768px) {
+    .stats-container {
+        top: 16px;
+        gap: 24px;
+    }
+    
+    .coin {
+        width: 220px;
+        height: 220px;
+    }
+    
+    .coin-flip-game::after {
+        width: 500px;
+        height: 500px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-container {
+        top: 12px;
+        gap: 20px;
+    }
+    
+    .coin {
+        width: 180px;
+        height: 180px;
+    }
+    
+    .coin-flip-game::after {
+        width: 400px;
+        height: 400px;
+    }
+    
+    .total-flips {
+        bottom: 30px;
+        right: 20px;
+        padding: 12px 16px;
+    }
+    
+    .total-value {
+        font-size: 20px;
+    }
+}
+
+/* Mobile Responsive - Game Style */
+@media (max-width: 768px) {
+    .stat-counter {
+        padding: 6px 12px;
+        border-radius: 20px;
+    }
+    
+    .heads-counter {
+        top: 16px;
+        left: 16px;
+    }
+    
+    .tails-counter {
+        top: 16px;
+        right: 16px;
+    }
+    
+    .counter-icon {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .counter-value {
+        font-size: 22px;
+        min-width: 28px;
+    }
+    
+    .streak-counter {
+        top: 16px;
+        padding: 6px 12px;
+    }
+    
+    .streak-icon {
+        font-size: 18px;
+    }
+    
+    .streak-value {
+        font-size: 18px;
+    }
+    
+    .coin {
+        width: 200px;
+        height: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-counter {
+        padding: 6px 10px;
+        gap: 6px;
+    }
+    
+    .heads-counter {
+        top: 12px;
+        left: 12px;
+    }
+    
+    .tails-counter {
+        top: 12px;
+        right: 12px;
+    }
+    
+    .counter-icon {
+        width: 28px;
+        height: 28px;
+        border-width: 2px;
+    }
+    
+    .counter-value {
+        font-size: 20px;
+        min-width: 24px;
+    }
+    
+    .streak-counter {
+        top: 12px;
+        padding: 5px 10px;
+        gap: 5px;
+    }
+    
+    .streak-icon {
+        font-size: 16px;
+    }
+    
+    .streak-value {
+        font-size: 16px;
+    }
+    
+    .coin {
+        width: 180px;
+        height: 180px;
+    }
+}
+
+@media (max-width: 360px) {
+    .stat-counter {
+        padding: 4px 8px;
+        gap: 4px;
+    }
+    
+    .counter-icon {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .counter-value {
+        font-size: 18px;
+        min-width: 20px;
+    }
+    
+    .streak-counter {
+        padding: 4px 8px;
+        gap: 4px;
+    }
+    
+    .streak-icon {
+        font-size: 14px;
+    }
+    
+    .streak-value {
+        font-size: 14px;
+    }
+}
+
+/* Coin Flip Animations - FASTER & SMOOTHER (BOTTOM OVER TOP) */
 @keyframes coinFlipWeighted {
-    0% { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
-    15% { transform: translateY(-120px) rotateX(540deg) rotateY(0deg); }
-    35% { transform: translateY(-160px) rotateX(1440deg) rotateY(0deg); }
-    50% { transform: translateY(-170px) rotateX(2160deg) rotateY(0deg); }
-    65% { transform: translateY(-130px) rotateX(2880deg) rotateY(0deg); }
-    80% { transform: translateY(-40px) rotateX(3420deg) rotateY(0deg); }
-    88% { transform: translateY(-15px) rotateX(3540deg) rotateY(0deg); }
-    94% { transform: translateY(-5px) rotateX(3580deg) rotateY(0deg); }
-    97% { transform: translateY(-2px) rotateX(3595deg) rotateY(0deg); }
-    100% { transform: translateY(0) rotateX(3600deg) rotateY(0deg); }
+    0% { 
+        transform: translateY(0) rotateX(0deg) rotateY(0deg);
+    }
+    10% {
+        transform: translateY(-70px) rotateX(200deg) rotateY(-20deg);
+    }
+    20% {
+        transform: translateY(-130px) rotateX(400deg) rotateY(-12deg);
+    }
+    35% {
+        transform: translateY(-170px) rotateX(700deg) rotateY(-5deg);
+    }
+    50% {
+        transform: translateY(-185px) rotateX(1000deg) rotateY(0deg);
+    }
+    65% {
+        transform: translateY(-170px) rotateX(1300deg) rotateY(5deg);
+    }
+    80% {
+        transform: translateY(-80px) rotateX(1600deg) rotateY(8deg);
+    }
+    90% {
+        transform: translateY(-20px) rotateX(1740deg) rotateY(3deg);
+    }
+    97% {
+        transform: translateY(-3px) rotateX(1790deg) rotateY(1deg);
+    }
+    100% { 
+        transform: translateY(0) rotateX(1800deg) rotateY(0deg);
+    }
 }
 
 @keyframes coinFlipWeightedTails {
-    0% { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
-    15% { transform: translateY(-120px) rotateX(540deg) rotateY(0deg); }
-    35% { transform: translateY(-160px) rotateX(1440deg) rotateY(0deg); }
-    50% { transform: translateY(-170px) rotateX(2160deg) rotateY(0deg); }
-    65% { transform: translateY(-130px) rotateX(2880deg) rotateY(0deg); }
-    80% { transform: translateY(-40px) rotateX(3420deg) rotateY(0deg); }
-    88% { transform: translateY(-15px) rotateX(3540deg) rotateY(0deg); }
-    94% { transform: translateY(-5px) rotateX(3580deg) rotateY(0deg); }
-    97% { transform: translateY(-2px) rotateX(3595deg) rotateY(0deg); }
-    100% { transform: translateY(0) rotateX(3780deg) rotateY(0deg); }
+    0% { 
+        transform: translateY(0) rotateX(0deg) rotateY(0deg);
+    }
+    10% {
+        transform: translateY(-70px) rotateX(200deg) rotateY(-20deg);
+    }
+    20% {
+        transform: translateY(-130px) rotateX(400deg) rotateY(-12deg);
+    }
+    35% {
+        transform: translateY(-170px) rotateX(700deg) rotateY(-5deg);
+    }
+    50% {
+        transform: translateY(-185px) rotateX(1000deg) rotateY(0deg);
+    }
+    65% {
+        transform: translateY(-170px) rotateX(1300deg) rotateY(5deg);
+    }
+    80% {
+        transform: translateY(-80px) rotateX(1600deg) rotateY(8deg);
+    }
+    90% {
+        transform: translateY(-20px) rotateX(1920deg) rotateY(3deg);
+    }
+    97% {
+        transform: translateY(-3px) rotateX(1970deg) rotateY(1deg);
+    }
+    100% { 
+        transform: translateY(0) rotateX(1980deg) rotateY(0deg);
+    }
 }
 
 @keyframes flashSweep {
@@ -377,17 +708,17 @@
 @keyframes fadeInUp {
     0% {
         opacity: 0;
-        transform: translateX(-50%) translateY(20px);
+        transform: translateY(20px);
     }
     100% {
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translateY(0);
     }
 }
 
 @keyframes floatPrompt {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-8px); }
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
 }
 
 @keyframes pulse {
@@ -401,90 +732,127 @@
     }
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-    .coin {
-        width: 220px;
-        height: 220px;
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
     }
-    
-    .stats {
-        top: 30px;
-        gap: 40px;
-    }
-    
-    .stat-item {
-        padding: 16px 32px;
-    }
-    
-    .stat-value {
-        font-size: 32px;
-    }
-    
-    .stat-label {
-        font-size: 11px;
-    }
-    
-    .instruction-prompt {
-        bottom: 60px;
-        padding: 12px 24px;
-    }
-    
-    .instruction-text {
-        font-size: 12px;
-    }
-    
-    .instruction-icon {
-        width: 16px;
-        height: 16px;
-    }
-    
-    .coin-flip-game::after {
-        width: 500px;
-        height: 500px;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
-@media (max-width: 480px) {
-    .coin {
-        width: 180px;
-        height: 180px;
+/* Achievement Animations */
+.achievement-popup {
+    position: fixed;
+    top: 120px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-150%);
+    z-index: 1000;
+    animation: achievementSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+               achievementSlideOut 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) 2.5s forwards;
+}
+
+.achievement-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 36px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(5, 150, 105, 0.95) 100%);
+    backdrop-filter: blur(10px);
+    border-radius: 50px;
+    border: 2px solid rgba(16, 185, 129, 0.5);
+    box-shadow: 
+        0 8px 32px rgba(16, 185, 129, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.achievement-icon {
+    font-size: 32px;
+    animation: achievementBounce 0.8s ease-in-out infinite;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.achievement-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    letter-spacing: 0.5px;
+}
+
+@keyframes achievementSlideIn {
+    from {
+        transform: translateX(-50%) translateY(-150%);
+        opacity: 0;
     }
-    
-    .stats {
-        gap: 30px;
-        top: 20px;
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
     }
-    
-    .stat-item {
-        padding: 12px 24px;
+}
+
+@keyframes achievementSlideOut {
+    from {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
     }
-    
-    .stat-value {
-        font-size: 28px;
+    to {
+        transform: translateX(-50%) translateY(-150%);
+        opacity: 0;
     }
-    
-    .stat-label {
-        font-size: 10px;
-    }
-    
-    .instruction-prompt {
-        bottom: 40px;
-        padding: 10px 20px;
-        gap: 8px;
-    }
-    
-    .instruction-text {
-        font-size: 11px;
-    }
-    
-    .instruction-icon {
-        width: 14px;
-        height: 14px;
-    }
-    
-    .coin-flip-game::after {
-        width: 400px;
-        height: 400px;
-    }
+}
+
+@keyframes achievementBounce {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.2) rotate(-5deg); }
+    50% { transform: scale(0.9) rotate(5deg); }
+    75% { transform: scale(1.1) rotate(-3deg); }
+}
+
+/* Total Flips Counter */
+.total-flips {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    padding: 16px 24px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    z-index: 10;
+}
+
+.total-label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 600;
+}
+
+.total-value {
+    font-size: 24px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.coin-inner-ring {
+    position: absolute;
+    width: 85%;
+    height: 85%;
+    border: 2px solid rgba(218, 165, 32, 0.5);
+    border-radius: 50%;
+    z-index: 0;
 }
