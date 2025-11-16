@@ -1,6 +1,6 @@
 using CoinFlipGame.App.Models;
 using CoinFlipGame.App.Models.Unlocks;
-using System.Text.Json;
+using Blazored.LocalStorage;
 
 namespace CoinFlipGame.App.Services;
 
@@ -10,18 +10,33 @@ namespace CoinFlipGame.App.Services;
 public class UnlockProgressService
 {
     private const string StorageKey = "coinUnlockProgress";
+    private readonly ILocalStorageService? _localStorage;
     private Dictionary<string, int> _coinLandCounts = new();
-    private HashSet<string> _randomUnlockedCoins = new(); // Track coins unlocked via random chance
-    private HashSet<string> _notificationShownFor = new(); // Track which coins we've already shown notifications for
+    private HashSet<string> _randomUnlockedCoins = new();
+    private HashSet<string> _notificationShownFor = new();
     private int _totalFlips = 0;
     private int _headsFlips = 0;
     private int _tailsFlips = 0;
     private int _longestStreak = 0;
     private Random _random = new();
+    private bool _isInitialized = false;
     
-    public UnlockProgressService()
+    public UnlockProgressService(ILocalStorageService localStorage)
     {
-        LoadProgress();
+        _localStorage = localStorage;
+    }
+    
+    /// <summary>
+    /// Initialize and load progress from localStorage
+    /// Must be called from a component's OnAfterRenderAsync
+    /// </summary>
+    public async Task InitializeAsync()
+    {
+        if (_isInitialized)
+            return;
+            
+        await LoadProgressAsync();
+        _isInitialized = true;
     }
     
     /// <summary>
@@ -30,29 +45,37 @@ public class UnlockProgressService
     /// </summary>
     public List<CoinImage> TrackCoinLanding(string coinPath, bool isHeads, int currentStreak, List<CoinImage> allCoins)
     {
-        // Track total flips
-        _totalFlips++;
-        
-        // Track heads/tails
-        if (isHeads)
-            _headsFlips++;
-        else
-            _tailsFlips++;
-        
-        // Track streak
-        if (currentStreak > _longestStreak)
-            _longestStreak = currentStreak;
-        
-        // Track specific coin landings
-        if (!_coinLandCounts.ContainsKey(coinPath))
-            _coinLandCounts[coinPath] = 0;
-        
-        _coinLandCounts[coinPath]++;
-        
-        SaveProgress();
-        
-        // Check for newly unlocked coins
-        return CheckNewlyUnlockedCoins(allCoins);
+        try
+        {
+            // Track total flips
+            _totalFlips++;
+            
+            // Track heads/tails
+            if (isHeads)
+                _headsFlips++;
+            else
+                _tailsFlips++;
+            
+            // Track streak
+            if (currentStreak > _longestStreak)
+                _longestStreak = currentStreak;
+            
+            // Track specific coin landings
+            if (!_coinLandCounts.ContainsKey(coinPath))
+                _coinLandCounts[coinPath] = 0;
+            
+            _coinLandCounts[coinPath]++;
+            
+            _ = SaveProgressAsync(); // Fire and forget
+            
+            // Check for newly unlocked coins
+            return CheckNewlyUnlockedCoins(allCoins ?? new List<CoinImage>());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in TrackCoinLanding: {ex.Message}");
+            return new List<CoinImage>();
+        }
     }
     
     /// <summary>
@@ -62,68 +85,83 @@ public class UnlockProgressService
     {
         var newlyUnlocked = new List<CoinImage>();
         
-        foreach (var coin in allCoins)
+        try
         {
-            // Skip if already unlocked or no unlock condition
-            if (coin.UnlockCondition == null)
-                continue;
+            if (allCoins == null || !allCoins.Any())
+                return newlyUnlocked;
             
-            // Skip if we've already shown notification for this coin
-            if (_notificationShownFor.Contains(coin.Path))
-                continue;
-            
-            // Check if coin is now unlocked
-            if (!IsUnlocked(coin))
-                continue;
-            
-            // Don't show notification for random chance coins here - they're handled in TryRandomUnlocks
-            if (coin.UnlockCondition.Type == UnlockConditionType.RandomChance)
-                continue;
-            
-            // Check if this is the exact moment the coin was unlocked
-            bool justUnlocked = false;
-            
-            switch (coin.UnlockCondition.Type)
+            foreach (var coin in allCoins)
             {
-                case UnlockConditionType.TotalFlips:
-                    justUnlocked = _totalFlips == coin.UnlockCondition.RequiredCount;
-                    break;
-                case UnlockConditionType.HeadsFlips:
-                    justUnlocked = _headsFlips == coin.UnlockCondition.RequiredCount;
-                    break;
-                case UnlockConditionType.TailsFlips:
-                    justUnlocked = _tailsFlips == coin.UnlockCondition.RequiredCount;
-                    break;
-                case UnlockConditionType.Streak:
-                    justUnlocked = _longestStreak == coin.UnlockCondition.RequiredCount;
-                    break;
-                case UnlockConditionType.LandOnCoin:
-                    if (!string.IsNullOrEmpty(coin.UnlockCondition.RequiredCoinPath))
-                    {
-                        justUnlocked = _coinLandCounts.TryGetValue(coin.UnlockCondition.RequiredCoinPath, out int count)
-                            && count == coin.UnlockCondition.RequiredCount;
-                    }
-                    break;
-                case UnlockConditionType.LandOnMultipleCoins:
-                    if (coin.UnlockCondition.RequiredCoinPaths != null)
-                    {
-                        // Check if all required coins just reached the required count
-                        justUnlocked = coin.UnlockCondition.RequiredCoinPaths.Any(path =>
-                            _coinLandCounts.TryGetValue(path, out int count) && count == coin.UnlockCondition.RequiredCount);
-                    }
-                    break;
+                if (coin == null)
+                    continue;
+                    
+                // Skip if already unlocked or no unlock condition
+                if (coin.UnlockCondition == null)
+                    continue;
+                
+                // Skip if we've already shown notification for this coin
+                if (_notificationShownFor.Contains(coin.Path))
+                    continue;
+                
+                // Check if coin is now unlocked
+                if (!IsUnlocked(coin))
+                    continue;
+                
+                // Don't show notification for random chance coins here - they're handled in TryRandomUnlocks
+                if (coin.UnlockCondition.Type == UnlockConditionType.RandomChance)
+                    continue;
+                
+                // Check if this is the exact moment the coin was unlocked
+                bool justUnlocked = false;
+                
+                switch (coin.UnlockCondition.Type)
+                {
+                    case UnlockConditionType.TotalFlips:
+                        justUnlocked = _totalFlips == coin.UnlockCondition.RequiredCount;
+                        break;
+                    case UnlockConditionType.HeadsFlips:
+                        justUnlocked = _headsFlips == coin.UnlockCondition.RequiredCount;
+                        break;
+                    case UnlockConditionType.TailsFlips:
+                        justUnlocked = _tailsFlips == coin.UnlockCondition.RequiredCount;
+                        break;
+                    case UnlockConditionType.Streak:
+                        justUnlocked = _longestStreak == coin.UnlockCondition.RequiredCount;
+                        break;
+                    case UnlockConditionType.LandOnCoin:
+                        if (!string.IsNullOrEmpty(coin.UnlockCondition.RequiredCoinPath))
+                        {
+                            justUnlocked = _coinLandCounts.TryGetValue(coin.UnlockCondition.RequiredCoinPath, out int count)
+                                && count == coin.UnlockCondition.RequiredCount;
+                        }
+                        break;
+                    case UnlockConditionType.LandOnMultipleCoins:
+                        if (coin.UnlockCondition.RequiredCoinPaths != null && coin.UnlockCondition.RequiredCoinPaths.Any())
+                        {
+                            // Check if all required coins just reached the required count
+                            justUnlocked = coin.UnlockCondition.RequiredCoinPaths.Any(path =>
+                                !string.IsNullOrEmpty(path) && 
+                                _coinLandCounts.TryGetValue(path, out int count) && 
+                                count == coin.UnlockCondition.RequiredCount);
+                        }
+                        break;
+                }
+                
+                if (justUnlocked)
+                {
+                    newlyUnlocked.Add(coin);
+                    _notificationShownFor.Add(coin.Path);
+                }
             }
             
-            if (justUnlocked)
+            if (newlyUnlocked.Any())
             {
-                newlyUnlocked.Add(coin);
-                _notificationShownFor.Add(coin.Path);
+                _ = SaveProgressAsync(); // Fire and forget
             }
         }
-        
-        if (newlyUnlocked.Any())
+        catch (Exception ex)
         {
-            SaveProgress();
+            Console.WriteLine($"Error in CheckNewlyUnlockedCoins: {ex.Message}");
         }
         
         return newlyUnlocked;
@@ -179,80 +217,94 @@ public class UnlockProgressService
     /// </summary>
     public List<CoinImage> TryRandomUnlocks(string usedCoinPath, List<CoinImage> allCoins, double unlockChanceMultiplier = 1.0)
     {
-        var newlyUnlocked = new List<CoinImage>();
-        
-        foreach (var coin in allCoins)
+        try
         {
-            // Skip if already unlocked
-            if (IsUnlocked(coin))
-                continue;
+            var newlyUnlocked = new List<CoinImage>();
             
-            // Check if this is a random unlock coin
-            if (coin.UnlockCondition?.Type == UnlockConditionType.RandomChance)
+            if (allCoins == null || !allCoins.Any())
+                return newlyUnlocked;
+            
+            foreach (var coin in allCoins)
             {
-                // Check prerequisites first
-                if (coin.UnlockCondition.Prerequisites != null && coin.UnlockCondition.Prerequisites.Any())
+                if (coin == null)
+                    continue;
+                    
+                // Skip if already unlocked
+                if (IsUnlocked(coin))
+                    continue;
+                
+                // Check if this is a random unlock coin
+                if (coin.UnlockCondition?.Type == UnlockConditionType.RandomChance)
                 {
-                    bool prerequisitesMet = true;
-                    foreach (var prerequisite in coin.UnlockCondition.Prerequisites)
+                    // Check prerequisites first
+                    if (coin.UnlockCondition.Prerequisites != null && coin.UnlockCondition.Prerequisites.Any())
                     {
-                        if (!IsConditionMet(prerequisite, coin.Path))
+                        bool prerequisitesMet = true;
+                        foreach (var prerequisite in coin.UnlockCondition.Prerequisites)
                         {
-                            prerequisitesMet = false;
-                            break;
+                            if (prerequisite == null || !IsConditionMet(prerequisite, coin.Path))
+                            {
+                                prerequisitesMet = false;
+                                break;
+                            }
                         }
+                        
+                        if (!prerequisitesMet)
+                            continue; // Prerequisites not met, skip this coin
                     }
                     
-                    if (!prerequisitesMet)
-                        continue; // Prerequisites not met, skip this coin
-                }
-                
-                // For coins that require active selection (like Dragon_Rare)
-                bool shouldRoll = false;
-                if (coin.UnlockCondition.RequiresActiveCoin)
-                {
-                    // Only roll if the required coin is being used
-                    shouldRoll = coin.UnlockCondition.RequiredCoinPath == usedCoinPath;
-                }
-                else
-                {
-                    // For coins without active requirement, always roll if prerequisites are met
-                    shouldRoll = true;
-                }
-                
-                if (shouldRoll)
-                {
-                    // Apply unlock chance multiplier for super flips
-                    double effectiveChance = coin.UnlockCondition.UnlockChance * unlockChanceMultiplier;
-                    
-                    // Roll for unlock
-                    if (_random.NextDouble() <= effectiveChance)
+                    // For coins that require active selection (like Dragon_Rare)
+                    bool shouldRoll = false;
+                    if (coin.UnlockCondition.RequiresActiveCoin)
                     {
-                        _randomUnlockedCoins.Add(coin.Path);
-                        _notificationShownFor.Add(coin.Path);
-                        newlyUnlocked.Add(coin);
+                        // Only roll if the required coin is being used
+                        shouldRoll = coin.UnlockCondition.RequiredCoinPath == usedCoinPath;
+                    }
+                    else
+                    {
+                        // For coins without active requirement, always roll if prerequisites are met
+                        shouldRoll = true;
+                    }
+                    
+                    if (shouldRoll)
+                    {
+                        // Apply unlock chance multiplier for super flips
+                        double effectiveChance = coin.UnlockCondition.UnlockChance * unlockChanceMultiplier;
+                        
+                        // Roll for unlock
+                        if (_random.NextDouble() <= effectiveChance)
+                        {
+                            _randomUnlockedCoins.Add(coin.Path);
+                            _notificationShownFor.Add(coin.Path);
+                            newlyUnlocked.Add(coin);
+                        }
                     }
                 }
             }
+            
+            if (newlyUnlocked.Any())
+            {
+                _ = SaveProgressAsync(); // Fire and forget
+            }
+            
+            return newlyUnlocked;
         }
-        
-        if (newlyUnlocked.Any())
+        catch (Exception ex)
         {
-            SaveProgress();
+            Console.WriteLine($"Error in TryRandomUnlocks: {ex.Message}");
+            return new List<CoinImage>();
         }
-        
-        return newlyUnlocked;
     }
     
     /// <summary>
     /// Manually unlock a coin (for testing or special events)
     /// </summary>
-    public void UnlockCoin(string coinPath)
+    public async Task UnlockCoinAsync(string coinPath)
     {
         if (!_randomUnlockedCoins.Contains(coinPath))
         {
             _randomUnlockedCoins.Add(coinPath);
-            SaveProgress();
+            await SaveProgressAsync();
         }
     }
     
@@ -357,11 +409,14 @@ public class UnlockProgressService
         return $"{completedCoins}/{condition.RequiredCoinPaths.Count} coins completed ({condition.RequiredCount} each)";
     }
     
-    private void SaveProgress()
+    private async Task SaveProgressAsync()
     {
         try
         {
-            var data = new
+            if (_localStorage == null)
+                return;
+                
+            var progress = new UserProgress
             {
                 TotalFlips = _totalFlips,
                 HeadsFlips = _headsFlips,
@@ -372,33 +427,44 @@ public class UnlockProgressService
                 NotificationShownFor = _notificationShownFor.ToList()
             };
             
-            var json = JsonSerializer.Serialize(data);
-            // Note: In WebAssembly, we'd use localStorage via JSInterop
-            // For now, this is just in-memory during the session
+            await _localStorage.SetItemAsync(StorageKey, progress);
         }
-        catch
+        catch (Exception ex)
         {
-            // Silent fail for now
+            Console.WriteLine($"Error saving progress: {ex.Message}");
         }
     }
     
-    private void LoadProgress()
+    private async Task LoadProgressAsync()
     {
         try
         {
-            // Note: In WebAssembly, we'd load from localStorage via JSInterop
-            // For now, start fresh each session
+            if (_localStorage == null)
+                return;
+                
+            var progress = await _localStorage.GetItemAsync<UserProgress>(StorageKey);
+            
+            if (progress != null)
+            {
+                _totalFlips = progress.TotalFlips;
+                _headsFlips = progress.HeadsFlips;
+                _tailsFlips = progress.TailsFlips;
+                _longestStreak = progress.LongestStreak;
+                _coinLandCounts = progress.CoinLandCounts ?? new Dictionary<string, int>();
+                _randomUnlockedCoins = progress.RandomUnlockedCoins?.ToHashSet() ?? new HashSet<string>();
+                _notificationShownFor = progress.NotificationShownFor?.ToHashSet() ?? new HashSet<string>();
+            }
         }
-        catch
+        catch (Exception ex)
         {
-            // Silent fail - start with defaults
+            Console.WriteLine($"Error loading progress: {ex.Message}");
         }
     }
     
     /// <summary>
     /// Reset all progress (for testing or user request)
     /// </summary>
-    public void ResetProgress()
+    public async Task ResetProgressAsync()
     {
         _coinLandCounts.Clear();
         _randomUnlockedCoins.Clear();
@@ -407,6 +473,6 @@ public class UnlockProgressService
         _headsFlips = 0;
         _tailsFlips = 0;
         _longestStreak = 0;
-        SaveProgress();
+        await SaveProgressAsync();
     }
 }

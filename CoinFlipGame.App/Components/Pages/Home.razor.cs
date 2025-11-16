@@ -4,6 +4,7 @@ using Microsoft.JSInterop;
 using CoinFlipGame.App.Services;
 using CoinFlipGame.App.Models;
 using CoinFlipGame.App.Models.Unlocks;
+using Blazored.LocalStorage;
 
 namespace CoinFlipGame.App.Components.Pages;
 
@@ -23,6 +24,11 @@ public partial class Home : ComponentBase
     
     [Inject]
     private UnlockProgressService UnlockProgress { get; set; } = default!;
+    
+    [Inject]
+    private ILocalStorageService LocalStorage { get; set; } = default!;
+    
+    private const string CoinSelectionKey = "coinSelectionPreferences";
     
     private ElementReference coinElement;
     private bool isFlipping = false;
@@ -84,11 +90,23 @@ public partial class Home : ComponentBase
             await JSRuntime.InvokeVoidAsync("initParticleSystem");
             await JSRuntime.InvokeVoidAsync("initCoinPhysics");
             
+            // Initialize UnlockProgressService
+            await UnlockProgress.InitializeAsync();
+            
+            // Load coin selection preferences
+            await LoadCoinSelectionPreferencesAsync();
+            
             // Load available coins with unlock conditions
             availableCoins = await LoadCoinsWithConditions();
             
             // Set initial face to heads
             faceShowing = selectedHeadsImage;
+            
+            // Load user progress stats into local state
+            headsCount = UnlockProgress.GetHeadsFlips();
+            tailsCount = UnlockProgress.GetTailsFlips();
+            longestStreak = UnlockProgress.GetLongestStreak();
+            
             StateHasChanged();
         }
     }
@@ -112,7 +130,7 @@ public partial class Home : ComponentBase
         selectingFor = "";
     }
     
-    private void SelectCoin(CoinImage coin)
+    private async void SelectCoin(CoinImage coin)
     {
         // Check if coin is unlocked
         if (!UnlockProgress.IsUnlocked(coin))
@@ -139,6 +157,7 @@ public partial class Home : ComponentBase
             }
         }
         
+        await SaveCoinSelectionPreferencesAsync();
         CloseCoinSelector();
     }
     
@@ -205,12 +224,19 @@ public partial class Home : ComponentBase
         velocityX = 0;
         velocityY = 0;
         
-        // Start super flip charging
-        StartSuperFlipCharge();
+        // Start super flip charging (fire and forget is OK here since it has its own error handling)
+        _ = StartSuperFlipCharge();
         
-        await JSRuntime.InvokeVoidAsync("coinDragHandler.startDrag");
-        await JSRuntime.InvokeVoidAsync("coinPhysics.startDrag", coinCenterX, coinCenterY);
-        await JSRuntime.InvokeVoidAsync("triggerHaptic", "light");
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("coinDragHandler.startDrag");
+            await JSRuntime.InvokeVoidAsync("coinPhysics.startDrag", coinCenterX, coinCenterY);
+            await JSRuntime.InvokeVoidAsync("triggerHaptic", "light");
+        }
+        catch (JSException)
+        {
+            // JS call failed, continue anyway
+        }
     }
     
     private async Task OnPointerMove(PointerEventArgs e)
@@ -454,13 +480,25 @@ public partial class Home : ComponentBase
     private List<CoinImage> GetAllCoinsFlat()
     {
         var allCoins = new List<CoinImage>();
-        if (availableCoins != null)
+        
+        try
         {
+            if (availableCoins == null)
+                return allCoins;
+            
             foreach (var coinTypeGroup in availableCoins.Values)
             {
-                allCoins.AddRange(coinTypeGroup);
+                if (coinTypeGroup != null && coinTypeGroup.Any())
+                {
+                    allCoins.AddRange(coinTypeGroup.Where(c => c != null));
+                }
             }
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in GetAllCoinsFlat: {ex.Message}");
+        }
+        
         return allCoins;
     }
     
@@ -521,7 +559,7 @@ public partial class Home : ComponentBase
         StateHasChanged();
     }
     
-    private void SelectRandomOption()
+    private async void SelectRandomOption()
     {
         if (selectingFor == "heads")
         {
@@ -536,68 +574,96 @@ public partial class Home : ComponentBase
             selectedTailsImage = "/img/coins/logo.png"; // Fallback display
         }
         
+        await SaveCoinSelectionPreferencesAsync();
         CloseCoinSelector();
     }
     
     private CoinImage? GetRandomCoinByRarity()
     {
-        // Get all unlocked coins
-        var unlockedCoins = GetAllCoinsFlat()
-            .Where(c => UnlockProgress.IsUnlocked(c))
-            .ToList();
-        
-        if (!unlockedCoins.Any())
-            return null;
-        
-        // Calculate total weight based on rarity
-        // Rarity weights: Common=1, Uncommon=0.5, Rare=0.25, Legendary=0.1
-        var weightedCoins = unlockedCoins.Select(coin =>
-        {
-            double weight = (coin.UnlockCondition?.Rarity ?? UnlockRarity.Common) switch
-            {
-                UnlockRarity.Common => 1.0,
-                UnlockRarity.Uncommon => 0.5,
-                UnlockRarity.Rare => 0.25,
-                UnlockRarity.Legendary => 0.1,
-                _ => 1.0
-            };
-            return new { Coin = coin, Weight = weight };
-        }).ToList();
-        
-        double totalWeight = weightedCoins.Sum(wc => wc.Weight);
-        Random random = new Random();
-        double randomValue = random.NextDouble() * totalWeight;
-        
-        // Select coin based on weighted random
-        double cumulativeWeight = 0;
-        foreach (var weightedCoin in weightedCoins)
-        {
-            cumulativeWeight += weightedCoin.Weight;
-            if (randomValue <= cumulativeWeight)
-            {
-                return weightedCoin.Coin;
-            }
-        }
-        
-        // Fallback to last coin (shouldn't happen)
-        return weightedCoins.Last().Coin;
-    }
-    
-    private async void StartSuperFlipCharge()
-    {
-        chargeStartTime = DateTime.Now;
-        isSuperFlipCharging = true;
-        isSuperFlipReady = false;
-        
-        // Cancel any existing charge timer
-        chargeCancellationTokenSource?.Cancel();
-        chargeCancellationTokenSource = new CancellationTokenSource();
-        
         try
         {
-            // Update UI every 100ms for smooth progress bar
-            while (isSuperFlipCharging && !chargeCancellationTokenSource.Token.IsCancellationRequested)
+            // Get all unlocked coins
+            var unlockedCoins = GetAllCoinsFlat()
+                .Where(c => c != null && UnlockProgress.IsUnlocked(c))
+                .ToList();
+            
+            if (unlockedCoins == null || !unlockedCoins.Any())
+                return null;
+            
+            // Calculate total weight based on rarity
+            // Rarity weights: Common=1, Uncommon=0.5, Rare=0.25, Legendary=0.1
+            var weightedCoins = unlockedCoins.Select(coin =>
             {
+                double weight = (coin.UnlockCondition?.Rarity ?? UnlockRarity.Common) switch
+                {
+                    UnlockRarity.Common => 1.0,
+                    UnlockRarity.Uncommon => 0.5,
+                    UnlockRarity.Rare => 0.25,
+                    UnlockRarity.Legendary => 0.1,
+                    _ => 1.0
+                };
+                return new { Coin = coin, Weight = weight };
+            }).Where(wc => wc != null && wc.Coin != null).ToList();
+            
+            if (weightedCoins == null || !weightedCoins.Any())
+                return unlockedCoins.FirstOrDefault();
+            
+            double totalWeight = weightedCoins.Sum(wc => wc.Weight);
+            
+            // Handle edge case where total weight might be 0
+            if (totalWeight <= 0)
+                return weightedCoins.FirstOrDefault()?.Coin;
+            
+            Random random = new Random();
+            double randomValue = random.NextDouble() * totalWeight;
+            
+            // Select coin based on weighted random
+            double cumulativeWeight = 0;
+            foreach (var weightedCoin in weightedCoins)
+            {
+                if (weightedCoin == null || weightedCoin.Coin == null)
+                    continue;
+                    
+                cumulativeWeight += weightedCoin.Weight;
+                if (randomValue <= cumulativeWeight)
+                {
+                    return weightedCoin.Coin;
+                }
+            }
+            
+            // Fallback to first coin (shouldn't happen, but prevents index out of range)
+            return weightedCoins.FirstOrDefault()?.Coin;
+        }
+        catch (Exception ex)
+        {
+            // Log error for debugging
+            Console.WriteLine($"Error in GetRandomCoinByRarity: {ex.Message}");
+            // Return null to fall back to selected coin
+            return null;
+        }
+    }
+    
+    private async Task StartSuperFlipCharge()
+    {
+        try
+        {
+            chargeStartTime = DateTime.Now;
+            isSuperFlipCharging = true;
+            isSuperFlipReady = false;
+            
+            // Cancel any existing charge timer
+            chargeCancellationTokenSource?.Cancel();
+            chargeCancellationTokenSource?.Dispose();
+            chargeCancellationTokenSource = new CancellationTokenSource();
+            
+            var token = chargeCancellationTokenSource.Token;
+            
+            // Update UI every 100ms for smooth progress bar
+            while (isSuperFlipCharging && !token.IsCancellationRequested)
+            {
+                if (!chargeStartTime.HasValue)
+                    break;
+                    
                 double elapsed = (DateTime.Now - chargeStartTime.Value).TotalMilliseconds;
                 
                 if (elapsed >= SUPER_FLIP_CHARGE_TIME && !isSuperFlipReady)
@@ -605,30 +671,109 @@ public partial class Home : ComponentBase
                     isSuperFlipReady = true;
                     isSuperFlipCharging = false;
                     
-                    // Trigger visual shake and haptic feedback
-                    await JSRuntime.InvokeVoidAsync("coinDragHandler.startShake");
-                    await JSRuntime.InvokeVoidAsync("triggerHaptic", "heavy");
+                    try
+                    {
+                        // Trigger visual shake and haptic feedback
+                        if (!token.IsCancellationRequested)
+                        {
+                            await JSRuntime.InvokeVoidAsync("coinDragHandler.startShake");
+                            await JSRuntime.InvokeVoidAsync("triggerHaptic", "heavy");
+                        }
+                    }
+                    catch (JSException)
+                    {
+                        // JS call failed, ignore and continue
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // Component disposed, ignore
+                    }
+                    
                     await InvokeAsync(StateHasChanged);
                     break;
                 }
                 
-                await InvokeAsync(StateHasChanged);
-                await Task.Delay(100, chargeCancellationTokenSource.Token);
+                // Update UI less frequently to reduce overhead
+                if ((int)elapsed % 50 == 0)
+                {
+                    await InvokeAsync(StateHasChanged);
+                }
+                
+                await Task.Delay(50, token);
             }
         }
         catch (TaskCanceledException)
         {
             // Expected when cancellation is requested
         }
+        catch (ObjectDisposedException)
+        {
+            // Component was disposed, clean up
+            isSuperFlipCharging = false;
+            isSuperFlipReady = false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in StartSuperFlipCharge: {ex.Message}");
+            isSuperFlipCharging = false;
+            isSuperFlipReady = false;
+        }
     }
     
     private void StopSuperFlipCharge()
     {
-        chargeCancellationTokenSource?.Cancel();
-        chargeCancellationTokenSource?.Dispose();
-        chargeCancellationTokenSource = null;
-        isSuperFlipCharging = false;
-        isSuperFlipReady = false;
-        chargeStartTime = null;
+        try
+        {
+            chargeCancellationTokenSource?.Cancel();
+            chargeCancellationTokenSource?.Dispose();
+            chargeCancellationTokenSource = null;
+            isSuperFlipCharging = false;
+            isSuperFlipReady = false;
+            chargeStartTime = null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in StopSuperFlipCharge: {ex.Message}");
+        }
+    }
+    
+    private async Task SaveCoinSelectionPreferencesAsync()
+    {
+        try
+        {
+            var preferences = new CoinSelectionPreferences
+            {
+                SelectedHeadsImage = selectedHeadsImage,
+                SelectedTailsImage = selectedTailsImage,
+                IsHeadsRandom = isHeadsRandom,
+                IsTailsRandom = isTailsRandom
+            };
+            
+            await LocalStorage.SetItemAsync(CoinSelectionKey, preferences);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving coin selection preferences: {ex.Message}");
+        }
+    }
+    
+    private async Task LoadCoinSelectionPreferencesAsync()
+    {
+        try
+        {
+            var preferences = await LocalStorage.GetItemAsync<CoinSelectionPreferences>(CoinSelectionKey);
+            
+            if (preferences != null)
+            {
+                selectedHeadsImage = preferences.SelectedHeadsImage;
+                selectedTailsImage = preferences.SelectedTailsImage;
+                isHeadsRandom = preferences.IsHeadsRandom;
+                isTailsRandom = preferences.IsTailsRandom;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading coin selection preferences: {ex.Message}");
+        }
     }
 }

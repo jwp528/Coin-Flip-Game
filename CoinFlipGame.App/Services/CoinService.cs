@@ -20,7 +20,9 @@ public class CoinService
         {
             new JpLogoCoinType(),
             new ZodiakCoinType(),
-            new CartoonCoinType()
+            new AchievementCoinType(),
+            new RandomCoinType(),
+            new LeatherCoinType()
         };
         _coinImageCache = new Dictionary<string, List<CoinImage>>();
     }

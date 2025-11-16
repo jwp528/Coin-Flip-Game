@@ -2,6 +2,10 @@
 @using CoinFlipGame.App.Models
 @using CoinFlipGame.App.Models.Unlocks
 
+<HeadContent>
+    <title>Coin Flip Game</title>
+</HeadContent>
+
 <div class="coin-flip-game" 
      @onpointermove="OnPointerMove"
      @onpointerup="OnPointerUp"
@@ -45,26 +49,6 @@
                 <img src="@faceShowing" alt="Coin" draggable="false" />
             </div>
         </div>
-        
-        <!-- Super Flip Charging Indicator -->
-        @if (isSuperFlipCharging || isSuperFlipReady)
-        {
-            <div class="super-flip-indicator @(isSuperFlipReady ? "ready" : "")">
-                @if (isSuperFlipReady)
-                {
-                    <span class="super-flip-text">⚡ SUPER FLIP READY! ⚡</span>
-                }
-                else
-                {
-                    <div class="super-flip-progress">
-                        <span class="super-flip-label">Charging Super Flip...</span>
-                        <div class="super-flip-bar">
-                            <div class="super-flip-fill" style="width: @GetChargeProgress()%"></div>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
     </div>
 </div>
 
