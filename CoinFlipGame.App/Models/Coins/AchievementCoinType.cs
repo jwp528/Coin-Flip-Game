@@ -104,7 +104,9 @@ public class AchievementCoinType : CoinType
                     "/img/coins/AI/Achievements/10Flips.png",
                     "/img/coins/AI/Achievements/25Flips.png",
                     "/img/coins/AI/Achievements/50Flips.png",
-                    "/img/coins/AI/Achievements/100Flips.png"
+                    "/img/coins/AI/Achievements/100Flips.png",
+                    "/img/coins/AI/Achievements/500Flips.png",
+                    "/img/coins/AI/Achievements/1000Flips.png"
                 },
                 Description = "Unlock all other coins in the game",
                 Rarity = UnlockRarity.Legendary
