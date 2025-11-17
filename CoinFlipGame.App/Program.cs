@@ -11,6 +11,6 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<CoinService>();
-builder.Services.AddSingleton<UnlockProgressService>(); // Singleton to persist across page lifecycle
+builder.Services.AddScoped<UnlockProgressService>(); // Scoped to allow consumption of scoped ILocalStorageService
 
 await builder.Build().RunAsync();
