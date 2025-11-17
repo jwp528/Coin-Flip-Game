@@ -135,7 +135,7 @@ public class ZodiakCoinType : CoinType
                 Type = UnlockConditionType.RandomChance, 
                 RequiredCount = 1,
                 RequiredCoinPath = "/img/coins/AI/Zodiak/Dragon.png",
-                UnlockChance = 0.0005, // 0.05% chance
+                UnlockChance = 0.05,
                 Description = "0.05% chance when Dragon coin is selected",
                 Rarity = UnlockRarity.Legendary,
                 RequiresActiveCoin = true, // Only rolls when Dragon is actively selected

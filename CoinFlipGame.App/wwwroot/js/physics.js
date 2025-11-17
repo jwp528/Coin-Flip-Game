@@ -66,6 +66,18 @@ window.triggerHaptic = function(intensity) {
             case 'heavy':
                 navigator.vibrate([30, 10, 30]);
                 break;
+            case 'super-ready':
+                // Powerful pulse for super flip ready
+                navigator.vibrate([50, 30, 50, 30, 80]);
+                break;
+            case 'super-flip':
+                // Sustained vibration during super flip
+                navigator.vibrate([100, 20, 100]);
+                break;
+            case 'landing':
+                // Impact vibration for coin landing
+                navigator.vibrate([40, 15, 20]);
+                break;
         }
     }
 };

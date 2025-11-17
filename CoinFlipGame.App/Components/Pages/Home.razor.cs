@@ -59,7 +59,7 @@ public partial class Home : ComponentBase
     private bool isSuperFlipReady = false;
     private DateTime? chargeStartTime = null;
     private const double SUPER_FLIP_CHARGE_TIME = 1500; // 1.5 seconds (reduced from 3 seconds)
-    private const double SUPER_FLIP_UNLOCK_MULTIPLIER = 2.0; // Double unlock chance
+    private const double SUPER_FLIP_UNLOCK_MULTIPLIER = 10.0; // 10x unlock chance for random chance coins
     private CancellationTokenSource? chargeCancellationTokenSource = null;
     
     // Unlock achievement state
@@ -350,6 +350,12 @@ public partial class Home : ComponentBase
         await JSRuntime.InvokeVoidAsync("playFlipSound");
         await JSRuntime.InvokeVoidAsync("triggerHaptic", "medium");
         
+        // Add special haptic for super flip
+        if (isSuperFlip)
+        {
+            await JSRuntime.InvokeVoidAsync("triggerHaptic", "super-flip");
+        }
+        
         StateHasChanged();
         
         // Wait for animation duration (shorter for super flip)
@@ -381,9 +387,6 @@ public partial class Home : ComponentBase
             landedCoinPath = isHeads ? selectedHeadsImage : selectedTailsImage;
         }
         
-        // Update the face showing based on result
-        faceShowing = landedCoinPath;
-        
         // Update counts and streaks
         if (isHeads)
             headsCount++;
@@ -400,6 +403,16 @@ public partial class Home : ComponentBase
         double unlockMultiplier = isSuperFlip ? SUPER_FLIP_UNLOCK_MULTIPLIER : 1.0;
         var randomUnlocked = UnlockProgress.TryRandomUnlocks(landedCoinPath, allCoins, unlockMultiplier);
         newlyUnlocked.AddRange(randomUnlocked);
+        
+        // If a coin was unlocked, show it as the landed face for added effect
+        if (newlyUnlocked != null && newlyUnlocked.Any())
+        {
+            // Use the first unlocked coin as the display face
+            landedCoinPath = newlyUnlocked.First().Path;
+        }
+        
+        // Update the face showing based on result (or unlocked coin)
+        faceShowing = landedCoinPath;
         
         // Queue up any newly unlocked coins for achievement display
         foreach (var unlockedCoin in newlyUnlocked)
@@ -418,7 +431,7 @@ public partial class Home : ComponentBase
         // Trigger landing effects (bigger burst for super flip)
         int burstCount = isSuperFlip ? 40 : 20;
         await JSRuntime.InvokeVoidAsync("triggerParticleBurst", coinCenterX, coinCenterY, burstCount, new { });
-        await JSRuntime.InvokeVoidAsync("triggerHaptic", "heavy");
+        await JSRuntime.InvokeVoidAsync("triggerHaptic", "landing");
         
         // Set isFlipping to false BEFORE checking achievements so player can continue flipping
         isFlipping = false;
@@ -677,7 +690,7 @@ public partial class Home : ComponentBase
                         if (!token.IsCancellationRequested)
                         {
                             await JSRuntime.InvokeVoidAsync("coinDragHandler.startShake");
-                            await JSRuntime.InvokeVoidAsync("triggerHaptic", "heavy");
+                            await JSRuntime.InvokeVoidAsync("triggerHaptic", "super-ready");
                         }
                     }
                     catch (JSException)
