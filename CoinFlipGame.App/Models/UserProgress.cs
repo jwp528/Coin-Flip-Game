@@ -21,9 +21,19 @@ public class UserProgress
     public int TailsFlips { get; set; }
     
     /// <summary>
-    /// Longest streak achieved
+    /// Longest streak achieved (any side - legacy)
     /// </summary>
     public int LongestStreak { get; set; }
+    
+    /// <summary>
+    /// Longest heads streak achieved
+    /// </summary>
+    public int LongestHeadsStreak { get; set; }
+    
+    /// <summary>
+    /// Longest tails streak achieved
+    /// </summary>
+    public int LongestTailsStreak { get; set; }
     
     /// <summary>
     /// Dictionary tracking how many times each coin has been landed on

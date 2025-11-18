@@ -18,6 +18,8 @@ public class UnlockProgressService
     private int _headsFlips = 0;
     private int _tailsFlips = 0;
     private int _longestStreak = 0;
+    private int _longestHeadsStreak = 0;
+    private int _longestTailsStreak = 0;
     private Random _random = new();
     private bool _isInitialized = false;
     
@@ -52,11 +54,21 @@ public class UnlockProgressService
             
             // Track heads/tails
             if (isHeads)
+            {
                 _headsFlips++;
+                // Update heads streak
+                if (currentStreak > _longestHeadsStreak)
+                    _longestHeadsStreak = currentStreak;
+            }
             else
+            {
                 _tailsFlips++;
+                // Update tails streak
+                if (currentStreak > _longestTailsStreak)
+                    _longestTailsStreak = currentStreak;
+            }
             
-            // Track streak
+            // Track overall streak (any side)
             if (currentStreak > _longestStreak)
                 _longestStreak = currentStreak;
             
@@ -126,7 +138,19 @@ public class UnlockProgressService
                         justUnlocked = _tailsFlips == coin.UnlockCondition.RequiredCount;
                         break;
                     case UnlockConditionType.Streak:
-                        justUnlocked = _longestStreak == coin.UnlockCondition.RequiredCount;
+                        // Check if streak side is specified
+                        if (coin.UnlockCondition.StreakSide.HasValue)
+                        {
+                            if (coin.UnlockCondition.StreakSide.Value == Models.Unlocks.StreakSide.Heads)
+                                justUnlocked = _longestHeadsStreak == coin.UnlockCondition.RequiredCount;
+                            else
+                                justUnlocked = _longestTailsStreak == coin.UnlockCondition.RequiredCount;
+                        }
+                        else
+                        {
+                            // Legacy: any streak
+                            justUnlocked = _longestStreak == coin.UnlockCondition.RequiredCount;
+                        }
                         break;
                     case UnlockConditionType.LandOnCoin:
                         if (!string.IsNullOrEmpty(coin.UnlockCondition.RequiredCoinPath))
@@ -203,12 +227,28 @@ public class UnlockProgressService
             UnlockConditionType.TotalFlips => _totalFlips >= condition.RequiredCount,
             UnlockConditionType.HeadsFlips => _headsFlips >= condition.RequiredCount,
             UnlockConditionType.TailsFlips => _tailsFlips >= condition.RequiredCount,
-            UnlockConditionType.Streak => _longestStreak >= condition.RequiredCount,
+            UnlockConditionType.Streak => CheckStreakCondition(condition),
             UnlockConditionType.LandOnCoin => CheckLandOnCoinCondition(condition),
             UnlockConditionType.RandomChance => _randomUnlockedCoins.Contains(coinPath),
             UnlockConditionType.LandOnMultipleCoins => CheckLandOnMultipleCoinsCondition(condition),
             _ => false
         };
+    }
+    
+    private bool CheckStreakCondition(UnlockCondition condition)
+    {
+        if (condition.StreakSide.HasValue)
+        {
+            if (condition.StreakSide.Value == Models.Unlocks.StreakSide.Heads)
+                return _longestHeadsStreak >= condition.RequiredCount;
+            else
+                return _longestTailsStreak >= condition.RequiredCount;
+        }
+        else
+        {
+            // Legacy: any streak
+            return _longestStreak >= condition.RequiredCount;
+        }
     }
     
     /// <summary>
@@ -363,6 +403,16 @@ public class UnlockProgressService
     public int GetLongestStreak() => _longestStreak;
     
     /// <summary>
+    /// Get longest heads streak
+    /// </summary>
+    public int GetLongestHeadsStreak() => _longestHeadsStreak;
+    
+    /// <summary>
+    /// Get longest tails streak
+    /// </summary>
+    public int GetLongestTailsStreak() => _longestTailsStreak;
+    
+    /// <summary>
     /// Get progress description for a locked coin
     /// </summary>
     public string GetProgressDescription(CoinImage coin)
@@ -375,12 +425,27 @@ public class UnlockProgressService
             UnlockConditionType.TotalFlips => $"{_totalFlips}/{coin.UnlockCondition.RequiredCount} flips",
             UnlockConditionType.HeadsFlips => $"{_headsFlips}/{coin.UnlockCondition.RequiredCount} heads",
             UnlockConditionType.TailsFlips => $"{_tailsFlips}/{coin.UnlockCondition.RequiredCount} tails",
-            UnlockConditionType.Streak => $"{_longestStreak}/{coin.UnlockCondition.RequiredCount} streak",
+            UnlockConditionType.Streak => GetStreakProgress(coin.UnlockCondition),
             UnlockConditionType.LandOnCoin => GetLandOnCoinProgress(coin.UnlockCondition),
             UnlockConditionType.RandomChance => $"Random unlock ({coin.UnlockCondition.UnlockChance * 100:F3}% chance)",
             UnlockConditionType.LandOnMultipleCoins => GetLandOnMultipleCoinsProgress(coin.UnlockCondition),
             _ => "Locked"
         };
+    }
+    
+    private string GetStreakProgress(UnlockCondition condition)
+    {
+        if (condition.StreakSide.HasValue)
+        {
+            if (condition.StreakSide.Value == Models.Unlocks.StreakSide.Heads)
+                return $"{_longestHeadsStreak}/{condition.RequiredCount} heads streak";
+            else
+                return $"{_longestTailsStreak}/{condition.RequiredCount} tails streak";
+        }
+        else
+        {
+            return $"{_longestStreak}/{condition.RequiredCount} streak";
+        }
     }
     
     private string GetLandOnCoinProgress(UnlockCondition condition)
@@ -422,6 +487,8 @@ public class UnlockProgressService
                 HeadsFlips = _headsFlips,
                 TailsFlips = _tailsFlips,
                 LongestStreak = _longestStreak,
+                LongestHeadsStreak = _longestHeadsStreak,
+                LongestTailsStreak = _longestTailsStreak,
                 CoinLandCounts = _coinLandCounts,
                 RandomUnlockedCoins = _randomUnlockedCoins.ToList(),
                 NotificationShownFor = _notificationShownFor.ToList()
@@ -450,6 +517,8 @@ public class UnlockProgressService
                 _headsFlips = progress.HeadsFlips;
                 _tailsFlips = progress.TailsFlips;
                 _longestStreak = progress.LongestStreak;
+                _longestHeadsStreak = progress.LongestHeadsStreak;
+                _longestTailsStreak = progress.LongestTailsStreak;
                 _coinLandCounts = progress.CoinLandCounts ?? new Dictionary<string, int>();
                 _randomUnlockedCoins = progress.RandomUnlockedCoins?.ToHashSet() ?? new HashSet<string>();
                 _notificationShownFor = progress.NotificationShownFor?.ToHashSet() ?? new HashSet<string>();
@@ -473,6 +542,8 @@ public class UnlockProgressService
         _headsFlips = 0;
         _tailsFlips = 0;
         _longestStreak = 0;
+        _longestHeadsStreak = 0;
+        _longestTailsStreak = 0;
         await SaveProgressAsync();
     }
 }

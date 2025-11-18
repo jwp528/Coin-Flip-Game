@@ -1,6 +1,15 @@
 namespace CoinFlipGame.App.Models.Unlocks;
 
 /// <summary>
+/// Specifies which side a streak must be on
+/// </summary>
+public enum StreakSide
+{
+    Heads,
+    Tails
+}
+
+/// <summary>
 /// Defines unlock conditions for a coin image
 /// </summary>
 public class UnlockCondition
@@ -39,4 +48,10 @@ public class UnlockCondition
     /// Example: Dragon_Rare only rolls when Dragon coin is selected as heads/tails
     /// </summary>
     public bool RequiresActiveCoin { get; set; } = false;
+    
+    /// <summary>
+    /// For Streak type - specifies which side (Heads or Tails) the streak must be on.
+    /// If null, any streak counts (legacy behavior).
+    /// </summary>
+    public StreakSide? StreakSide { get; set; } = null;
 }
