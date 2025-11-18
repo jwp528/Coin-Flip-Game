@@ -108,61 +108,52 @@
     font-size: 1rem;
     color: rgba(255, 255, 255, 0.85);
     line-height: 1.6;
-    margin-bottom: 32px;
+    margin-bottom: 20px;
 }
 
-.about-features {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 32px;
-}
-
-.feature-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.9);
+.about-instructions {
     font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.5;
+    margin-bottom: 20px;
 }
 
-.feature-icon {
-    font-size: 1.5rem;
-    line-height: 1;
+.about-github-info {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.5;
+    margin-bottom: 16px;
 }
 
 .about-links {
     margin-bottom: 32px;
 }
 
-.about-link {
+.about-link-icon {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 24px;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    padding: 12px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
+    border-radius: 50%;
     color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
     transition: all 0.3s ease;
-    font-weight: 500;
 }
 
-.about-link:hover {
+.about-link-icon:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(129, 140, 248, 0.5);
     color: #818cf8;
-    transform: translateY(-2px);
+    transform: translateY(-2px) scale(1.05);
 }
 
-.about-link svg {
-    width: 20px;
-    height: 20px;
+.about-link-icon svg {
+    width: 32px;
+    height: 32px;
 }
 
 .about-danger-zone {
@@ -265,12 +256,20 @@
         font-size: 1.4rem;
     }
     
-    .about-description {
+    .about-description,
+    .about-instructions,
+    .about-github-info {
         font-size: 0.9rem;
     }
     
-    .feature-item {
-        font-size: 0.85rem;
+    .about-link-icon {
+        width: 48px;
+        height: 48px;
         padding: 10px;
+    }
+    
+    .about-link-icon svg {
+        width: 28px;
+        height: 28px;
     }
 }
