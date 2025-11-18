@@ -28,7 +28,16 @@ public partial class Home : ComponentBase
     [Inject]
     private ILocalStorageService LocalStorage { get; set; } = default!;
     
+    [Inject]
+    private ILogger<Home> Logger { get; set; } = default!;
+
+    [Parameter]
+    public string? referrer { get; set; }
+
     private const string CoinSelectionKey = "coinSelectionPreferences";
+    private const string SoundPreferenceKey = "soundEnabled";
+    private const string FirstTimeKey = "hasSeenGame";
+    private const string ReferrerAppliedKey = "referrerBonusApplied";
     
     private ElementReference coinElement;
     private bool isFlipping = false;
@@ -42,6 +51,11 @@ public partial class Home : ComponentBase
     private string lastResult = "";
     private bool showAchievement = false;
     private string achievementText = "";
+    
+    // UI state
+    private bool showAboutModal = false;
+    private bool isSoundEnabled = true;
+    private bool showFirstTimeHint = false;
     
     // Coin customization state
     private bool showCoinSelector = false;
@@ -96,8 +110,17 @@ public partial class Home : ComponentBase
             // Load coin selection preferences
             await LoadCoinSelectionPreferencesAsync();
             
-            // Load available coins with unlock conditions
+            // Load sound preference
+            await LoadSoundPreferenceAsync();
+            
+            // Check if first time user
+            await CheckFirstTimeUser();
+            
+            // Load available coins with unlock conditions BEFORE applying referrer bonus
             availableCoins = await LoadCoinsWithConditions();
+            
+            // Apply referrer bonus if applicable (after coins are loaded)
+            await ApplyReferrerBonusAsync();
             
             // Set initial face to heads
             faceShowing = selectedHeadsImage;
@@ -115,6 +138,61 @@ public partial class Home : ComponentBase
     {
         var coins = await CoinService.GetAllAvailableCoinsAsync();
         return coins;
+    }
+    
+    private async Task CheckFirstTimeUser()
+    {
+        try
+        {
+            var hasSeenGame = await LocalStorage.GetItemAsync<bool>(FirstTimeKey);
+            if (!hasSeenGame && headsCount == 0 && tailsCount == 0)
+            {
+                showFirstTimeHint = true;
+                await LocalStorage.SetItemAsync(FirstTimeKey, true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error checking first time user");
+        }
+    }
+    
+    private async Task LoadSoundPreferenceAsync()
+    {
+        try
+        {
+            var soundEnabled = await LocalStorage.GetItemAsync<bool?>(SoundPreferenceKey);
+            isSoundEnabled = soundEnabled ?? true; // Default to enabled
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading sound preference");
+            isSoundEnabled = true;
+        }
+    }
+    
+    private async Task ToggleSound()
+    {
+        isSoundEnabled = !isSoundEnabled;
+        await LocalStorage.SetItemAsync(SoundPreferenceKey, isSoundEnabled);
+        await JSRuntime.InvokeVoidAsync("setSoundEnabled", isSoundEnabled);
+        StateHasChanged();
+    }
+    
+    private void OpenAboutModal()
+    {
+        showAboutModal = true;
+    }
+    
+    private void CloseAboutModal()
+    {
+        showAboutModal = false;
+    }
+    
+    private async Task HandleDataCleared()
+    {
+        // Reload the page after data is cleared
+        await JSRuntime.InvokeVoidAsync("location.reload");
     }
     
     private void OpenCoinSelector(string side)
@@ -209,6 +287,13 @@ public partial class Home : ComponentBase
     {
         if (isFlipping) return;
         
+        // Hide first time hint once user interacts
+        if (showFirstTimeHint)
+        {
+            showFirstTimeHint = false;
+            StateHasChanged();
+        }
+        
         isDragging = true;
         startY = e.ClientY;
         currentY = e.ClientY;
@@ -231,7 +316,11 @@ public partial class Home : ComponentBase
         {
             await JSRuntime.InvokeVoidAsync("coinDragHandler.startDrag");
             await JSRuntime.InvokeVoidAsync("coinPhysics.startDrag", coinCenterX, coinCenterY);
-            await JSRuntime.InvokeVoidAsync("triggerHaptic", "light");
+            
+            if (isSoundEnabled)
+            {
+                await JSRuntime.InvokeVoidAsync("triggerHaptic", "light");
+            }
         }
         catch (JSException)
         {
@@ -348,12 +437,16 @@ public partial class Home : ComponentBase
         int particleCount = isSuperFlip ? 30 : 15;
         await JSRuntime.InvokeVoidAsync("triggerSparkle", coinCenterX, coinCenterY, particleCount);
         await JSRuntime.InvokeVoidAsync("playFlipSound");
-        await JSRuntime.InvokeVoidAsync("triggerHaptic", "medium");
         
-        // Add special haptic for super flip
-        if (isSuperFlip)
+        if (isSoundEnabled)
         {
-            await JSRuntime.InvokeVoidAsync("triggerHaptic", "super-flip");
+            await JSRuntime.InvokeVoidAsync("triggerHaptic", "medium");
+            
+            // Add special haptic for super flip
+            if (isSuperFlip)
+            {
+                await JSRuntime.InvokeVoidAsync("triggerHaptic", "super-flip");
+            }
         }
         
         StateHasChanged();
@@ -509,7 +602,7 @@ public partial class Home : ComponentBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in GetAllCoinsFlat: {ex.Message}");
+            Logger.LogError(ex, "Error in GetAllCoinsFlat");
         }
         
         return allCoins;
@@ -650,7 +743,7 @@ public partial class Home : ComponentBase
         catch (Exception ex)
         {
             // Log error for debugging
-            Console.WriteLine($"Error in GetRandomCoinByRarity: {ex.Message}");
+            Logger.LogError(ex, "Error in GetRandomCoinByRarity");
             // Return null to fall back to selected coin
             return null;
         }
@@ -727,7 +820,7 @@ public partial class Home : ComponentBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in StartSuperFlipCharge: {ex.Message}");
+            Logger.LogError(ex, "Error in StartSuperFlipCharge");
             isSuperFlipCharging = false;
             isSuperFlipReady = false;
         }
@@ -746,7 +839,7 @@ public partial class Home : ComponentBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in StopSuperFlipCharge: {ex.Message}");
+            Logger.LogError(ex, "Error in StopSuperFlipCharge");
         }
     }
     
@@ -766,7 +859,7 @@ public partial class Home : ComponentBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error saving coin selection preferences: {ex.Message}");
+            Logger.LogError(ex, "Error saving coin selection preferences");
         }
     }
     
@@ -786,7 +879,57 @@ public partial class Home : ComponentBase
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading coin selection preferences: {ex.Message}");
+            Logger.LogError(ex, "Error loading coin selection preferences");
+        }
+    }
+    
+    private async Task ApplyReferrerBonusAsync()
+    {
+        try
+        {
+            // Check if referrer parameter is provided and not empty
+            if (string.IsNullOrWhiteSpace(referrer))
+                return;
+            
+            // Check if referrer bonus has already been applied
+            var bonusApplied = await LocalStorage.GetItemAsync<bool>(ReferrerAppliedKey);
+            if (bonusApplied)
+            {
+                Logger.LogInformation("Referrer bonus already applied");
+                return;
+            }
+            
+            // Check if user already has flips (don't apply bonus if they've already played)
+            if (UnlockProgress.GetTotalFlips() > 0)
+            {
+                Logger.LogInformation("User already has flips, not applying referrer bonus");
+                return;
+            }
+            
+            // Apply 10 flips: 5 heads and 5 tails
+            var allCoins = GetAllCoinsFlat();
+            string defaultCoin = "/img/coins/logo.png";
+            
+            // Apply 5 heads flips
+            for (int i = 0; i < 5; i++)
+            {
+                UnlockProgress.TrackCoinLanding(defaultCoin, true, 1, allCoins);
+            }
+            
+            // Apply 5 tails flips
+            for (int i = 0; i < 5; i++)
+            {
+                UnlockProgress.TrackCoinLanding(defaultCoin, false, 1, allCoins);
+            }
+            
+            // Mark referrer bonus as applied
+            await LocalStorage.SetItemAsync(ReferrerAppliedKey, true);
+            
+            Logger.LogInformation("Referrer bonus applied: 10 flips (5 heads, 5 tails)");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error applying referrer bonus");
         }
     }
 }

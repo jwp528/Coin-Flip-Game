@@ -251,6 +251,11 @@ class AudioSystem {
         this.isMuted = !this.isMuted;
         return this.isMuted;
     }
+    
+    // Set mute state directly
+    setMuted(muted) {
+        this.isMuted = muted;
+    }
 }
 
 // Initialize global audio system
@@ -297,4 +302,10 @@ window.setAudioVolume = function(volume) {
 window.toggleAudioMute = function() {
     const audio = window.initAudioSystem();
     return audio.toggleMute();
+};
+
+// Set sound enabled/disabled
+window.setSoundEnabled = function(enabled) {
+    const audio = window.initAudioSystem();
+    audio.setMuted(!enabled);
 };

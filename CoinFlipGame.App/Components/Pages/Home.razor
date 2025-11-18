@@ -1,4 +1,4 @@
-﻿@page "/"
+﻿@page "/{referrer?}"
 @using CoinFlipGame.App.Models
 @using CoinFlipGame.App.Models.Unlocks
 
@@ -11,18 +11,56 @@
      @onpointerup="OnPointerUp"
      @onpointercancel="OnPointerCancel">
     
+    <!-- Control Buttons - Header on Desktop -->
+    <div class="control-buttons-header">
+        <button class="control-btn" @onclick="ToggleSound" title="@(isSoundEnabled ? "Sound On" : "Sound Off")">
+            @if (isSoundEnabled)
+            {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+            }
+            else
+            {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>
+            }
+        </button>
+        <button class="control-btn" @onclick="OpenAboutModal" title="About">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+        </button>
+    </div>
+    
     <!-- Mobile Game Style Stats -->
     <div class="stats-container">
         <!-- Heads Counter - Top Left -->
         <div class="stat-counter heads-counter" @onclick='() => OpenCoinSelector("heads")'>
-            <img src="@selectedHeadsImage" alt="Heads" class="counter-icon" />
-            <span class="counter-value">@headsCount</span>
+            <div class="counter-content">
+                <img src="@selectedHeadsImage" alt="Heads" class="counter-icon" />
+                <div class="counter-info">
+                    <div class="counter-label">Heads</div>
+                    <span class="counter-value">@headsCount</span>
+                </div>
+            </div>
         </div>
         
         <!-- Tails Counter - Top Right -->
         <div class="stat-counter tails-counter" @onclick='() => OpenCoinSelector("tails")'>
-            <img src="@selectedTailsImage" alt="Tails" class="counter-icon" />
-            <span class="counter-value">@tailsCount</span>
+            <div class="counter-content">
+                <img src="@selectedTailsImage" alt="Tails" class="counter-icon" />
+                <div class="counter-info">
+                    <div class="counter-label">Tails</div>
+                    <span class="counter-value">@tailsCount</span>
+                </div>
+            </div>
         </div>
         
         <!-- Streak Counter - Top Center -->
@@ -38,6 +76,18 @@
     <!-- Main Coin Container -->
     <div class="coin-container">
         <div class="coin-glow"></div>
+        
+        <!-- First-time user hint -->
+        @if (showFirstTimeHint)
+        {
+            <div class="first-time-hint">
+                <div class="hint-content">
+                    <span class="hint-icon">👆</span>
+                    <span class="hint-text">Tap or drag to flip!</span>
+                </div>
+            </div>
+        }
+        
         <div @ref="coinElement" 
              class="coin @flipResult @(isDragging ? "dragging" : "") @(isSuperFlipReady ? "super-flip-ready shake" : "")" 
              @onclick="HandleClick"
@@ -49,6 +99,43 @@
                 <img src="@faceShowing" alt="Coin" draggable="false" />
             </div>
         </div>
+    </div>
+    
+    <!-- Control Buttons - Bottom on Mobile -->
+    <div class="control-buttons-mobile">
+        <button class="control-btn" @onclick="ToggleSound" title="@(isSoundEnabled ? "Sound On" : "Sound Off")">
+            @if (isSoundEnabled)
+            {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+            }
+            else
+            {
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>
+            }
+        </button>
+        <button class="control-btn" @onclick="OpenAboutModal" title="About">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+        </button>
+    </div>
+    
+    <!-- Developer Credit Footer -->
+    <div class="developer-credit">
+        <span class="credit-text">Developed By:</span>
+        <a href="https://www.joshparsons.ca" target="_blank" rel="noopener noreferrer" class="developer-link">
+            <img src="/img/coins/logo.png" alt="JP Logo" class="developer-logo" />
+            <span class="developer-name">Josh Parsons</span>
+        </a>
     </div>
 </div>
 
@@ -62,6 +149,12 @@
     OnClose="@CloseCoinSelector"
     OnCoinSelected="@SelectCoin"
     OnRandomSelected="@SelectRandomOption" />
+
+<!-- About Modal -->
+<AboutModal 
+    IsVisible="@showAboutModal"
+    OnClose="@CloseAboutModal"
+    OnDataCleared="@HandleDataCleared" />
 
 <!-- Passive Coin Unlock Notification - Bottom of Screen -->
 @if (showUnlockAchievement && currentlyUnlockedCoin != null)

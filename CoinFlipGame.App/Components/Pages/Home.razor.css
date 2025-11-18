@@ -328,22 +328,260 @@
     transform: scale(0.98);
 }
 
+/* Control Buttons - Header (Desktop) */
+.control-buttons-header {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 16px;
+    z-index: 100;
+}
+
+/* Control Buttons - Mobile (Bottom) - Hidden on desktop */
+.control-buttons-mobile {
+    display: none;
+}
+
+.control-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.control-btn:hover {
+    background: rgba(0, 0, 0, 0.7);
+    border-color: rgba(255, 215, 0, 0.3);
+    color: #ffd700;
+    transform: scale(1.05);
+}
+
+.control-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Developer Credit Footer */
+.developer-credit {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    border-radius: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 100;
+}
+
+.credit-text {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.developer-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255, 255, 255, 0.95);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    padding: 4px 8px;
+    border-radius: 20px;
+}
+
+.developer-link:hover {
+    color: #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+    transform: scale(1.05);
+}
+
+.developer-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.developer-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .developer-credit {
+        bottom: 16px;
+        padding: 10px 20px;
+        gap: 10px;
+        max-width: calc(100% - 40px);
+    }
+    
+    .credit-text {
+        font-size: 0.8rem;
+    }
+    
+    .developer-logo {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .developer-name {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .developer-credit {
+        bottom: 12px;
+        padding: 8px 16px;
+        gap: 8px;
+        flex-wrap: nowrap;
+    }
+    
+    .credit-text {
+        font-size: 0.75rem;
+    }
+    
+    .developer-logo {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .developer-name {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .developer-credit {
+        bottom: 10px;
+        padding: 6px 14px;
+        gap: 6px;
+        max-width: calc(100% - 28px);
+    }
+    
+    .credit-text {
+        font-size: 0.7rem;
+    }
+    
+    .developer-logo {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .developer-name {
+        font-size: 0.75rem;
+    }
+}
+
 /* Heads Counter - Top Left */
 .heads-counter {
-    top: 20px;
-    left: 20px;
+    top: 24px;
+    left: 24px;
 }
 
 /* Tails Counter - Top Right */
 .tails-counter {
-    top: 20px;
-    right: 20px;
+    top: 24px;
+    right: 24px;
 }
 
-/* Counter Icon */
+/* Streak Counter - Top Center */
+.streak-counter {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(251, 146, 60, 0.15);
+    backdrop-filter: blur(12px);
+    border-radius: 24px;
+    border: 2px solid rgba(251, 146, 60, 0.5);
+    pointer-events: none;
+    box-shadow: 
+        0 4px 20px rgba(251, 146, 60, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    animation: streakPulse 2s ease-in-out infinite;
+}
+
+.streak-icon {
+    font-size: 24px;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    animation: streakFlicker 1.5s ease-in-out infinite;
+}
+
+.streak-value {
+    font-size: 22px;
+    font-weight: 900;
+    color: white;
+    text-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.7),
+        0 0 12px rgba(251, 146, 60, 0.6);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.5px;
+    line-height: 1;
+}
+
+@keyframes streakPulse {
+    0%, 100% {
+        box-shadow: 
+            0 4px 20px rgba(251, 146, 60, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        transform: translateX(-50%) scale(1);
+    }
+    50% {
+        box-shadow: 
+            0 6px 30px rgba(251, 146, 60, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        transform: translateX(-50%) scale(1.05);
+    }
+}
+
+@keyframes streakFlicker {
+    0%, 100% {
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        transform: scale(1);
+    }
+    50% {
+        filter: drop-shadow(0 2px 8px rgba(251, 146, 60, 0.6));
+        transform: scale(1.1);
+    }
+}
+
+/* Counter Content Layout */
+.counter-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Counter Icon - LARGER SIZE */
 .counter-icon {
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid rgba(255, 215, 0, 0.7);
@@ -352,6 +590,25 @@
         inset 0 1px 2px rgba(255, 255, 255, 0.3);
     background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
     padding: 2px;
+    flex-shrink: 0;
+}
+
+/* Counter Info */
+.counter-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-start;
+}
+
+/* Counter Label - NEW */
+.counter-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1;
 }
 
 /* Counter Value */
@@ -363,127 +620,96 @@
         0 2px 4px rgba(0, 0, 0, 0.7),
         0 0 12px rgba(255, 255, 255, 0.3);
     font-variant-numeric: tabular-nums;
-    min-width: 32px;
     letter-spacing: -0.5px;
+    line-height: 1;
 }
 
-/* Streak Counter - Top Center */
-.streak-counter {
+/* First Time Hint */
+.first-time-hint {
     position: absolute;
-    top: 20px;
+    top: -80px;
     left: 50%;
     transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 16px;
-    background: linear-gradient(135deg, rgba(251, 146, 60, 0.95), rgba(239, 68, 68, 0.95));
-    backdrop-filter: blur(12px);
-    border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 
-        0 4px 16px rgba(251, 146, 60, 0.5),
-        0 2px 4px rgba(0, 0, 0, 0.3);
-    animation: streakPulse 2s ease-in-out infinite;
+    animation: hintBounce 2s ease-in-out infinite;
+    z-index: 10;
 }
 
-@keyframes streakPulse {
+.hint-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, rgba(129, 140, 248, 0.95) 0%, rgba(192, 132, 252, 0.95) 100%);
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+        0 4px 20px rgba(129, 140, 248, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.hint-icon {
+    font-size: 28px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    animation: pointDown 1s ease-in-out infinite;
+}
+
+.hint-text {
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+}
+
+@keyframes hintBounce {
     0%, 100% {
-        box-shadow: 
-            0 4px 16px rgba(251, 146, 60, 0.5),
-            0 2px 4px rgba(0, 0, 0, 0.3);
+        transform: translateX(-50%) translateY(0);
     }
     50% {
-        box-shadow: 
-            0 6px 24px rgba(251, 146, 60, 0.7),
-            0 2px 4px rgba(0, 0, 0, 0.3);
+        transform: translateX(-50%) translateY(-10px);
     }
 }
 
-.streak-icon {
-    font-size: 20px;
-    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
-    animation: streakFlicker 1.5s ease-in-out infinite;
-}
-
-@keyframes streakFlicker {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
-}
-
-.streak-value {
-    font-size: 20px;
-    font-weight: 900;
-    color: white;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
-    letter-spacing: -0.5px;
-}
-
-/* Remove all old stat styling and instruction prompt styles */
-.stat-item,
-.stat-icon-wrapper,
-.stat-icon-img,
-.stat-count,
-.streak-badge,
-.streak-fire,
-.streak-count,
-.instruction-prompt,
-.instruction-container,
-.instruction-glass,
-.instruction-text,
-.instruction-icon {
-    /* Old styles removed */
-}
-
-/* Responsive Design - Minimal Stats */
-@media (max-width: 768px) {
-    .stats-container {
-        top: 16px;
-        gap: 24px;
+@keyframes pointDown {
+    0%, 100% {
+        transform: translateY(0);
     }
-    
-    .coin {
-        width: 220px;
-        height: 220px;
-    }
-    
-    .coin-flip-game::after {
-        width: 500px;
-        height: 500px;
-    }
-}
-
-@media (max-width: 480px) {
-    .stats-container {
-        top: 12px;
-        gap: 20px;
-    }
-    
-    .coin {
-        width: 180px;
-        height: 180px;
-    }
-    
-    .coin-flip-game::after {
-        width: 400px;
-        height: 400px;
-    }
-    
-    .total-flips {
-        bottom: 30px;
-        right: 20px;
-        padding: 12px 16px;
-    }
-    
-    .total-value {
-        font-size: 20px;
+    50% {
+        transform: translateY(5px);
     }
 }
 
 /* Mobile Responsive - Game Style */
 @media (max-width: 768px) {
+    /* Hide desktop header buttons on mobile */
+    .control-buttons-header {
+        display: none;
+    }
+    
+    /* Show mobile bottom buttons */
+    .control-buttons-mobile {
+        display: flex;
+        position: absolute;
+        bottom: 90px;
+        left: 50%;
+        transform: translateX(-50%);
+        gap: 16px;
+        z-index: 100;
+    }
+    
+    .control-btn {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .control-btn svg {
+        width: 22px;
+        height: 22px;
+    }
+    
     .stat-counter {
-        padding: 6px 12px;
+        padding: 8px 14px;
         border-radius: 20px;
     }
     
@@ -497,39 +723,84 @@
         right: 16px;
     }
     
-    .counter-icon {
-        width: 32px;
-        height: 32px;
-    }
-    
-    .counter-value {
-        font-size: 22px;
-        min-width: 28px;
-    }
-    
     .streak-counter {
         top: 16px;
-        padding: 6px 12px;
+        padding: 6px 14px;
+        gap: 6px;
     }
     
     .streak-icon {
-        font-size: 18px;
+        font-size: 20px;
     }
     
     .streak-value {
-        font-size: 18px;
+        font-size: 20px;
     }
     
-    .coin {
-        width: 200px;
-        height: 200px;
+    .counter-icon {
+        width: 52px;
+        height: 52px;
+    }
+    
+    .counter-label {
+        font-size: 10px;
+    }
+    
+    .counter-value {
+        font-size: 24px;
+    }
+    
+    .developer-credit {
+        bottom: 16px;
+        padding: 10px 20px;
+        max-width: calc(100% - 32px);
+    }
+    
+    .credit-text {
+        font-size: 0.85rem;
+    }
+    
+    .developer-logo {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .developer-name {
+        font-size: 0.9rem;
+    }
+    
+    .first-time-hint {
+        top: -70px;
+    }
+    
+    .hint-icon {
+        font-size: 24px;
+    }
+    
+    .hint-text {
+        font-size: 0.9rem;
     }
 }
 
 @media (max-width: 480px) {
+    .control-buttons-mobile {
+        bottom: 80px;
+        gap: 12px;
+    }
+    
+    .control-btn {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .control-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+    
     .stat-counter {
-        padding: 6px 10px;
-        gap: 6px;
+        padding: 6px 12px;
+        gap: 8px;
     }
     
     .heads-counter {
@@ -542,20 +813,67 @@
         right: 12px;
     }
     
+    .streak-counter {
+        top: 12px;
+        padding: 5px 12px;
+        gap: 6px;
+    }
+    
+    .streak-icon {
+        font-size: 18px;
+    }
+    
+    .streak-value {
+        font-size: 18px;
+    }
+    
     .counter-icon {
-        width: 28px;
-        height: 28px;
+        width: 44px;
+        height: 44px;
         border-width: 2px;
     }
     
+    .counter-label {
+        font-size: 9px;
+    }
+    
     .counter-value {
-        font-size: 20px;
-        min-width: 24px;
+        font-size: 22px;
+    }
+    
+    .developer-credit {
+        bottom: 12px;
+        padding: 8px 16px;
+        gap: 8px;
+        flex-wrap: nowrap;
+    }
+    
+    .credit-text {
+        font-size: 0.75rem;
+    }
+    
+    .developer-logo {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .developer-name {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .control-buttons-mobile {
+        bottom: 75px;
+    }
+    
+    .counter-content {
+        gap: 8px;
     }
     
     .streak-counter {
-        top: 12px;
-        padding: 5px 10px;
+        top: 10px;
+        padding: 4px 10px;
         gap: 5px;
     }
     
@@ -567,39 +885,35 @@
         font-size: 16px;
     }
     
-    .coin {
-        width: 180px;
-        height: 180px;
-    }
-}
-
-@media (max-width: 360px) {
-    .stat-counter {
-        padding: 4px 8px;
-        gap: 4px;
+    .counter-icon {
+        width: 38px;
+        height: 38px;
     }
     
-    .counter-icon {
-        width: 24px;
-        height: 24px;
+    .counter-label {
+        font-size: 8px;
     }
     
     .counter-value {
-        font-size: 18px;
-        min-width: 20px;
+        font-size: 20px;
     }
     
-    .streak-counter {
-        padding: 4px 8px;
-        gap: 4px;
+    .developer-credit {
+        padding: 6px 12px;
+        gap: 6px;
     }
     
-    .streak-icon {
-        font-size: 14px;
+    .credit-text {
+        font-size: 0.7rem;
     }
     
-    .streak-value {
-        font-size: 14px;
+    .developer-logo {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .developer-name {
+        font-size: 0.8rem;
     }
 }
 
@@ -1237,6 +1551,26 @@
     
     .coin-unlock-sparkle {
         font-size: 16px;
+    }
+}
+
+@media (max-width: 360px) {
+    .coin-unlock-notification {
+        padding: 6px 12px;
+        gap: 6px;
+    }
+    
+    .coin-unlock-icon-wrapper {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .coin-unlock-label {
+        font-size: 8px;
+    }
+    
+    .coin-unlock-name {
+        font-size: 12px;
     }
 }
 

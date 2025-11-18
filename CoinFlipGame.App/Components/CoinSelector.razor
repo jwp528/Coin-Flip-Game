@@ -29,16 +29,14 @@
                     </h3>
                     
                     <div class="coin-grid">
-                        <div class="coin-option random-option @(IsRandomSelected ? "selected" : "")" @onclick="HandleRandomSelection">
+                        <div class="coin-option @(IsRandomSelected ? "selected" : "")" @onclick="HandleRandomSelection">
                             <div class="coin-option-image-wrapper">
-                                <div class="random-coin-icon">
+                                <div class="random-coin-placeholder">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <circle cx="12" cy="12" r="10"></circle>
                                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                                     </svg>
-                                    <span class="random-sparkle">?</span>
-                                    <span class="random-sparkle">?</span>
                                 </div>
                                 @if (IsRandomSelected)
                                 {
@@ -49,8 +47,7 @@
                                     </div>
                                 }
                             </div>
-                            <div class="coin-option-name random-label">Random</div>
-                            <div class="random-description">Rarity-weighted selection</div>
+                            <div class="coin-option-name">Random</div>
                         </div>
                     </div>
                 </div>
@@ -70,9 +67,10 @@
                                 var isUnlocked = UnlockProgress.IsUnlocked(coin);
                                 var landCount = UnlockProgress.GetCoinLandCount(coin.Path);
                                 var isSelected = IsSelectedCoin(coin.Path);
+                                var isExpanded = expandedCoinPath == coin.Path;
                                 
-                                <div class="coin-option @(isUnlocked ? "" : "locked") @(isSelected ? "selected" : "")" 
-                                     @onclick="@(() => HandleCoinSelection(coin))"
+                                <div class="coin-option @(isUnlocked ? "" : "locked") @(isSelected ? "selected" : "") @(isExpanded ? "expanded" : "")" 
+                                     @onclick="@(() => HandleCoinClick(coin, isUnlocked))"
                                      @onmouseenter="@((MouseEventArgs e) => HandleCoinHover(coin, e, true))"
                                      @onmouseleave="@(() => HideTooltip())">
                                     <div class="coin-option-image-wrapper">
@@ -113,7 +111,20 @@
                                         }
                                     </div>
                                     <div class="coin-option-name">@coin.DisplayName</div>
-                                    @if (!isUnlocked && coin.UnlockCondition != null)
+                                    
+                                    @if (!isUnlocked && coin.UnlockCondition != null && isExpanded)
+                                    {
+                                        <div class="coin-unlock-details">
+                                            <div class="unlock-description">@coin.UnlockCondition.Description</div>
+                                            <div class="unlock-progress-inline">
+                                                <div class="progress-bar-container">
+                                                    <div class="progress-bar-fill" style="width: @(CalculateProgressPercentage(coin))%"></div>
+                                                </div>
+                                                <div class="progress-text">@UnlockProgress.GetProgressDescription(coin)</div>
+                                            </div>
+                                        </div>
+                                    }
+                                    else if (!isUnlocked && coin.UnlockCondition != null)
                                     {
                                         <div class="coin-unlock-progress">@UnlockProgress.GetProgressDescription(coin)</div>
                                     }
@@ -134,14 +145,16 @@
     </div>
 </div>
 
-<!-- Unlock Tooltip -->
-<UnlockTooltip 
-    IsVisible="@showTooltip"
-    CoinImage="@hoveredCoin"
-    ProgressText="@tooltipProgressText"
-    ProgressPercentage="@tooltipProgressPercentage"
-    X="@tooltipX"
-    Y="@tooltipY" />
+<!-- Unlock Tooltip - Only show on desktop -->
+<div class="tooltip-desktop-only">
+    <UnlockTooltip 
+        IsVisible="@showTooltip"
+        CoinImage="@hoveredCoin"
+        ProgressText="@tooltipProgressText"
+        ProgressPercentage="@tooltipProgressPercentage"
+        X="@tooltipX"
+        Y="@tooltipY" />
+</div>
 
 @code {
     [Parameter]
@@ -174,14 +187,21 @@
     private double tooltipProgressPercentage = 0;
     private double tooltipX = 0;
     private double tooltipY = 0;
+    private string? expandedCoinPath = null;
     
-    private async Task HandleCoinSelection(CoinImage coin)
+    private async Task HandleCoinClick(CoinImage coin, bool isUnlocked)
     {
-        // Only allow selection if unlocked
-        if (UnlockProgress.IsUnlocked(coin))
+        if (isUnlocked)
         {
+            // Select the coin if it's unlocked
             HideTooltip();
+            expandedCoinPath = null;
             await OnCoinSelected.InvokeAsync(coin);
+        }
+        else
+        {
+            // Toggle expansion for locked coins
+            expandedCoinPath = expandedCoinPath == coin.Path ? null : coin.Path;
         }
     }
     

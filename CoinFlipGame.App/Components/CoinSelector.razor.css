@@ -176,6 +176,8 @@
     gap: 8px;
     cursor: pointer;
     transition: transform 0.3s ease;
+    border-radius: 16px;
+    padding: 8px;
 }
 
 .coin-option:hover:not(.locked) {
@@ -330,170 +332,21 @@
     margin-top: 4px;
 }
 
-/* Mobile Responsive - Fullscreen on mobile */
-@media (max-width: 768px) {
-    .coin-selector-modal {
-        width: 100%;
-        height: 100%;
-        max-width: 100%;
-        max-height: 100%;
-        border-radius: 0;
-    }
-    
-    .coin-selector-modal::before {
-        border-radius: 0;
-    }
-    
-    .coin-selector-header {
-        padding: 20px 24px;
-    }
-    
-    .coin-selector-content {
-        padding: 20px 24px;
-    }
-    
-    .coin-selector-title {
-        font-size: 1.5rem;
-    }
-    
-    .coin-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        gap: 12px;
-    }
-}
-
-@media (max-width: 480px) {
-    .coin-grid {
-        grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
-        gap: 10px;
-    }
-    
-    .coin-selector-header {
-        padding: 16px 20px;
-    }
-    
-    .coin-selector-content {
-        padding: 16px 20px;
-    }
-}
-
-/* Random Option Styles - Enhanced */
-.coin-option.random-option {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%);
-    border-radius: 16px;
-    padding: 12px;
-    position: relative;
-    overflow: hidden;
-}
-
-.coin-option.random-option::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(
-        45deg,
-        transparent 40%,
-        rgba(139, 92, 246, 0.2) 45%,
-        rgba(192, 132, 252, 0.3) 50%,
-        rgba(139, 92, 246, 0.2) 55%,
-        transparent 60%
-    );
-    animation: randomShimmer 3s linear infinite;
-}
-
-@keyframes randomShimmer {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-.coin-option.random-option:hover {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(59, 130, 246, 0.25) 100%);
-    transform: translateY(-4px) scale(1.05);
-}
-
-.random-coin-icon {
+/* Random option - Simplified to match regular coins */
+.random-coin-placeholder {
     width: 100%;
     height: 100%;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 8px;
-    position: relative;
-    z-index: 1;
+    padding: 20px;
 }
 
-.random-coin-icon svg {
-    width: 56px;
-    height: 56px;
+.random-coin-placeholder svg {
+    width: 100%;
+    height: 100%;
     color: #a78bfa;
-    filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.6));
-    animation: randomPulse 2s ease-in-out infinite;
-}
-
-@keyframes randomPulse {
-    0%, 100% {
-        transform: scale(1) rotate(0deg);
-        opacity: 0.9;
-    }
-    50% {
-        transform: scale(1.15) rotate(180deg);
-        opacity: 1;
-    }
-}
-
-.random-sparkle {
-    font-size: 28px;
-    position: absolute;
-    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
-    animation: randomSparkle 2s ease-in-out infinite;
-}
-
-.random-sparkle:nth-child(1) {
-    top: 10%;
-    right: 10%;
-    animation-delay: 0s;
-}
-
-.random-sparkle:nth-child(2) {
-    bottom: 10%;
-    left: 10%;
-    animation-delay: 0.5s;
-}
-
-@keyframes randomSparkle {
-    0%, 100% {
-        transform: rotate(0deg) scale(0.8);
-        opacity: 0.6;
-    }
-    50% {
-        transform: rotate(180deg) scale(1.3);
-        opacity: 1;
-    }
-}
-
-.coin-option.random-option .coin-option-name.random-label {
-    color: #a78bfa;
-    font-weight: 800;
-    font-size: 1.1rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
-}
-
-.random-description {
-    font-size: 0.75rem;
-    color: rgba(167, 139, 250, 0.7);
-    text-align: center;
-    font-style: italic;
-    font-weight: 500;
+    filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.4));
 }
 
 /* Selected coin indicator */
@@ -573,4 +426,171 @@
     transform: none !important;
 }
 
+/* Expanded coin details - Mobile */
+.coin-option.expanded {
+    background: rgba(129, 140, 248, 0.1);
+    border: 1px solid rgba(129, 140, 248, 0.3);
+}
+
+.coin-unlock-details {
+    width: 100%;
+    padding: 12px;
+    background: rgba(30, 41, 59, 0.8);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 8px;
+}
+
+.unlock-description {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.4;
+    margin-bottom: 10px;
+}
+
+.unlock-progress-inline {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.unlock-progress-inline .progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.unlock-progress-inline .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #818cf8 0%, #c084fc 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 8px rgba(129, 140, 248, 0.5);
+}
+
+.unlock-progress-inline .progress-text {
+    font-size: 0.8rem;
+    color: rgba(129, 140, 248, 0.9);
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Hide tooltip on mobile */
+.tooltip-desktop-only {
+    display: block;
+}
+
 /* Mobile Responsive - Fullscreen on mobile */
+@media (max-width: 768px) {
+    .coin-selector-modal {
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        border-radius: 0;
+    }
+    
+    .coin-selector-modal::before {
+        border-radius: 0;
+    }
+    
+    .coin-selector-header {
+        padding: 20px 20px;
+    }
+    
+    .coin-selector-content {
+        padding: 20px;
+    }
+    
+    .coin-selector-title {
+        font-size: 1.5rem;
+    }
+    
+    .coin-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 14px;
+    }
+    
+    .coin-type-section {
+        margin-bottom: 28px;
+    }
+    
+    .coin-type-header {
+        font-size: 1.1rem;
+        margin-bottom: 14px;
+    }
+    
+    /* Larger touch targets on mobile */
+    .coin-option {
+        padding: 10px;
+        min-height: 140px;
+    }
+    
+    /* Hide desktop tooltip on mobile */
+    .tooltip-desktop-only {
+        display: none;
+    }
+    
+    /* Don't show hover effects on mobile */
+    .coin-option:hover:not(.locked) {
+        transform: none;
+    }
+    
+    .coin-option:hover:not(.locked) .coin-option-image-wrapper {
+        border-color: rgba(255, 215, 0, 0.3);
+        box-shadow: 
+            0 4px 12px rgba(0, 0, 0, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    
+    .coin-option:hover:not(.locked) .coin-option-overlay {
+        opacity: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .coin-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    
+    .coin-selector-header {
+        padding: 16px;
+    }
+    
+    .coin-selector-content {
+        padding: 16px;
+    }
+    
+    .coin-selector-title {
+        font-size: 1.3rem;
+    }
+    
+    .coin-option {
+        padding: 8px;
+        min-height: 120px;
+    }
+    
+    .coin-option-name {
+        font-size: 0.8rem;
+    }
+    
+    .coin-type-header {
+        font-size: 1rem;
+        margin-bottom: 12px;
+    }
+    
+    .coin-unlock-progress {
+        font-size: 0.7rem;
+    }
+    
+    .coin-land-count {
+        font-size: 0.7rem;
+        padding: 3px 6px;
+        top: 6px;
+        right: 6px;
+    }
+}
