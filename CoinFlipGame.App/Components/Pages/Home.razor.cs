@@ -163,6 +163,9 @@ public partial class Home : ComponentBase
         {
             var soundEnabled = await LocalStorage.GetItemAsync<bool?>(SoundPreferenceKey);
             isSoundEnabled = soundEnabled ?? true; // Default to enabled
+            
+            // Sync the sound state with the JavaScript audio system
+            await JSRuntime.InvokeVoidAsync("setSoundEnabled", isSoundEnabled);
         }
         catch (Exception ex)
         {
