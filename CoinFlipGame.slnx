@@ -4,5 +4,6 @@
     <File Path=".gitignore" />
     <File Path="README.md" />
   </Folder>
+  <Project Path="CoinFlipGame.Api/CoinFlipGame.Api.csproj" />
   <Project Path="CoinFlipGame.App/CoinFlipGame.App.csproj" />
 </Solution>

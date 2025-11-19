@@ -1,7 +1,8 @@
-namespace CoinFlipGame.App.Models;
+namespace CoinFlipGame.Api.Models;
 
 /// <summary>
 /// Tracks the application version and build information
+/// This should be kept in sync with the client-side AppVersion
 /// </summary>
 public class AppVersion
 {
@@ -15,11 +16,6 @@ public class AppVersion
     /// Format: yyyyMMddHHmmss
     /// </summary>
     public const string BuildTime = "20250119000000";
-    
-    /// <summary>
-    /// Gets the cache busting query parameter
-    /// </summary>
-    public static string CacheBuster => $"v={Version}-{BuildTime}";
     
     /// <summary>
     /// Full version string including build time

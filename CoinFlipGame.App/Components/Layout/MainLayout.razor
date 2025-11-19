@@ -8,8 +8,31 @@
     </main>
 </div>
 
+<!-- Update Prompt -->
+@if (showUpdatePrompt)
+{
+    <div class="update-prompt-overlay">
+        <div class="update-prompt">
+            <div class="update-prompt-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+            </div>
+            <h3>Update Available</h3>
+            <p>A new version of the app is available. Update now for the latest features and improvements.</p>
+            <div class="update-prompt-buttons">
+                <button class="btn-update" @onclick="UpdateApp">Update Now</button>
+                <button class="btn-dismiss" @onclick="DismissUpdate">Later</button>
+            </div>
+        </div>
+    </div>
+}
+
 <div id="blazor-error-ui">
     An unhandled error has occurred.
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+

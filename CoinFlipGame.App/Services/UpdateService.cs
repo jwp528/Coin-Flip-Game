@@ -9,25 +9,30 @@ namespace CoinFlipGame.App.Services;
 public class UpdateService
 {
     private readonly IJSRuntime _jsRuntime;
+    private readonly ApiVersionService _apiVersionService;
     private const string LAST_VERSION_KEY = "app_last_version";
     
-    public UpdateService(IJSRuntime jsRuntime)
+    public UpdateService(IJSRuntime jsRuntime, ApiVersionService apiVersionService)
     {
         _jsRuntime = jsRuntime;
+        _apiVersionService = apiVersionService;
     }
     
     /// <summary>
-    /// Check if the app has been updated since last visit
+    /// Check if the app has been updated since last visit by querying the API
+    /// Only checks API - does not fall back to prevent false positives
     /// </summary>
     public async Task<bool> IsUpdateAvailable()
     {
         try
         {
-            var lastVersion = await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", LAST_VERSION_KEY);
-            return lastVersion != AppVersion.FullVersion;
+            // Check the API for the server version
+            var apiUpdateAvailable = await _apiVersionService.IsUpdateAvailableAsync();
+            return apiUpdateAvailable;
         }
         catch
         {
+            // If API check fails, don't show update prompt
             return false;
         }
     }

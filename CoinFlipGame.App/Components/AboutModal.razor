@@ -6,6 +6,7 @@
 @inject ILocalStorageService LocalStorage
 @inject IJSRuntime JSRuntime
 @inject UpdateService UpdateService
+@inject ApiVersionService ApiVersionService
 
 <div class="about-modal-overlay @(IsVisible ? "visible" : "")" @onclick="OnClose">
     <div class="about-modal-content" @onclick:stopPropagation="true">
@@ -63,6 +64,10 @@
                         <h3 class="cache-section-title">Having issues?</h3>
                         <div class="about-version-badge">v@(UpdateService.GetCurrentVersion())</div>
                     </div>
+                    @if (!string.IsNullOrEmpty(updateCheckMessage))
+                    {
+                        <div class="update-check-message">@updateCheckMessage</div>
+                    }
                     <button class="btn-clear-cache" @onclick="HandleClearCache" disabled="@isClearingCache">
                         @if (isClearingCache)
                         {
@@ -149,20 +154,48 @@
     private bool showResetConfirm = false;
     private bool isClearing = false;
     private bool isClearingCache = false;
+    private string updateCheckMessage = "";
     
     private async Task HandleClearCache()
     {
         isClearingCache = true;
+        updateCheckMessage = "";
         StateHasChanged();
         
         try
         {
-            await UpdateService.ClearCacheAndReload();
+            // Check if update is available by comparing with API version
+            var updateAvailable = await UpdateService.IsUpdateAvailable();
+            
+            if (updateAvailable)
+            {
+                // Update is available, reload the page
+                await UpdateService.ClearCacheAndReload();
+            }
+            else
+            {
+                // No update available
+                updateCheckMessage = "You're on the latest version!";
+                await UpdateService.MarkVersionAsSeen();
+                isClearingCache = false;
+                StateHasChanged();
+                
+                // Clear message after 3 seconds
+                await Task.Delay(3000);
+                updateCheckMessage = "";
+                StateHasChanged();
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error clearing cache: {ex.Message}");
+            Console.WriteLine($"Error checking for updates: {ex.Message}");
+            updateCheckMessage = "Unable to check for updates";
             isClearingCache = false;
+            StateHasChanged();
+            
+            // Clear error message after 3 seconds
+            await Task.Delay(3000);
+            updateCheckMessage = "";
             StateHasChanged();
         }
     }

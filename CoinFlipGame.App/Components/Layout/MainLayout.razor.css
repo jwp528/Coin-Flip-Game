@@ -94,3 +94,118 @@ main {
         right: 0.75rem;
         top: 0.5rem;
     }
+
+/* Update Prompt Styles */
+.update-prompt-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+}
+
+.update-prompt {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 2rem;
+    border-radius: 20px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+    color: white;
+}
+
+.update-prompt-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1rem auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    color: white;
+}
+
+.update-prompt-icon svg {
+    width: 36px;
+    height: 36px;
+}
+
+.update-prompt h3 {
+    font-size: 1.5rem;
+    margin: 0 0 1rem 0;
+    font-weight: 600;
+}
+
+.update-prompt p {
+    font-size: 1rem;
+    margin: 0 0 1.5rem 0;
+    opacity: 0.95;
+    line-height: 1.5;
+}
+
+.update-prompt-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.update-prompt-buttons button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-update {
+    background: white;
+    color: #667eea;
+}
+
+.btn-update:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+}
+
+.btn-dismiss {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.btn-dismiss:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+
