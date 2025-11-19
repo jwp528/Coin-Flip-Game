@@ -21,4 +21,9 @@ public class CoinImage
     /// Number of times this coin has been landed on
     /// </summary>
     public int TimesLandedOn { get; set; }
+    
+    /// <summary>
+    /// Special effect this coin has when it is active (null = no effect)
+    /// </summary>
+    public CoinEffect? Effect { get; set; }
 }

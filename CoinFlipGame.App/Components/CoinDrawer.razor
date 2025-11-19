@@ -7,7 +7,7 @@
 @implements IDisposable
 
 <div class="coin-drawer-overlay @(IsVisible ? "visible" : "")" @onclick="OnClose">
-    <div class="coin-drawer @(IsVisible ? "open" : "")" @onclick:stopPropagation="true">
+<div class="coin-drawer @GetDrawerClasses()" @onclick:stopPropagation="true">
         <div class="drawer-handle" @onclick="OnClose">
             <div class="handle-bar"></div>
         </div>
@@ -66,6 +66,12 @@
                                             {
                                                 <div class="coin-badge">@landCount</div>
                                             }
+                                            @if (coin.Effect != null)
+                                            {
+                                                <div class="coin-effect-badge @GetEffectBadgeClass(coin.Effect.Type)" title="@coin.Effect.Description">
+                                                    @((MarkupString)GetEffectIcon(coin.Effect.Type))
+                                                </div>
+                                            }
                                             @if (isSelected)
                                             {
                                                 <div class="coin-selected-badge">
@@ -111,6 +117,7 @@
 private const string RANDOM_COIN_IMAGE = "/img/coins/Random.png";
 private const double LONG_PRESS_DURATION = 500; // 500ms for long press
 private bool previousIsVisible = false;
+private bool isClosing = false;
     
 [Parameter]
 public bool IsVisible { get; set; }
@@ -265,6 +272,58 @@ private System.Threading.Timer? longPressTimer = null;
     {
         // Truncate long names for better display
         return name.Length > 10 ? name.Substring(0, 10) + "..." : name;
+    }
+    
+    private string GetEffectIcon(CoinEffectType effectType)
+    {
+        return effectType switch
+        {
+            CoinEffectType.AutoClick => "<i class=\"bi bi-arrow-clockwise\"></i>",
+            CoinEffectType.Weighted => "<i class=\"bi bi-train-freight-front-fill\"></i>",
+            CoinEffectType.Shaved => "<i class=\"bi bi-feather\"></i>",
+            _ => ""
+        };
+    }
+    
+    private string GetEffectBadgeClass(CoinEffectType effectType)
+    {
+        return effectType switch
+        {
+            CoinEffectType.AutoClick => "auto-click",
+            CoinEffectType.Weighted => "weighted",
+            CoinEffectType.Shaved => "shaved",
+            _ => ""
+        };
+    }
+    
+    private string GetDrawerClasses()
+    {
+        if (isClosing)
+            return "closing";
+        if (IsVisible)
+            return "open";
+        return "";
+    }
+    
+    protected override void OnParametersSet()
+    {
+        // Detect when drawer is being closed
+        if (previousIsVisible && !IsVisible)
+        {
+            isClosing = true;
+            // Reset closing flag after animation completes
+            Task.Delay(500).ContinueWith(_ => 
+            {
+                isClosing = false;
+                InvokeAsync(StateHasChanged);
+            });
+        }
+        else if (!previousIsVisible && IsVisible)
+        {
+            isClosing = false;
+        }
+        
+        base.OnParametersSet();
     }
     
     public void Dispose()

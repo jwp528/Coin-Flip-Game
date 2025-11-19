@@ -83,6 +83,10 @@ public partial class Home : ComponentBase
     private bool showCoinPreview = false;
     private CoinImage? previewCoin = null;
     
+    // Auto-click effect state
+    private System.Threading.Timer? autoClickTimer = null;
+    private bool isAutoClickActive = false;
+    
     private double startY = 0;
     private double currentY = 0;
     private double startX = 0;
@@ -240,6 +244,9 @@ public partial class Home : ComponentBase
             }
         }
         
+        // Update auto-click state when coins change
+        UpdateAutoClickState();
+        
         await SaveCoinSelectionPreferencesAsync();
         // Don't auto-close drawer - let user close it manually
         StateHasChanged();
@@ -292,6 +299,12 @@ public partial class Home : ComponentBase
     private async Task OnPointerDown(PointerEventArgs e)
     {
         if (isFlipping) return;
+        
+        // User is interacting - pause auto-click temporarily
+        if (isAutoClickActive)
+        {
+            StopAutoClick();
+        }
         
         // Hide first time hint once user interacts
         if (showFirstTimeHint)
@@ -389,6 +402,9 @@ public partial class Home : ComponentBase
             await JSRuntime.InvokeVoidAsync("coinDragHandler.resetTransform");
             StateHasChanged();
         }
+        
+        // Restart auto-click after user interaction
+        UpdateAutoClickState();
     }
     
     private async void OnPointerCancel(PointerEventArgs e)
@@ -434,8 +450,14 @@ public partial class Home : ComponentBase
         rotationY = 0;
         await JSRuntime.InvokeVoidAsync("coinDragHandler.clearTransform");
         
+        // Get active coin effects
+        var headsEffect = GetActiveCoinEffect(selectedHeadsImage);
+        var tailsEffect = GetActiveCoinEffect(selectedTailsImage);
+        
+        // Apply coin effect bias to flip probability
         Random random = new Random();
-        bool isHeads = random.Next(2) == 0;
+        double flipValue = random.NextDouble();
+        bool isHeads = ApplyCoinEffectBias(flipValue, headsEffect, tailsEffect);
         string result = isHeads ? "heads" : "tails";
         flipResult = isHeads ? (isSuperFlip ? "flip-heads super-flip" : "flip-heads") : (isSuperFlip ? "flip-tails super-flip" : "flip-tails");
         
@@ -976,6 +998,174 @@ public partial class Home : ComponentBase
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error applying referrer bonus");
+        }
+    }
+    
+    /// <summary>
+    /// Get the coin effect for a specific coin path
+    /// </summary>
+    private CoinEffect? GetActiveCoinEffect(string coinPath)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(coinPath) || availableCoins == null)
+                return null;
+            
+            // Find the coin in available coins
+            foreach (var coinTypeGroup in availableCoins.Values)
+            {
+                var coin = coinTypeGroup.FirstOrDefault(c => c.Path == coinPath);
+                if (coin != null)
+                {
+                    return coin.Effect;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error getting active coin effect");
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// Apply coin effect bias to determine flip result
+    /// </summary>
+    /// <param name="flipValue">Random value between 0 and 1</param>
+    /// <param name="headsEffect">Effect for heads coin</param>
+    /// <param name="tailsEffect">Effect for tails coin</param>
+    /// <returns>True if heads, false if tails</returns>
+    private bool ApplyCoinEffectBias(double flipValue, CoinEffect? headsEffect, CoinEffect? tailsEffect)
+    {
+        // Base probability is 0.5 (50/50)
+        double headsProbability = 0.5;
+        
+        // Apply heads coin effect
+        if (headsEffect != null)
+        {
+            switch (headsEffect.Type)
+            {
+                case CoinEffectType.Weighted:
+                    // Weighted means the coin is heavy on this side, so it lands DOWN (opposite side up)
+                    // Decrease the probability of landing heads up
+                    headsProbability -= headsEffect.BiasStrength;
+                    break;
+                case CoinEffectType.Shaved:
+                    // Shaved means this side is shaved/lighter, so it lands UP more often
+                    // INCREASE the probability of landing heads up
+                    headsProbability += headsEffect.BiasStrength;
+                    break;
+            }
+        }
+        
+        // Apply tails coin effect (inverse logic)
+        if (tailsEffect != null)
+        {
+            switch (tailsEffect.Type)
+            {
+                case CoinEffectType.Weighted:
+                    // Weighted tails means heavy on tails side, lands DOWN (heads up)
+                    // Increase the probability of landing heads up
+                    headsProbability += tailsEffect.BiasStrength;
+                    break;
+                case CoinEffectType.Shaved:
+                    // Shaved tails means lighter on tails side, lands UP more (tails up, heads down)
+                    // DECREASE the probability of landing heads up
+                    headsProbability -= tailsEffect.BiasStrength;
+                    break;
+            }
+        }
+        
+        // Clamp probability between 0.1 and 0.9 to avoid guaranteed outcomes
+        headsProbability = Math.Clamp(headsProbability, 0.1, 0.9);
+        
+        
+        return flipValue < headsProbability;
+    }
+    
+    /// <summary>
+    /// Update auto-click state based on active coins
+    /// </summary>
+    private void UpdateAutoClickState()
+    {
+        try
+        {
+            // Check if either active coin has auto-click effect
+            var headsEffect = GetActiveCoinEffect(selectedHeadsImage);
+            var tailsEffect = GetActiveCoinEffect(selectedTailsImage);
+            
+            bool shouldAutoClick = (headsEffect?.Type == CoinEffectType.AutoClick) || 
+                                   (tailsEffect?.Type == CoinEffectType.AutoClick);
+            
+            if (shouldAutoClick && !isAutoClickActive)
+            {
+                // Get the auto-click interval from the effect
+                int interval = headsEffect?.Type == CoinEffectType.AutoClick 
+                    ? headsEffect.AutoClickInterval 
+                    : (tailsEffect?.AutoClickInterval ?? 1000);
+                
+                StartAutoClick(interval);
+            }
+            else if (!shouldAutoClick && isAutoClickActive)
+            {
+                StopAutoClick();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error updating auto-click state");
+        }
+    }
+    
+    /// <summary>
+    /// Start auto-click timer
+    /// </summary>
+    private void StartAutoClick(int intervalMs)
+    {
+        try
+        {
+            StopAutoClick(); // Stop existing timer if any
+            
+            isAutoClickActive = true;
+            autoClickTimer = new System.Threading.Timer(async _ =>
+            {
+                if (!isFlipping && !isDragging && isAutoClickActive)
+                {
+                    await InvokeAsync(async () =>
+                    {
+                        // Trigger a flip
+                        await HandleClick();
+                    });
+                }
+            }, null, intervalMs, intervalMs);
+            
+            Logger.LogInformation($"Auto-click started with interval {intervalMs}ms");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error starting auto-click");
+        }
+    }
+    
+    /// <summary>
+    /// Stop auto-click timer
+    /// </summary>
+    private void StopAutoClick()
+    {
+        try
+        {
+            if (autoClickTimer != null)
+            {
+                autoClickTimer.Dispose();
+                autoClickTimer = null;
+                isAutoClickActive = false;
+                Logger.LogInformation("Auto-click stopped");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error stopping auto-click");
         }
     }
 }

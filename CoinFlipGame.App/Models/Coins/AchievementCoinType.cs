@@ -255,49 +255,7 @@ public class AchievementCoinType : CoinType
             { 
                 Type = UnlockConditionType.LandOnMultipleCoins, 
                 RequiredCount = 1,
-                RequiredCoinPaths = new List<string>
-                {
-                    // JP Logo coins
-                    "/img/coins/logo.png",
-                    
-                    // Zodiak coins
-                    "/img/coins/AI/Zodiak/Gemini.png",
-                    "/img/coins/AI/Zodiak/Rat.png",
-                    "/img/coins/AI/Zodiak/Ram.png",
-                    "/img/coins/AI/Zodiak/Dog.png",
-                    "/img/coins/AI/Zodiak/Tauros.png",
-                    "/img/coins/AI/Zodiak/Rabbit.png",
-                    "/img/coins/AI/Zodiak/Rooster.png",
-                    "/img/coins/AI/Zodiak/Pig.png",
-                    "/img/coins/AI/Zodiak/Dragon.png",
-                    "/img/coins/AI/Zodiak/Dragon_Rare.png",
-                    
-                    // Achievement coins (excluding self)
-                    "/img/coins/AI/Achievements/10Flips.png",
-                    "/img/coins/AI/Achievements/25Flips.png",
-                    "/img/coins/AI/Achievements/50Flips.png",
-                    "/img/coins/AI/Achievements/100Flips.png",
-                    "/img/coins/AI/Achievements/500Flips.png",
-                    "/img/coins/AI/Achievements/1000Flips.png",
-                    "/img/coins/AI/Achievements/1500Flips.png",
-                    "/img/coins/AI/Achievements/2000Flips.png",
-                    "/img/coins/AI/Achievements/5000Flips.png",
-                    "/img/coins/AI/Achievements/10000Flips.png",
-
-                    "/img/coins/AI/Achievements/3HeadStreak.png",
-                    "/img/coins/AI/Achievements/4HeadStreak.png",
-                    "/img/coins/AI/Achievements/5HeadStreak.png",
-                    "/img/coins/AI/Achievements/10HeadStreak.png",
-                    "/img/coins/AI/Achievements/50HeadStreak.png",
-                    "/img/coins/AI/Achievements/Headmaster.png",
-
-                    "/img/coins/AI/Achievements/3TailStreak.png",
-                    "/img/coins/AI/Achievements/4TailStreak.png",
-                    "/img/coins/AI/Achievements/5TailStreak.png",
-                    "/img/coins/AI/Achievements/10TailStreak.png",
-                    "/img/coins/AI/Achievements/50TailStreak.png",
-                    "/img/coins/AI/Achievements/TailMaster.png"
-                },
+                UseDynamicCoinList = true, // Automatically includes all coins in the game
                 Description = "Unlock all other coins in the game",
                 Rarity = UnlockRarity.Legendary
             }

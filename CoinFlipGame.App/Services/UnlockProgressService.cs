@@ -11,6 +11,7 @@ public class UnlockProgressService
 {
     private const string StorageKey = "coinUnlockProgress";
     private readonly ILocalStorageService? _localStorage;
+    private readonly CoinService _coinService;
     private Dictionary<string, int> _coinLandCounts = new();
     private HashSet<string> _randomUnlockedCoins = new();
     private HashSet<string> _notificationShownFor = new();
@@ -23,9 +24,10 @@ public class UnlockProgressService
     private Random _random = new();
     private bool _isInitialized = false;
     
-    public UnlockProgressService(ILocalStorageService localStorage)
+    public UnlockProgressService(ILocalStorageService localStorage, CoinService coinService)
     {
         _localStorage = localStorage;
+        _coinService = coinService;
     }
     
     /// <summary>
@@ -174,7 +176,11 @@ public class UnlockProgressService
                 if (justUnlocked)
                 {
                     newlyUnlocked.Add(coin);
-                    _notificationShownFor.Add(coin.Path);
+                    // Mark notification as shown
+                    if (!_notificationShownFor.Contains(coin.Path))
+                    {
+                        _notificationShownFor.Add(coin.Path);
+                    }
                 }
             }
             
@@ -230,7 +236,7 @@ public class UnlockProgressService
             UnlockConditionType.Streak => CheckStreakCondition(condition),
             UnlockConditionType.LandOnCoin => CheckLandOnCoinCondition(condition),
             UnlockConditionType.RandomChance => _randomUnlockedCoins.Contains(coinPath),
-            UnlockConditionType.LandOnMultipleCoins => CheckLandOnMultipleCoinsCondition(condition),
+            UnlockConditionType.LandOnMultipleCoins => CheckLandOnMultipleCoinsCondition(condition, coinPath),
             _ => false
         };
     }
@@ -315,7 +321,11 @@ public class UnlockProgressService
                         if (_random.NextDouble() <= effectiveChance)
                         {
                             _randomUnlockedCoins.Add(coin.Path);
-                            _notificationShownFor.Add(coin.Path);
+                            // Mark notification as shown for random unlocks
+                            if (!_notificationShownFor.Contains(coin.Path))
+                            {
+                                _notificationShownFor.Add(coin.Path);
+                            }
                             newlyUnlocked.Add(coin);
                         }
                     }
@@ -344,6 +354,8 @@ public class UnlockProgressService
         if (!_randomUnlockedCoins.Contains(coinPath))
         {
             _randomUnlockedCoins.Add(coinPath);
+            // Don't mark notification as shown for manual unlocks
+            // This allows notifications to show if triggered later
             await SaveProgressAsync();
         }
     }
@@ -357,13 +369,24 @@ public class UnlockProgressService
             && count >= condition.RequiredCount;
     }
     
-    private bool CheckLandOnMultipleCoinsCondition(UnlockCondition condition)
+    private bool CheckLandOnMultipleCoinsCondition(UnlockCondition condition, string currentCoinPath = "")
     {
-        if (condition.RequiredCoinPaths == null || !condition.RequiredCoinPaths.Any())
+        var requiredPaths = condition.RequiredCoinPaths;
+        
+        // If UseDynamicCoinList is true, we need to fetch all coins dynamically
+        if (condition.UseDynamicCoinList)
+        {
+            // Get all coins synchronously from cache (they should already be loaded)
+            // We'll populate the condition with all coins except the current one
+            var allPaths = _coinService.GetAllUnlockableCoinPathsAsync(currentCoinPath).GetAwaiter().GetResult();
+            requiredPaths = allPaths;
+        }
+        
+        if (requiredPaths == null || !requiredPaths.Any())
             return false;
         
         // Check that ALL required coins have been landed on the required number of times
-        foreach (var coinPath in condition.RequiredCoinPaths)
+        foreach (var coinPath in requiredPaths)
         {
             if (!_coinLandCounts.TryGetValue(coinPath, out int count) || count < condition.RequiredCount)
             {
@@ -428,7 +451,7 @@ public class UnlockProgressService
             UnlockConditionType.Streak => GetStreakProgress(coin.UnlockCondition),
             UnlockConditionType.LandOnCoin => GetLandOnCoinProgress(coin.UnlockCondition),
             UnlockConditionType.RandomChance => $"Random unlock ({coin.UnlockCondition.UnlockChance * 100:F3}% chance)",
-            UnlockConditionType.LandOnMultipleCoins => GetLandOnMultipleCoinsProgress(coin.UnlockCondition),
+            UnlockConditionType.LandOnMultipleCoins => GetLandOnMultipleCoinsProgress(coin.UnlockCondition, coin.Path),
             _ => "Locked"
         };
     }
@@ -457,13 +480,22 @@ public class UnlockProgressService
         return $"{current}/{condition.RequiredCount} times";
     }
     
-    private string GetLandOnMultipleCoinsProgress(UnlockCondition condition)
+    private string GetLandOnMultipleCoinsProgress(UnlockCondition condition, string currentCoinPath = "")
     {
-        if (condition.RequiredCoinPaths == null || !condition.RequiredCoinPaths.Any())
+        var requiredPaths = condition.RequiredCoinPaths;
+        
+        // If UseDynamicCoinList is true, fetch all coins dynamically
+        if (condition.UseDynamicCoinList)
+        {
+            var allPaths = _coinService.GetAllUnlockableCoinPathsAsync(currentCoinPath).GetAwaiter().GetResult();
+            requiredPaths = allPaths;
+        }
+        
+        if (requiredPaths == null || !requiredPaths.Any())
             return "Invalid condition";
         
         int completedCoins = 0;
-        foreach (var coinPath in condition.RequiredCoinPaths)
+        foreach (var coinPath in requiredPaths)
         {
             if (_coinLandCounts.TryGetValue(coinPath, out int count) && count >= condition.RequiredCount)
             {
@@ -471,7 +503,7 @@ public class UnlockProgressService
             }
         }
         
-        return $"{completedCoins}/{condition.RequiredCoinPaths.Count} coins completed ({condition.RequiredCount} each)";
+        return $"{completedCoins}/{requiredPaths.Count} coins completed ({condition.RequiredCount} each)";
     }
     
     private async Task SaveProgressAsync()

@@ -31,14 +31,45 @@
         0 -10px 60px rgba(0, 0, 0, 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.1);
     transform: translateY(100%);
-    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    transition: none;
     display: flex;
     flex-direction: column;
     overflow: hidden;
 }
 
 .coin-drawer.open {
-    transform: translateY(0);
+    animation: drawerSlideUpBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.coin-drawer.closing {
+    animation: drawerSlideDownBounce 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+}
+
+@keyframes drawerSlideUpBounce {
+    0% {
+        transform: translateY(100%);
+    }
+    60% {
+        transform: translateY(-2%);
+    }
+    80% {
+        transform: translateY(1%);
+    }
+    100% {
+        transform: translateY(0);
+    }
+}
+
+@keyframes drawerSlideDownBounce {
+    0% {
+        transform: translateY(0);
+    }
+    30% {
+        transform: translateY(-3%);
+    }
+    100% {
+        transform: translateY(100%);
+    }
 }
 
 /* Drawer Handle */
@@ -352,6 +383,47 @@
     border: 2px solid rgba(255, 255, 255, 0.4);
 }
 
+/* Coin effect badge - base styles */
+.coin-effect-badge {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 5px 7px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+    min-width: 26px;
+    text-align: center;
+    white-space: nowrap;
+    line-height: 1;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Heavy/Weighted coin - RED badge */
+.coin-effect-badge.weighted {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-color: rgba(239, 68, 68, 0.6);
+}
+
+/* Shaved coin - WHITE/LIGHT badge */
+.coin-effect-badge.shaved {
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    color: #1f2937;
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Auto-clicker coin - GREEN badge */
+.coin-effect-badge.auto-click {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-color: rgba(16, 185, 129, 0.6);
+}
+
 .coin-selected-badge {
     position: absolute;
     top: 0;
@@ -385,18 +457,6 @@
         transform: scale(1);
         opacity: 1;
     }
-}
-
-/* Selected coin slot glow */
-.coin-case-slot.selected .coin-display {
-    border-color: rgba(34, 197, 94, 0.8);
-    box-shadow: 
-        inset 0 4px 12px rgba(0, 0, 0, 0.9),
-        inset 0 -1px 4px rgba(255, 255, 255, 0.03),
-        inset 0 0 20px rgba(0, 0, 0, 0.5),
-        0 0 20px rgba(34, 197, 94, 0.5),
-        0 4px 16px rgba(34, 197, 94, 0.4);
-    animation: selectedGlow 2s ease-in-out infinite;
 }
 
 @keyframes selectedGlow {

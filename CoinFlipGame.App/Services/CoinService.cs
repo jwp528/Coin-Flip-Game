@@ -22,7 +22,8 @@ public class CoinService
             new ZodiakCoinType(),
             new AchievementCoinType(),
             new RandomCoinType(),
-            new LeatherCoinType()
+            new LeatherCoinType(),
+            new PowersCoinType()
         };
         _coinImageCache = new Dictionary<string, List<CoinImage>>();
     }
@@ -79,6 +80,13 @@ public class CoinService
             // Get unlock conditions from the coin type
             var unlockConditions = coinType.GetUnlockConditions();
             
+            // Get effects from the coin type (if it's a PowersCoinType)
+            Dictionary<string, CoinEffect>? coinEffects = null;
+            if (coinType is PowersCoinType powersCoinType)
+            {
+                coinEffects = powersCoinType.GetCoinEffects();
+            }
+            
             var coinImages = files
                 .Where(f => f.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
                            f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
@@ -97,6 +105,12 @@ public class CoinService
                     if (unlockConditions.TryGetValue(fileName, out var unlockCondition))
                     {
                         coinImage.UnlockCondition = unlockCondition;
+                    }
+                    
+                    // Apply effect if one exists for this coin
+                    if (coinEffects != null && coinEffects.TryGetValue(fileName, out var coinEffect))
+                    {
+                        coinImage.Effect = coinEffect;
                     }
                     
                     return coinImage;
@@ -148,5 +162,31 @@ public class CoinService
     public CoinType? GetCoinTypeByName(string name)
     {
         return _coinTypes.FirstOrDefault(ct => ct.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+    }
+    
+    /// <summary>
+    /// Get all coin paths that can be unlocked (excluding a specific coin if provided)
+    /// This is used for dynamic unlock conditions like Completionist achievement
+    /// </summary>
+    public async Task<List<string>> GetAllUnlockableCoinPathsAsync(string? excludeCoinPath = null)
+    {
+        var allPaths = new List<string>();
+        
+        foreach (var coinType in _coinTypes)
+        {
+            var coins = await GetAvailableCoinsAsync(coinType);
+            
+            foreach (var coin in coins)
+            {
+                // Include coins that either have no unlock condition (always unlocked) 
+                // or have an unlock condition (can be unlocked)
+                if (string.IsNullOrEmpty(excludeCoinPath) || coin.Path != excludeCoinPath)
+                {
+                    allPaths.Add(coin.Path);
+                }
+            }
+        }
+        
+        return allPaths;
     }
 }

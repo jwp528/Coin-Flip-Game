@@ -54,4 +54,11 @@ public class UnlockCondition
     /// If null, any streak counts (legacy behavior).
     /// </summary>
     public StreakSide? StreakSide { get; set; } = null;
+    
+    /// <summary>
+    /// For LandOnMultipleCoins type - if true, RequiredCoinPaths will be dynamically populated
+    /// with all unlockable coins in the game (excluding the coin with this condition).
+    /// This makes "collect all" achievements automatically track new coins without manual updates.
+    /// </summary>
+    public bool UseDynamicCoinList { get; set; } = false;
 }
