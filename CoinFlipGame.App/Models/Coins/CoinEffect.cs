@@ -23,7 +23,28 @@ public enum CoinEffectType
     /// <summary>
     /// Biases the coin flip slightly away from landing on this side (shaved)
     /// </summary>
-    Shaved
+    Shaved,
+    
+    /// <summary>
+    /// Enhances the opposite side's effect (or adds to streak if no effect)
+    /// </summary>
+    Combo
+}
+
+/// <summary>
+/// Combo multiplier type
+/// </summary>
+public enum ComboType
+{
+    /// <summary>
+    /// Adds to the effect value (e.g., +10% bias becomes +15% with +5% combo)
+    /// </summary>
+    Additive,
+    
+    /// <summary>
+    /// Multiplies the effect value (e.g., +10% bias becomes +15% with 1.5x combo)
+    /// </summary>
+    Multiplicative
 }
 
 /// <summary>
@@ -53,4 +74,17 @@ public class CoinEffect
     /// Example: 0.1 = 10% bias
     /// </summary>
     public double BiasStrength { get; set; } = 0.1;
+    
+    /// <summary>
+    /// Combo type for Combo effects (Additive or Multiplicative)
+    /// </summary>
+    public ComboType ComboType { get; set; } = ComboType.Additive;
+    
+    /// <summary>
+    /// Combo multiplier value
+    /// For Additive: added to effect (e.g., +0.05 adds 5% to bias)
+    /// For Multiplicative: multiplies effect (e.g., 1.5 = 150% of original)
+    /// For no effect on opposite side: adds to current streak
+    /// </summary>
+    public double ComboMultiplier { get; set; } = 0.05;
 }

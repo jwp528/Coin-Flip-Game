@@ -67,7 +67,7 @@ public class PowersCoinType : CoinType
             {
                 Type = CoinEffectType.Shaved,
                 Description = "Shaved - biased to land this side up more often",
-                BiasStrength = 0.15 // 15% bias towards landing UP
+                BiasStrength = 0.20 // 20% bias towards landing UP
             }
         },
         {
@@ -75,7 +75,7 @@ public class PowersCoinType : CoinType
             {
                 Type = CoinEffectType.Weighted,
                 Description = "Weighted - heavy side lands down (opposite side shows)",
-                BiasStrength = 0.20 // 20% bias towards landing DOWN
+                BiasStrength = 0.40 // 40% bias towards landing DOWN
             }
         }
     };

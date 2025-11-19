@@ -15,6 +15,7 @@ public class UnlockProgressService
     private Dictionary<string, int> _coinLandCounts = new();
     private HashSet<string> _randomUnlockedCoins = new();
     private HashSet<string> _notificationShownFor = new();
+    private Dictionary<string, DateTime> _coinUnlockTimestamps = new();
     private int _totalFlips = 0;
     private int _headsFlips = 0;
     private int _tailsFlips = 0;
@@ -181,6 +182,11 @@ public class UnlockProgressService
                     {
                         _notificationShownFor.Add(coin.Path);
                     }
+                    // Record unlock timestamp
+                    if (!_coinUnlockTimestamps.ContainsKey(coin.Path))
+                    {
+                        _coinUnlockTimestamps[coin.Path] = DateTime.UtcNow;
+                    }
                 }
             }
             
@@ -326,6 +332,11 @@ public class UnlockProgressService
                             {
                                 _notificationShownFor.Add(coin.Path);
                             }
+                            // Record unlock timestamp
+                            if (!_coinUnlockTimestamps.ContainsKey(coin.Path))
+                            {
+                                _coinUnlockTimestamps[coin.Path] = DateTime.UtcNow;
+                            }
                             newlyUnlocked.Add(coin);
                         }
                     }
@@ -436,6 +447,14 @@ public class UnlockProgressService
     public int GetLongestTailsStreak() => _longestTailsStreak;
     
     /// <summary>
+    /// Get unlock timestamp for a coin
+    /// </summary>
+    public DateTime? GetUnlockTimestamp(string coinPath)
+    {
+        return _coinUnlockTimestamps.TryGetValue(coinPath, out DateTime timestamp) ? timestamp : null;
+    }
+    
+    /// <summary>
     /// Get progress description for a locked coin
     /// </summary>
     public string GetProgressDescription(CoinImage coin)
@@ -523,7 +542,8 @@ public class UnlockProgressService
                 LongestTailsStreak = _longestTailsStreak,
                 CoinLandCounts = _coinLandCounts,
                 RandomUnlockedCoins = _randomUnlockedCoins.ToList(),
-                NotificationShownFor = _notificationShownFor.ToList()
+                NotificationShownFor = _notificationShownFor.ToList(),
+                CoinUnlockTimestamps = _coinUnlockTimestamps
             };
             
             await _localStorage.SetItemAsync(StorageKey, progress);
@@ -554,6 +574,7 @@ public class UnlockProgressService
                 _coinLandCounts = progress.CoinLandCounts ?? new Dictionary<string, int>();
                 _randomUnlockedCoins = progress.RandomUnlockedCoins?.ToHashSet() ?? new HashSet<string>();
                 _notificationShownFor = progress.NotificationShownFor?.ToHashSet() ?? new HashSet<string>();
+                _coinUnlockTimestamps = progress.CoinUnlockTimestamps ?? new Dictionary<string, DateTime>();
             }
         }
         catch (Exception ex)
@@ -570,6 +591,7 @@ public class UnlockProgressService
         _coinLandCounts.Clear();
         _randomUnlockedCoins.Clear();
         _notificationShownFor.Clear();
+        _coinUnlockTimestamps.Clear();
         _totalFlips = 0;
         _headsFlips = 0;
         _tailsFlips = 0;

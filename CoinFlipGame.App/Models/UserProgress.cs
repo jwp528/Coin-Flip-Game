@@ -50,6 +50,12 @@ public class UserProgress
     /// List of coins that have already shown unlock notifications
     /// </summary>
     public List<string> NotificationShownFor { get; set; } = new();
+    
+    /// <summary>
+    /// Dictionary tracking when each coin was unlocked
+    /// Key: coin path, Value: unlock timestamp (UTC)
+    /// </summary>
+    public Dictionary<string, DateTime> CoinUnlockTimestamps { get; set; } = new();
 }
 
 /// <summary>

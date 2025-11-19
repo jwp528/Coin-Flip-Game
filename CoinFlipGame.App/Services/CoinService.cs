@@ -23,7 +23,8 @@ public class CoinService
             new AchievementCoinType(),
             new RandomCoinType(),
             new LeatherCoinType(),
-            new PowersCoinType()
+            new PowersCoinType(),
+            new ComboCoinType()
         };
         _coinImageCache = new Dictionary<string, List<CoinImage>>();
     }
@@ -80,11 +81,15 @@ public class CoinService
             // Get unlock conditions from the coin type
             var unlockConditions = coinType.GetUnlockConditions();
             
-            // Get effects from the coin type (if it's a PowersCoinType)
+            // Get effects from the coin type (if it's a PowersCoinType or ComboCoinType)
             Dictionary<string, CoinEffect>? coinEffects = null;
             if (coinType is PowersCoinType powersCoinType)
             {
                 coinEffects = powersCoinType.GetCoinEffects();
+            }
+            else if (coinType is ComboCoinType comboCoinType)
+            {
+                coinEffects = comboCoinType.GetCoinEffects();
             }
             
             var coinImages = files

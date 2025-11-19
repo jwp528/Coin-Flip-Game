@@ -21,6 +21,34 @@
             </p>
         </div>
         
+        <!-- Search Bar with Inline Counter -->
+        <div class="drawer-search-section">
+            <div class="drawer-search">
+                <input 
+                    type="text" 
+                    class="drawer-search-input" 
+                    placeholder="Search coins..." 
+                    @bind="searchQuery"
+                    @bind:event="oninput" />
+                @if (string.IsNullOrEmpty(searchQuery))
+                {
+                    <i class="bi bi-search drawer-search-icon"></i>
+                }
+                else
+                {
+                    <button class="drawer-search-clear" @onclick="ClearSearch" @onclick:stopPropagation="true">
+                        <i class="bi bi-x"></i>
+                    </button>
+                }
+            </div>
+            
+            <div class="drawer-unlock-counter">
+                <span class="unlock-counter-value">@GetUnlockedCount()</span>
+                <span class="unlock-counter-separator">/</span>
+                <span class="unlock-counter-total">@GetTotalCount()</span>
+            </div>
+        </div>
+        
         <div class="drawer-content">
             @if (AvailableCoins != null)
             {
@@ -47,11 +75,15 @@
                     <!-- Regular Coins -->
                     @foreach (var coinTypeGroup in AvailableCoins.Where(ct => ct.Value.Any()))
                     {
-                        @foreach (var coin in coinTypeGroup.Value)
+                        var filteredCoins = coinTypeGroup.Value.Where(MatchesSearch).ToList();
+                        
+                        @if (filteredCoins.Any())
                         {
-                            var isUnlocked = UnlockProgress.IsUnlocked(coin);
-                            var landCount = UnlockProgress.GetCoinLandCount(coin.Path);
-                            var isSelected = IsSelectedCoin(coin.Path);
+                            @foreach (var coin in filteredCoins)
+                            {
+                                var isUnlocked = UnlockProgress.IsUnlocked(coin);
+                                var landCount = UnlockProgress.GetCoinLandCount(coin.Path);
+                                var isSelected = IsSelectedCoin(coin.Path);
                             
                             <div class="coin-case-slot @(isUnlocked ? "" : "locked") @(isSelected ? "selected" : "")" 
                                  @onpointerdown="@(() => HandleCoinPointerDown(coin, isUnlocked))"
@@ -92,6 +124,7 @@
                                 </div>
                                 <div class="coin-slot-label">@GetShortName(coin.DisplayName)</div>
                             </div>
+                            }
                         }
                     }
                 </div>
@@ -118,6 +151,7 @@ private const string RANDOM_COIN_IMAGE = "/img/coins/Random.png";
 private const double LONG_PRESS_DURATION = 500; // 500ms for long press
 private bool previousIsVisible = false;
 private bool isClosing = false;
+private string searchQuery = "";
     
 [Parameter]
 public bool IsVisible { get; set; }
@@ -281,6 +315,7 @@ private System.Threading.Timer? longPressTimer = null;
             CoinEffectType.AutoClick => "<i class=\"bi bi-arrow-clockwise\"></i>",
             CoinEffectType.Weighted => "<i class=\"bi bi-train-freight-front-fill\"></i>",
             CoinEffectType.Shaved => "<i class=\"bi bi-feather\"></i>",
+            CoinEffectType.Combo => "<i class=\"bi bi-lightning-charge-fill\"></i>",
             _ => ""
         };
     }
@@ -292,6 +327,7 @@ private System.Threading.Timer? longPressTimer = null;
             CoinEffectType.AutoClick => "auto-click",
             CoinEffectType.Weighted => "weighted",
             CoinEffectType.Shaved => "shaved",
+            CoinEffectType.Combo => "combo",
             _ => ""
         };
     }
@@ -303,6 +339,45 @@ private System.Threading.Timer? longPressTimer = null;
         if (IsVisible)
             return "open";
         return "";
+    }
+    
+    private int GetUnlockedCount()
+    {
+        if (AvailableCoins == null) return 0;
+        
+        int count = 0;
+        foreach (var coinTypeGroup in AvailableCoins.Values)
+        {
+            count += coinTypeGroup.Count(coin => UnlockProgress.IsUnlocked(coin));
+        }
+        return count;
+    }
+    
+    private int GetTotalCount()
+    {
+        if (AvailableCoins == null) return 0;
+        
+        int count = 0;
+        foreach (var coinTypeGroup in AvailableCoins.Values)
+        {
+            count += coinTypeGroup.Count;
+        }
+        return count;
+    }
+    
+    private void ClearSearch()
+    {
+        searchQuery = "";
+    }
+    
+    private bool MatchesSearch(CoinImage coin)
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+            return true;
+        
+        var query = searchQuery.ToLower();
+        return coin.DisplayName.ToLower().Contains(query) ||
+               (coin.UnlockCondition?.Description?.ToLower().Contains(query) ?? false);
     }
     
     protected override void OnParametersSet()

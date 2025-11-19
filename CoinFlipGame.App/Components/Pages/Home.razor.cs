@@ -1040,48 +1040,157 @@ public partial class Home : ComponentBase
     {
         // Base probability is 0.5 (50/50)
         double headsProbability = 0.5;
+        double headsBias = 0.0;
+        double tailsBias = 0.0;
         
-        // Apply heads coin effect
-        if (headsEffect != null)
+        // Get enhanced effects after applying combo modifiers
+        var enhancedHeadsEffect = ApplyComboEnhancement(headsEffect, tailsEffect);
+        var enhancedTailsEffect = ApplyComboEnhancement(tailsEffect, headsEffect);
+        
+        // Calculate bias for heads coin
+        if (enhancedHeadsEffect != null)
         {
-            switch (headsEffect.Type)
+            switch (enhancedHeadsEffect.Type)
             {
                 case CoinEffectType.Weighted:
                     // Weighted means the coin is heavy on this side, so it lands DOWN (opposite side up)
-                    // Decrease the probability of landing heads up
-                    headsProbability -= headsEffect.BiasStrength;
+                    headsBias = -enhancedHeadsEffect.BiasStrength;
                     break;
                 case CoinEffectType.Shaved:
                     // Shaved means this side is shaved/lighter, so it lands UP more often
-                    // INCREASE the probability of landing heads up
-                    headsProbability += headsEffect.BiasStrength;
+                    headsBias = enhancedHeadsEffect.BiasStrength;
                     break;
             }
         }
         
-        // Apply tails coin effect (inverse logic)
-        if (tailsEffect != null)
+        // Calculate bias for tails coin
+        if (enhancedTailsEffect != null)
         {
-            switch (tailsEffect.Type)
+            switch (enhancedTailsEffect.Type)
             {
                 case CoinEffectType.Weighted:
                     // Weighted tails means heavy on tails side, lands DOWN (heads up)
-                    // Increase the probability of landing heads up
-                    headsProbability += tailsEffect.BiasStrength;
+                    tailsBias = enhancedTailsEffect.BiasStrength;
                     break;
                 case CoinEffectType.Shaved:
                     // Shaved tails means lighter on tails side, lands UP more (tails up, heads down)
-                    // DECREASE the probability of landing heads up
-                    headsProbability -= tailsEffect.BiasStrength;
+                    tailsBias = -enhancedTailsEffect.BiasStrength;
                     break;
             }
         }
+        
+        // Apply combo streak boost if applicable (when opposite side has no effect)
+        double streakBoost = 0.0;
+        
+        // Check if heads has combo and tails has no effect
+        if (headsEffect?.Type == CoinEffectType.Combo && 
+            (tailsEffect == null || tailsEffect.Type == CoinEffectType.None || tailsEffect.Type == CoinEffectType.Combo))
+        {
+            streakBoost += ApplyComboStreakBoost(headsEffect, lastResult == "heads");
+        }
+        
+        // Check if tails has combo and heads has no effect
+        if (tailsEffect?.Type == CoinEffectType.Combo && 
+            (headsEffect == null || headsEffect.Type == CoinEffectType.None || headsEffect.Type == CoinEffectType.Combo))
+        {
+            streakBoost += ApplyComboStreakBoost(tailsEffect, lastResult == "tails");
+        }
+        
+        // Apply final biases and streak boost to probability
+        headsProbability += headsBias + tailsBias + streakBoost;
         
         // Clamp probability between 0.1 and 0.9 to avoid guaranteed outcomes
         headsProbability = Math.Clamp(headsProbability, 0.1, 0.9);
         
-        
         return flipValue < headsProbability;
+    }
+    
+    /// <summary>
+    /// Apply combo enhancement to an effect based on opposite side's combo
+    /// </summary>
+    private CoinEffect? ApplyComboEnhancement(CoinEffect? effect, CoinEffect? oppositeEffect)
+    {
+        // If no effect or opposite side doesn't have combo, return original
+        if (effect == null || oppositeEffect?.Type != CoinEffectType.Combo)
+            return effect;
+        
+        // Only enhance Weighted, Shaved, and AutoClick effects
+        if (effect.Type != CoinEffectType.Weighted && 
+            effect.Type != CoinEffectType.Shaved && 
+            effect.Type != CoinEffectType.AutoClick)
+            return effect;
+        
+        // Create enhanced copy of the effect
+        var enhanced = new CoinEffect
+        {
+            Type = effect.Type,
+            Description = effect.Description,
+            BiasStrength = effect.BiasStrength,
+            AutoClickInterval = effect.AutoClickInterval
+        };
+        
+        // Apply combo enhancement based on type
+        if (oppositeEffect.ComboType == ComboType.Additive)
+        {
+            // Additive: add combo multiplier to bias or reduce auto-click interval
+            if (effect.Type == CoinEffectType.Weighted || effect.Type == CoinEffectType.Shaved)
+            {
+                enhanced.BiasStrength += oppositeEffect.ComboMultiplier;
+            }
+            else if (effect.Type == CoinEffectType.AutoClick)
+            {
+                // For additive, reduce interval by a fixed amount (e.g., 100ms per 0.05 multiplier)
+                int reduction = (int)(oppositeEffect.ComboMultiplier * 2000); // 0.05 -> 100ms reduction
+                enhanced.AutoClickInterval = Math.Max(100, effect.AutoClickInterval - reduction);
+            }
+        }
+        else // Multiplicative
+        {
+            // Multiplicative: multiply bias or divide auto-click interval
+            if (effect.Type == CoinEffectType.Weighted || effect.Type == CoinEffectType.Shaved)
+            {
+                enhanced.BiasStrength *= oppositeEffect.ComboMultiplier;
+            }
+            else if (effect.Type == CoinEffectType.AutoClick)
+            {
+                // For multiplicative, divide interval (1.5x -> 1/1.5 = 0.667 of original time)
+                enhanced.AutoClickInterval = (int)(effect.AutoClickInterval / oppositeEffect.ComboMultiplier);
+                enhanced.AutoClickInterval = Math.Max(100, enhanced.AutoClickInterval); // Min 100ms
+            }
+        }
+        
+        return enhanced;
+    }
+    
+    /// <summary>
+    /// Calculate streak boost probability adjustment from combo effect
+    /// </summary>
+    private double ApplyComboStreakBoost(CoinEffect comboEffect, bool favorCurrentStreak)
+    {
+        if (!favorCurrentStreak || string.IsNullOrEmpty(lastResult))
+            return 0.0;
+        
+        double boost = 0.0;
+        
+        if (comboEffect.ComboType == ComboType.Additive)
+        {
+            // Additive: add the multiplier value (e.g., +0.05 = +5% to continue streak)
+            boost = comboEffect.ComboMultiplier;
+        }
+        else // Multiplicative
+        {
+            // Multiplicative: increase probability by percentage of current 50% base
+            // e.g., 1.5x means 50% * 0.5 = 25% boost
+            boost = 0.5 * (comboEffect.ComboMultiplier - 1.0);
+        }
+        
+        // Adjust sign based on which side should be favored
+        if (lastResult == "tails")
+        {
+            boost = -boost; // Negative means favor tails (decrease heads probability)
+        }
+        
+        return boost;
     }
     
     /// <summary>
@@ -1095,21 +1204,35 @@ public partial class Home : ComponentBase
             var headsEffect = GetActiveCoinEffect(selectedHeadsImage);
             var tailsEffect = GetActiveCoinEffect(selectedTailsImage);
             
-            bool shouldAutoClick = (headsEffect?.Type == CoinEffectType.AutoClick) || 
-                                   (tailsEffect?.Type == CoinEffectType.AutoClick);
+            // Apply combo enhancements to effects
+            var enhancedHeadsEffect = ApplyComboEnhancement(headsEffect, tailsEffect);
+            var enhancedTailsEffect = ApplyComboEnhancement(tailsEffect, headsEffect);
+            
+            bool shouldAutoClick = (enhancedHeadsEffect?.Type == CoinEffectType.AutoClick) || 
+                                   (enhancedTailsEffect?.Type == CoinEffectType.AutoClick);
             
             if (shouldAutoClick && !isAutoClickActive)
             {
-                // Get the auto-click interval from the effect
-                int interval = headsEffect?.Type == CoinEffectType.AutoClick 
-                    ? headsEffect.AutoClickInterval 
-                    : (tailsEffect?.AutoClickInterval ?? 1000);
+                // Get the auto-click interval from the enhanced effect
+                int interval = enhancedHeadsEffect?.Type == CoinEffectType.AutoClick 
+                    ? enhancedHeadsEffect.AutoClickInterval 
+                    : (enhancedTailsEffect?.AutoClickInterval ?? 1000);
                 
                 StartAutoClick(interval);
             }
             else if (!shouldAutoClick && isAutoClickActive)
             {
                 StopAutoClick();
+            }
+            else if (shouldAutoClick && isAutoClickActive)
+            {
+                // Auto-click is active but interval might have changed due to combo
+                int newInterval = enhancedHeadsEffect?.Type == CoinEffectType.AutoClick 
+                    ? enhancedHeadsEffect.AutoClickInterval 
+                    : (enhancedTailsEffect?.AutoClickInterval ?? 1000);
+                
+                // Restart with new interval if it changed
+                StartAutoClick(newInterval);
             }
         }
         catch (Exception ex)

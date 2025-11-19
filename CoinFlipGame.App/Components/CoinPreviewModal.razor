@@ -1,6 +1,8 @@
 @using CoinFlipGame.App.Models
+@using CoinFlipGame.App.Services
 @using Microsoft.AspNetCore.Components.Web
 @inject IJSRuntime JSRuntime
+@inject UnlockProgressService UnlockProgress
 
 <div class="coin-preview-overlay @(IsVisible ? "visible" : "")" @onclick="OnClose">
     <div class="coin-preview-modal" @onclick:stopPropagation="true">
@@ -14,6 +16,46 @@
         <div class="preview-content">
             <h3 class="preview-title">@CoinImage?.DisplayName</h3>
             <p class="preview-subtitle">Drag to rotate</p>
+            
+            @if (CoinImage != null)
+            {
+                <!-- Coin Stats -->
+                <div class="preview-stats">
+                    @if (CoinImage.UnlockCondition != null)
+                    {
+                        <div class="preview-stat">
+                            <span class="preview-stat-icon">??</span>
+                            <div class="preview-stat-content">
+                                <span class="preview-stat-label">Description</span>
+                                <span class="preview-stat-value">@CoinImage.UnlockCondition.Description</span>
+                            </div>
+                        </div>
+                    }
+                    
+                    @{
+                        var unlockDate = UnlockProgress.GetUnlockTimestamp(CoinImage.Path);
+                        if (unlockDate.HasValue)
+                        {
+                            <div class="preview-stat">
+                                <span class="preview-stat-icon">??</span>
+                                <div class="preview-stat-content">
+                                    <span class="preview-stat-label">Unlocked</span>
+                                    <span class="preview-stat-value">@FormatUnlockDate(unlockDate.Value)</span>
+                                </div>
+                            </div>
+                        }
+                        
+                        var timesLanded = UnlockProgress.GetCoinLandCount(CoinImage.Path);
+                        <div class="preview-stat">
+                            <span class="preview-stat-icon">??</span>
+                            <div class="preview-stat-content">
+                                <span class="preview-stat-label">Times Landed</span>
+                                <span class="preview-stat-value">@timesLanded</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
             
             <div class="preview-coin-container">
                 <div class="preview-coin"
@@ -165,6 +207,24 @@
         shineY = Math.Clamp(shineY, -10, 50);
         
         return $"transform: translate3d({shineX:F2}%, {shineY:F2}%, 0);";
+    }
+    
+    private string FormatUnlockDate(DateTime unlockDate)
+    {
+        var local = unlockDate.ToLocalTime();
+        var now = DateTime.Now;
+        var diff = now - local;
+        
+        if (diff.TotalMinutes < 1)
+            return "Just now";
+        else if (diff.TotalMinutes < 60)
+            return $"{(int)diff.TotalMinutes} minute{((int)diff.TotalMinutes == 1 ? "" : "s")} ago";
+        else if (diff.TotalHours < 24)
+            return $"{(int)diff.TotalHours} hour{((int)diff.TotalHours == 1 ? "" : "s")} ago";
+        else if (diff.TotalDays < 7)
+            return $"{(int)diff.TotalDays} day{((int)diff.TotalDays == 1 ? "" : "s")} ago";
+        else
+            return local.ToString("MMM dd, yyyy");
     }
     
     public void Dispose()
