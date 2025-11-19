@@ -9,7 +9,7 @@ public static class GameSettings
     /// Super flip charge time in milliseconds
     /// Default: 1500ms (1.5 seconds)
     /// </summary>
-    public const double SUPER_FLIP_CHARGE_TIME = 1500;
+    public const double SUPER_FLIP_CHARGE_TIME = 750;
     
     /// <summary>
     /// Unlock chance multiplier for super flips
