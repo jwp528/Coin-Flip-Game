@@ -1,0 +1,174 @@
+@using CoinFlipGame.App.Models
+@using Microsoft.AspNetCore.Components.Web
+@inject IJSRuntime JSRuntime
+
+<div class="coin-preview-overlay @(IsVisible ? "visible" : "")" @onclick="OnClose">
+    <div class="coin-preview-modal" @onclick:stopPropagation="true">
+        <button class="preview-close-btn" @onclick="OnClose">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        
+        <div class="preview-content">
+            <h3 class="preview-title">@CoinImage?.DisplayName</h3>
+            <p class="preview-subtitle">Drag to rotate</p>
+            
+            <div class="preview-coin-container">
+                <div class="preview-coin"
+                     @ref="previewCoinElement"
+                     @onpointerdown="OnPointerDown"
+                     @onpointermove="OnPointerMove"
+                     @onpointerup="OnPointerUp"
+                     @onpointercancel="OnPointerCancel"
+                     style="@GetCoinTransform()">
+                    <div class="preview-coin-face">
+                        <div class="preview-coin-shine" style="@GetShineTransform()"></div>
+                        @if (CoinImage != null)
+                        {
+                            <img src="@CoinImage.Path" alt="@CoinImage.DisplayName" draggable="false" />
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; }
+    
+    [Parameter]
+    public CoinImage? CoinImage { get; set; }
+    
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+    
+    private ElementReference previewCoinElement;
+    private bool isDragging = false;
+    private double startX = 0;
+    private double startY = 0;
+    private double currentX = 0;
+    private double currentY = 0;
+    private double rotationX = 15;  // Default starting rotation
+    private double rotationY = -15; // Default starting rotation
+    private const double MAX_ROTATION_X = 75.0;  // Limit vertical rotation to prevent full inversion
+    private const double MAX_ROTATION_Y = 75.0;  // Limit horizontal rotation
+    private DotNetObjectReference<CoinPreviewModal>? dotNetRef;
+    private bool hasBeenVisible = false;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        // Reset rotation when modal is opened
+        if (IsVisible && !hasBeenVisible)
+        {
+            rotationX = 15;
+            rotationY = -15;
+            hasBeenVisible = true;
+        }
+        else if (!IsVisible)
+        {
+            hasBeenVisible = false;
+            // Reset rotation when modal closes
+            rotationX = 15;
+            rotationY = -15;
+        }
+        
+        await base.OnParametersSetAsync();
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Setup document-level event listeners
+            dotNetRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("coinPreviewModal.setupEvents", dotNetRef);
+        }
+    }
+    
+    [JSInvokable]
+    public void HandlePointerMove(double clientX, double clientY)
+    {
+        if (!isDragging) return;
+        
+        currentX = clientX;
+        currentY = clientY;
+        
+        double deltaX = currentX - startX;
+        double deltaY = currentY - startY;
+        
+        // Convert movement to rotation with limits to prevent inversion
+        rotationY = Math.Clamp(deltaX / 2, -MAX_ROTATION_Y, MAX_ROTATION_Y);
+        rotationX = Math.Clamp(-deltaY / 2, -MAX_ROTATION_X, MAX_ROTATION_X);
+        
+        StateHasChanged();
+    }
+    
+    [JSInvokable]
+    public void HandlePointerUp()
+    {
+        isDragging = false;
+    }
+    
+    private void OnPointerDown(PointerEventArgs e)
+    {
+        isDragging = true;
+        startX = e.ClientX;
+        startY = e.ClientY;
+        currentX = e.ClientX;
+        currentY = e.ClientY;
+    }
+    
+    private void OnPointerMove(PointerEventArgs e)
+    {
+        if (!isDragging) return;
+        
+        currentX = e.ClientX;
+        currentY = e.ClientY;
+        
+        double deltaX = currentX - startX;
+        double deltaY = currentY - startY;
+        
+        // Convert movement to rotation with limits to prevent inversion
+        rotationY = Math.Clamp(deltaX / 2, -MAX_ROTATION_Y, MAX_ROTATION_Y);
+        rotationX = Math.Clamp(-deltaY / 2, -MAX_ROTATION_X, MAX_ROTATION_X);
+        
+        StateHasChanged();
+    }
+    
+    private void OnPointerUp(PointerEventArgs e)
+    {
+        isDragging = false;
+    }
+    
+    private void OnPointerCancel(PointerEventArgs e)
+    {
+        isDragging = false;
+    }
+    
+    private string GetCoinTransform()
+    {
+        return $"transform: rotateX({rotationX:F2}deg) rotateY({rotationY:F2}deg);";
+    }
+    
+    private string GetShineTransform()
+    {
+        double baseX = 20.0;
+        double baseY = 20.0;
+        double shineX = baseX - (rotationY * 1.5);
+        double shineY = baseY + (rotationX * 1.5);
+        
+        shineX = Math.Clamp(shineX, -10, 50);
+        shineY = Math.Clamp(shineY, -10, 50);
+        
+        return $"transform: translate3d({shineX:F2}%, {shineY:F2}%, 0);";
+    }
+    
+    public void Dispose()
+    {
+        dotNetRef?.Dispose();
+    }
+}

@@ -12,5 +12,6 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddScoped<CoinService>();
 builder.Services.AddScoped<UnlockProgressService>(); // Scoped to allow consumption of scoped ILocalStorageService
+builder.Services.AddScoped<UpdateService>(); // Service for app updates and cache management
 
 await builder.Build().RunAsync();

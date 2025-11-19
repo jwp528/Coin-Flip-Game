@@ -60,8 +60,8 @@ public partial class Home : ComponentBase
     // Coin customization state
     private bool showCoinSelector = false;
     private string selectingFor = ""; // "heads" or "tails"
-    private string selectedHeadsImage = "/img/coins/logo.png";
-    private string selectedTailsImage = "/img/coins/logo.png";
+    private string selectedHeadsImage = "/img/coins/Random.png";
+    private string selectedTailsImage = "/img/coins/Random.png";
     private bool isHeadsRandom = true; // Default to random
     private bool isTailsRandom = true; // Default to random
     private string faceShowing = "/img/coins/logo.png"; // The current face displayed
@@ -73,13 +73,17 @@ public partial class Home : ComponentBase
     private bool isSuperFlipReady = false;
     private DateTime? chargeStartTime = null;
     private const double SUPER_FLIP_CHARGE_TIME = 1500; // 1.5 seconds (reduced from 3 seconds)
-    private const double SUPER_FLIP_UNLOCK_MULTIPLIER = 10.0; // 10x unlock chance for random chance coins
+    private const double SUPER_FLIP_UNLOCK_MULTIPLIER = 3.0; // 3x unlock chance for random chance coins
     private CancellationTokenSource? chargeCancellationTokenSource = null;
     
     // Unlock achievement state
     private bool showUnlockAchievement = false;
     private CoinImage? currentlyUnlockedCoin = null;
     private Queue<CoinImage> pendingUnlockAchievements = new Queue<CoinImage>();
+    
+    // Coin preview modal state
+    private bool showCoinPreview = false;
+    private CoinImage? previewCoin = null;
     
     private double startY = 0;
     private double currentY = 0;
@@ -239,7 +243,8 @@ public partial class Home : ComponentBase
         }
         
         await SaveCoinSelectionPreferencesAsync();
-        CloseCoinSelector();
+        // Don't auto-close drawer - let user close it manually
+        StateHasChanged();
     }
     
     private string GetCoinTransform()
@@ -550,6 +555,17 @@ public partial class Home : ComponentBase
         {
             currentlyUnlockedCoin = pendingUnlockAchievements.Dequeue();
             showUnlockAchievement = true;
+            
+            // Play coin unlock sound
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("playCoinUnlockSound");
+            }
+            catch (JSException)
+            {
+                // Sound failed to play, continue anyway
+            }
+            
             StateHasChanged();
             
             // Wait for user to dismiss this achievement
@@ -572,6 +588,21 @@ public partial class Home : ComponentBase
     {
         showUnlockAchievement = false;
         StateHasChanged();
+    }
+    
+    private void OpenUnlockedCoinPreview()
+    {
+        if (currentlyUnlockedCoin != null)
+        {
+            // Set the preview coin and open the modal
+            previewCoin = currentlyUnlockedCoin;
+            showCoinPreview = true;
+            
+            // Dismiss the unlock notification
+            showUnlockAchievement = false;
+            
+            StateHasChanged();
+        }
     }
     
     private string GetRarityClass(UnlockRarity rarity)
@@ -684,7 +715,21 @@ public partial class Home : ComponentBase
         }
         
         await SaveCoinSelectionPreferencesAsync();
-        CloseCoinSelector();
+        // Don't auto-close drawer - let user close it manually
+        StateHasChanged();
+    }
+    
+    private void HandleCoinLongPress(CoinImage coin)
+    {
+        previewCoin = coin;
+        showCoinPreview = true;
+        StateHasChanged();
+    }
+    
+    private void CloseCoinPreview()
+    {
+        showCoinPreview = false;
+        previewCoin = null;
     }
     
     private CoinImage? GetRandomCoinByRarity()

@@ -1,13 +1,14 @@
 {
-  "name": "Coin Flip Game - Unlock Rare Coins",
-  "short_name": "Coin Flip",
-  "description": "A premium interactive coin flipping game with unlockable rare coins, super flips, and stunning animations. Flip coins, unlock achievements, and collect zodiac-themed coins!",
-  "start_url": "/",
-  "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#667eea",
-  "orientation": "portrait-primary",
-  "scope": "/",
+"name": "Coin Flip Game - Unlock Rare Coins",
+"short_name": "Coin Flip",
+"version": "1.2.0",
+"description": "A premium interactive coin flipping game with unlockable rare coins, super flips, and stunning animations. Flip coins, unlock achievements, and collect zodiac-themed coins!",
+"start_url": "/?v=1.2.0",
+"display": "standalone",
+"background_color": "#0f172a",
+"theme_color": "#667eea",
+"orientation": "portrait-primary",
+"scope": "/",
   "icons": [
     {
       "src": "/icons/icon-72x72.png",

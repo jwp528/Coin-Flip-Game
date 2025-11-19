@@ -146,7 +146,7 @@
     user-select: none;
     touch-action: none;
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    filter: drop-shadow(0 10px 40px rgba(255, 215, 0, 0.3));
+    filter: drop-shadow(0 10px 40px rgba(255, 215, 0, 0.3)) drop-shadow(0 20px 60px rgba(0, 0, 0, 0.5));
 }
 
 .coin.dragging {
@@ -156,7 +156,7 @@
 
 .coin:hover:not(.flip-heads):not(.flip-tails):not(.dragging) {
     transform: scale(1.08);
-    filter: drop-shadow(0 15px 50px rgba(255, 215, 0, 0.5));
+    filter: drop-shadow(0 15px 50px rgba(255, 215, 0, 0.5)) drop-shadow(0 25px 70px rgba(0, 0, 0, 0.6));
 }
 
 .coin:active:not(.flip-heads):not(.flip-tails) {
@@ -175,7 +175,7 @@
     animation-name: coinFlipWeightedTails;
 }
 
-/* Coin Face & Edge Styling - SIMPLIFIED VERSION */
+/* Coin Face & Edge Styling */
 .coin-face {
     position: absolute;
     width: 100%;
@@ -195,6 +195,8 @@
     transition: opacity 0.1s;
 }
 
+/* Coin depth layers - creating realistic 3D thickness with multiple layers */
+/* Deepest layer - darkest edge */
 .coin::before {
     content: '';
     position: absolute;
@@ -203,19 +205,25 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    transform: translate(-50%, -50%) translateZ(-8px);
+    transform: translate(-50%, -50%) translateZ(-16px);
     background: linear-gradient(90deg, 
-        #8b7500 0%,
-        #b8960b 15%,
-        #daa520 35%,
-        #f0d060 50%,
-        #daa520 65%,
-        #b8960b 85%,
-        #8b7500 100%);
+        #4a3c00 0%,
+        #5d4a00 10%,
+        #6b5700 20%,
+        #8b7500 35%,
+        #a68a05 50%,
+        #8b7500 65%,
+        #6b5700 80%,
+        #5d4a00 90%,
+        #4a3c00 100%);
     transform-style: preserve-3d;
-    z-index: -1;
+    z-index: -3;
+    box-shadow: 
+        inset 0 0 25px rgba(0, 0, 0, 0.6),
+        0 0 15px rgba(0, 0, 0, 0.4);
 }
 
+/* Second depth layer - mid-dark edge */
 .coin::after {
     content: '';
     position: absolute;
@@ -224,19 +232,78 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    transform: translate(-50%, -50%) translateZ(-4px);
+    transform: translate(-50%, -50%) translateZ(-12px);
+    background: linear-gradient(135deg, 
+        #6b5700 0%,
+        #8b7500 15%,
+        #b8960b 30%,
+        #daa520 45%,
+        #f0d060 50%,
+        #daa520 55%,
+        #b8960b 70%,
+        #8b7500 85%,
+        #6b5700 100%);
+    transform-style: preserve-3d;
+    z-index: -2;
+    box-shadow: 
+        inset 0 0 20px rgba(0, 0, 0, 0.4),
+        0 0 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Add intermediate layers using pseudo-elements on the face */
+.coin-face::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transform: translateZ(-8px);
     background: linear-gradient(180deg, 
+        #a68a05 0%,
+        #b8960b 15%,
+        #daa520 30%,
+        #ffed4e 45%,
+        #ffd700 50%,
+        #ffed4e 55%,
+        #daa520 70%,
+        #b8960b 85%,
+        #a68a05 100%);
+    transform-style: preserve-3d;
+    z-index: -1;
+    box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.25);
+}
+
+/* Lightest intermediate layer */
+.coin-face::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    transform: translateZ(-4px);
+    background: linear-gradient(90deg, 
         #c9a502 0%,
-        #daa520 25%,
-        #ffed4e 50%,
-        #daa520 75%,
+        #daa520 20%,
+        #ffed4e 40%,
+        #ffd700 50%,
+        #ffed4e 60%,
+        #daa520 80%,
         #c9a502 100%);
     transform-style: preserve-3d;
     z-index: -1;
-    opacity: 0.9;
+    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.15);
 }
 
-.coin-face.landing-flash::after {
+/* Landing flash effect - higher z-index to show above depth layers */
+.coin-face.landing-flash {
+    position: relative;
+}
+
+.coin-face.landing-flash::before {
     content: '';
     position: absolute;
     top: 0;
@@ -252,7 +319,8 @@
     border-radius: 50%;
     animation: flashSweep 0.5s ease-out;
     pointer-events: none;
-    z-index: 10;
+    z-index: 100;
+    transform: none !important; /* Override depth transform */
 }
 
 .coin-shine {
@@ -629,9 +697,10 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translateX(-50%)translateY(-50%);
+    transform: translate(-50%, -50%);
     animation: hintBounce 2s ease-in-out infinite;
     z-index: 10;
+    max-width: 90%;
 }
 
 .hint-content {
@@ -770,7 +839,8 @@
     }
     
     .first-time-hint {
-        top: -70px;
+        top: 50%;
+        max-width: calc(100% - 40px);
     }
     
     .hint-icon {

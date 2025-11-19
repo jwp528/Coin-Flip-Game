@@ -1,0 +1,275 @@
+/* Unlock Info Dialog Styles */
+.unlock-info-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.unlock-info-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.unlock-info-dialog {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(51, 65, 85, 0.98) 100%);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    max-width: 400px;
+    width: 90%;
+    transform: scale(0.9);
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.unlock-info-overlay.visible .unlock-info-dialog {
+    transform: scale(1);
+}
+
+.unlock-info-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.unlock-info-coin-preview {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.unlock-coin-silhouette {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 237, 78, 0.1) 100%);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.unlock-coin-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 12px;
+    filter: grayscale(100%) brightness(0.4);
+}
+
+.unlock-coin-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(2px);
+}
+
+.unlock-question-mark {
+    font-size: 3rem;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.unlock-info-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.unlock-info-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.95);
+    margin: 0;
+    text-align: center;
+}
+
+.unlock-info-rarity {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.unlock-info-rarity.common {
+    background: rgba(139, 92, 246, 0.2);
+    color: #a78bfa;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.unlock-info-rarity.uncommon {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.unlock-info-rarity.rare {
+    background: rgba(168, 85, 247, 0.2);
+    color: #c084fc;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.unlock-info-rarity.legendary {
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.2) 0%, rgba(239, 68, 68, 0.2) 100%);
+    color: #fb923c;
+    border: 1px solid rgba(251, 146, 60, 0.4);
+}
+
+.unlock-info-description {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.5;
+    text-align: center;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.unlock-info-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.unlock-progress-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(129, 140, 248, 0.9);
+    text-align: center;
+}
+
+.unlock-progress-bar-container {
+    width: 100%;
+    height: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.unlock-progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #818cf8 0%, #c084fc 100%);
+    border-radius: 5px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(129, 140, 248, 0.5);
+}
+
+.unlock-progress-text {
+    font-size: 0.85rem;
+    color: rgba(129, 140, 248, 0.9);
+    font-weight: 600;
+    text-align: center;
+}
+
+.unlock-info-prerequisites {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.unlock-prerequisites-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.unlock-prerequisite-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.4;
+}
+
+.unlock-prerequisite-bullet {
+    color: #818cf8;
+    font-weight: 700;
+}
+
+.unlock-info-close-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(129, 140, 248, 0.3);
+}
+
+.unlock-info-close-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(129, 140, 248, 0.4);
+}
+
+.unlock-info-close-btn:active {
+    transform: translateY(0);
+}
+
+/* Mobile responsive */
+@media (max-width: 480px) {
+    .unlock-info-dialog {
+        max-width: 340px;
+    }
+    
+    .unlock-info-body {
+        padding: 20px;
+        gap: 14px;
+    }
+    
+    .unlock-coin-silhouette {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .unlock-question-mark {
+        font-size: 2.5rem;
+    }
+    
+    .unlock-info-title {
+        font-size: 1.3rem;
+    }
+    
+    .unlock-info-description {
+        font-size: 0.9rem;
+        padding: 10px;
+    }
+}

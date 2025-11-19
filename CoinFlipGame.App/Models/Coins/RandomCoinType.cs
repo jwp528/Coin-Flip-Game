@@ -16,7 +16,12 @@ public class RandomCoinType : CoinType
         "River.png",
         "Winter.png",
         "City.png",
-        "Chaos.png"
+        "Chaos.png",
+        "Lisa.png",
+        "Zen.png",
+        "Scenery.png",
+        "Panda.png",
+        "Brook.png"
     };
     
     public override Dictionary<string, UnlockCondition> GetUnlockConditions() => new()
@@ -26,7 +31,7 @@ public class RandomCoinType : CoinType
             { 
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.02,
-                Description = "2% random unlock on any flip",
+                Description = "2% chance to unlock on any flip",
                 Rarity = UnlockRarity.Common
             } 
         },
@@ -35,7 +40,7 @@ public class RandomCoinType : CoinType
             { 
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.06,
-                Description = "6% random unlock on any flip",
+                Description = "6% chance to unlock on any flip",
                 Rarity = UnlockRarity.Uncommon
             } 
         },
@@ -44,7 +49,7 @@ public class RandomCoinType : CoinType
             { 
                 Type = UnlockConditionType.RandomChance, 
                 UnlockChance = 0.05,
-                Description = "5% random unlock on any flip",
+                Description = "5% chance to unlock on any flip",
                 Rarity = UnlockRarity.Rare
             } 
         },
@@ -52,8 +57,8 @@ public class RandomCoinType : CoinType
             "Chaos.png", new UnlockCondition
             {
                 Type = UnlockConditionType.RandomChance,
-                UnlockChance = 0.005, // 5% chance
-                Description = "5% random unlock on any flip",
+                UnlockChance = 0.005, // 0.5% chance
+                Description = "0.5% chance to unlock on any flip",
                 Rarity = UnlockRarity.Rare,
                 Prerequisites = new List<UnlockCondition>
                 {
@@ -62,6 +67,83 @@ public class RandomCoinType : CoinType
                         Type = UnlockConditionType.TotalFlips,
                         RequiredCount = 200,
                         Description = "Flip 200 times"
+                    }
+                }
+            }
+        },
+        {
+            "Lisa.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.RandomChance,
+                UnlockChance = 0.005, // 0.5% chance
+                Description = "0.5% chance to unlock on any flip",
+                Rarity = UnlockRarity.Rare
+            }
+        },
+        {
+            "Scenery.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.RandomChance,
+                UnlockChance = 0.01, // 1% chance
+                Description = "1% chance to unlock on any flip",
+                Rarity = UnlockRarity.Rare
+            }
+        },
+        {
+            "Panda.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.RandomChance,
+                UnlockChance = 0.001, // 0.1% chance
+                Description = "0.1% chance to unlock on any flip",
+                Rarity = UnlockRarity.Rare
+            }
+        },
+        {
+            "Zen.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.RandomChance,
+                UnlockChance = 0.005, // 0.5% chance
+                Description = "0.5% chance to unlock after 500 flips while Panda is active",
+                Rarity = UnlockRarity.Rare,
+                RequiresActiveCoin = true,
+                Prerequisites = new List<UnlockCondition>
+                {
+                    new UnlockCondition
+                    {
+                        Type = UnlockConditionType.TotalFlips,
+                        RequiredCount = 500,
+                        Description = "500 total flips"
+                    },
+                    new UnlockCondition
+                    {
+                        Type = UnlockConditionType.LandOnCoin,
+                        RequiredCoinPath = "Panda.png",
+                        RequiredCount = 1,
+                        Description = "Have the Panda coin active"
+
+                    }
+                }
+            }
+        },
+         {
+            "Brook.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.RandomChance,
+                UnlockChance = 0.01, // 1% chance
+                Description = "1% chance to unlock on any flip. The Dillon coin.",
+                Rarity = UnlockRarity.Rare,
+                Prerequisites = new List<UnlockCondition>
+                {
+                    new UnlockCondition
+                    {
+                        Type = UnlockConditionType.LandOnCoin,
+                        RequiredCoinPaths = new List<string>
+                        {
+                            "/img/coins/AI/Random/Zen.png",
+                            "/img/coins/AI/Zodiak/Dragon_Rare.png"
+                        },
+                        RequiredCount = 1,
+                        Description = "Must have unlocked Dragon_Rare and Zen coins."
                     }
                 }
             }

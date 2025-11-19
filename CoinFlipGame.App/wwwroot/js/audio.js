@@ -61,6 +61,38 @@ class AudioSystem {
         }
     }
     
+    // Load and play coin unlock sound from audio file
+    async playCoinUnlock() {
+        if (this.isMuted || !this.audioContext) return;
+        
+        await this.resumeContext();
+        
+        try {
+            // Load the coin-unlocked.mp3 file if not already loaded
+            if (!this.sounds['coinUnlock']) {
+                const response = await fetch('/sounds/coin-unlocked.mp3');
+                const arrayBuffer = await response.arrayBuffer();
+                this.sounds['coinUnlock'] = await this.audioContext.decodeAudioData(arrayBuffer);
+            }
+            
+            // Create and play the sound
+            const source = this.audioContext.createBufferSource();
+            source.buffer = this.sounds['coinUnlock'];
+            
+            const gainNode = this.audioContext.createGain();
+            gainNode.gain.value = 0.8; // Slightly louder for celebration
+            
+            source.connect(gainNode);
+            gainNode.connect(this.masterGain);
+            
+            source.start(0);
+        } catch (error) {
+            console.warn('Failed to play coin unlock sound:', error);
+            // Fallback to sparkle sound if file fails to load
+            this.playSparkle();
+        }
+    }
+    
     // Fallback: Synthesize coin flip sound (whoosh with metallic ringing)
     playFlipSynthesized() {
         if (this.isMuted || !this.audioContext) return;
@@ -292,6 +324,11 @@ window.playSparkleSound = function() {
 window.playHoverSound = function() {
     const audio = window.initAudioSystem();
     audio.playHover();
+};
+
+window.playCoinUnlockSound = function() {
+    const audio = window.initAudioSystem();
+    audio.playCoinUnlock();
 };
 
 window.setAudioVolume = function(volume) {
