@@ -10,7 +10,7 @@ public class RandomCoinType : CoinType
     public override string Name { get; set; } = "Random";
     public override string BasePath { get; set; } = "/img/coins/AI/Random";
     public override string Category { get; set; } = "AI";
-    
+
     public override List<string> GetCoinFiles() => new()
     {
         "River.png",
@@ -21,37 +21,38 @@ public class RandomCoinType : CoinType
         "Zen.png",
         "Scenery.png",
         "Panda.png",
-        "Brook.png"
+        "Brook.png",
+        "Dillon.png"
     };
-    
+
     public override Dictionary<string, UnlockCondition> GetUnlockConditions() => new()
     {
-        { 
-            "River.png", new UnlockCondition 
-            { 
+        {
+            "River.png", new UnlockCondition
+            {
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.02,
                 Description = "2% chance to unlock on any flip",
                 Rarity = UnlockRarity.Common
-            } 
+            }
         },
-        { 
-            "Winter.png", new UnlockCondition 
-            { 
+        {
+            "Winter.png", new UnlockCondition
+            {
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.06,
                 Description = "6% chance to unlock on any flip",
                 Rarity = UnlockRarity.Uncommon
-            } 
+            }
         },
-        { 
-            "City.png", new UnlockCondition 
-            { 
-                Type = UnlockConditionType.RandomChance, 
+        {
+            "City.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.05,
                 Description = "5% chance to unlock on any flip",
                 Rarity = UnlockRarity.Rare
-            } 
+            }
         },
         {
             "Chaos.png", new UnlockCondition
@@ -144,6 +145,29 @@ public class RandomCoinType : CoinType
                         },
                         RequiredCount = 1,
                         Description = "Must have unlocked Dragon_Rare and Zen coins."
+                    }
+                }
+            }
+        },
+         {
+            "Dillon.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.None,
+                Description = "The Dillon coin! Thank you for the coin Dillon it's VERY nice!",
+                Rarity = UnlockRarity.Rare,
+                Prerequisites = new List<UnlockCondition>
+                {
+                    new UnlockCondition
+                    {
+                        Type = UnlockConditionType.HeadsFlips,
+                        RequiredCount = 100,
+                        Description = "Flip heads 100 times."
+                    },
+                    new UnlockCondition
+                    {
+                        Type = UnlockConditionType.TailsFlips,
+                        RequiredCount = 100,
+                        Description = "Flip tails 100 times."
                     }
                 }
             }

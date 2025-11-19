@@ -72,8 +72,6 @@ public partial class Home : ComponentBase
     private bool isSuperFlipCharging = false;
     private bool isSuperFlipReady = false;
     private DateTime? chargeStartTime = null;
-    private const double SUPER_FLIP_CHARGE_TIME = 1500; // 1.5 seconds (reduced from 3 seconds)
-    private const double SUPER_FLIP_UNLOCK_MULTIPLIER = 3.0; // 3x unlock chance for random chance coins
     private CancellationTokenSource? chargeCancellationTokenSource = null;
     
     // Unlock achievement state
@@ -287,7 +285,7 @@ public partial class Home : ComponentBase
             return 0;
         
         double elapsed = (DateTime.Now - chargeStartTime.Value).TotalMilliseconds;
-        double progress = Math.Min(100, (elapsed / SUPER_FLIP_CHARGE_TIME) * 100);
+        double progress = Math.Min(100, (elapsed / GameSettings.SUPER_FLIP_CHARGE_TIME) * 100);
         return progress;
     }
     
@@ -460,7 +458,7 @@ public partial class Home : ComponentBase
         StateHasChanged();
         
         // Wait for animation duration (shorter for super flip)
-        int animationDuration = isSuperFlip ? 750 : 600;
+        int animationDuration = isSuperFlip ? GameSettings.SUPER_FLIP_ANIMATION_DURATION : GameSettings.NORMAL_FLIP_ANIMATION_DURATION;
         await Task.Delay(animationDuration);
         
         // Remove animation class and FORCE neutral rotation
@@ -501,7 +499,7 @@ public partial class Home : ComponentBase
         var newlyUnlocked = UnlockProgress.TrackCoinLanding(landedCoinPath, isHeads, currentStreak, allCoins);
         
         // Try random unlocks based on the landed coin (with double chance for super flip)
-        double unlockMultiplier = isSuperFlip ? SUPER_FLIP_UNLOCK_MULTIPLIER : 1.0;
+        double unlockMultiplier = isSuperFlip ? GameSettings.SUPER_FLIP_UNLOCK_MULTIPLIER : 1.0;
         var randomUnlocked = UnlockProgress.TryRandomUnlocks(landedCoinPath, allCoins, unlockMultiplier);
         newlyUnlocked.AddRange(randomUnlocked);
         
@@ -820,7 +818,7 @@ public partial class Home : ComponentBase
                     
                 double elapsed = (DateTime.Now - chargeStartTime.Value).TotalMilliseconds;
                 
-                if (elapsed >= SUPER_FLIP_CHARGE_TIME && !isSuperFlipReady)
+                if (elapsed >= GameSettings.SUPER_FLIP_CHARGE_TIME && !isSuperFlipReady)
                 {
                     isSuperFlipReady = true;
                     isSuperFlipCharging = false;

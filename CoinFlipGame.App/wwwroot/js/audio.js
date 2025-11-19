@@ -93,6 +93,66 @@ class AudioSystem {
         }
     }
     
+    // Load and play drawer open sound from audio file
+    async playDrawerOpen() {
+        if (this.isMuted || !this.audioContext) return;
+        
+        await this.resumeContext();
+        
+        try {
+            // Load the CoinDrawer_Open.mp3 file if not already loaded
+            if (!this.sounds['drawerOpen']) {
+                const response = await fetch('/sounds/CoinDrawer_Open.mp3');
+                const arrayBuffer = await response.arrayBuffer();
+                this.sounds['drawerOpen'] = await this.audioContext.decodeAudioData(arrayBuffer);
+            }
+            
+            // Create and play the sound
+            const source = this.audioContext.createBufferSource();
+            source.buffer = this.sounds['drawerOpen'];
+            
+            const gainNode = this.audioContext.createGain();
+            gainNode.gain.value = 0.6; // Slightly quieter for UI sound
+            
+            source.connect(gainNode);
+            gainNode.connect(this.masterGain);
+            
+            source.start(0);
+        } catch (error) {
+            console.warn('Failed to play drawer open sound:', error);
+        }
+    }
+    
+    // Load and play drawer close sound from audio file
+    async playDrawerClose() {
+        if (this.isMuted || !this.audioContext) return;
+        
+        await this.resumeContext();
+        
+        try {
+            // Load the CoinDrawer_Close.mp3 file if not already loaded
+            if (!this.sounds['drawerClose']) {
+                const response = await fetch('/sounds/CoinDrawer_Close.mp3');
+                const arrayBuffer = await response.arrayBuffer();
+                this.sounds['drawerClose'] = await this.audioContext.decodeAudioData(arrayBuffer);
+            }
+            
+            // Create and play the sound
+            const source = this.audioContext.createBufferSource();
+            source.buffer = this.sounds['drawerClose'];
+            
+            const gainNode = this.audioContext.createGain();
+            gainNode.gain.value = 0.6; // Slightly quieter for UI sound
+            
+            source.connect(gainNode);
+            gainNode.connect(this.masterGain);
+            
+            source.start(0);
+        } catch (error) {
+            console.warn('Failed to play drawer close sound:', error);
+        }
+    }
+    
     // Fallback: Synthesize coin flip sound (whoosh with metallic ringing)
     playFlipSynthesized() {
         if (this.isMuted || !this.audioContext) return;
@@ -329,6 +389,16 @@ window.playHoverSound = function() {
 window.playCoinUnlockSound = function() {
     const audio = window.initAudioSystem();
     audio.playCoinUnlock();
+};
+
+window.playDrawerOpenSound = function() {
+    const audio = window.initAudioSystem();
+    audio.playDrawerOpen();
+};
+
+window.playDrawerCloseSound = function() {
+    const audio = window.initAudioSystem();
+    audio.playDrawerClose();
 };
 
 window.setAudioVolume = function(volume) {

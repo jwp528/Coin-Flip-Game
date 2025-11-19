@@ -1,7 +1,9 @@
 @using CoinFlipGame.App.Models
 @using CoinFlipGame.App.Models.Unlocks
 @using CoinFlipGame.App.Services
+@using Microsoft.JSInterop
 @inject UnlockProgressService UnlockProgress
+@inject IJSRuntime JSRuntime
 @implements IDisposable
 
 <div class="coin-drawer-overlay @(IsVisible ? "visible" : "")" @onclick="OnClose">
@@ -108,6 +110,7 @@
 @code {
 private const string RANDOM_COIN_IMAGE = "/img/coins/Random.png";
 private const double LONG_PRESS_DURATION = 500; // 500ms for long press
+private bool previousIsVisible = false;
     
 [Parameter]
 public bool IsVisible { get; set; }
@@ -141,6 +144,33 @@ private CoinImage? selectedLockedCoin = null;
 private DateTime? pointerDownTime = null;
 private CoinImage? pressedCoin = null;
 private System.Threading.Timer? longPressTimer = null;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        // Play sound when drawer visibility changes
+        if (IsVisible != previousIsVisible)
+        {
+            try
+            {
+                if (IsVisible)
+                {
+                    await JSRuntime.InvokeVoidAsync("playDrawerOpenSound");
+                }
+                else
+                {
+                    await JSRuntime.InvokeVoidAsync("playDrawerCloseSound");
+                }
+            }
+            catch (Exception)
+            {
+                // Ignore JS interop errors (e.g., during prerendering)
+            }
+            
+            previousIsVisible = IsVisible;
+        }
+        
+        await base.OnParametersSetAsync();
+    }
     
     private async Task HandleCoinClick(CoinImage coin, bool isUnlocked)
     {
