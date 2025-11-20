@@ -244,12 +244,14 @@ public partial class Home : ComponentBase, IDisposable
             }
         }
         
-        // Update auto-click state when coins change
-        UpdateAutoClickState();
-        
+        // IMPORTANT: Force a state update BEFORE checking auto-click
+        // This ensures the new coin selection is fully applied
         await SaveCoinSelectionPreferencesAsync();
-        // Don't auto-close drawer - let user close it manually
         StateHasChanged();
+        
+        // Update auto-click state AFTER state has been saved
+        // This ensures effects are read from the newly selected coins
+        UpdateAutoClickState();        
     }
     
     private string GetCoinTransform()
@@ -1125,19 +1127,15 @@ public partial class Home : ComponentBase, IDisposable
     /// </summary>
     private CoinEffect? ApplyComboEnhancement(CoinEffect? effect, CoinEffect? oppositeEffect)
     {
-        Logger.LogInformation($"[ApplyComboEnhancement] effect: {effect?.Type}, oppositeEffect: {oppositeEffect?.Type}");
-        
         // If both sides have combo, they cancel out - no enhancement
         if (effect?.Type == CoinEffectType.Combo && oppositeEffect?.Type == CoinEffectType.Combo)
         {
-            Logger.LogInformation("[ApplyComboEnhancement] Both sides have combo - canceling out");
             return effect;
         }
         
         // If no effect or opposite side doesn't have combo, return original
         if (effect == null || oppositeEffect?.Type != CoinEffectType.Combo)
         {
-            Logger.LogInformation($"[ApplyComboEnhancement] No enhancement - effect null: {effect == null}, opposite is combo: {oppositeEffect?.Type == CoinEffectType.Combo}");
             return effect;
         }
         
@@ -1146,11 +1144,8 @@ public partial class Home : ComponentBase, IDisposable
             effect.Type != CoinEffectType.Shaved && 
             effect.Type != CoinEffectType.AutoClick)
         {
-            Logger.LogInformation($"[ApplyComboEnhancement] Effect type {effect.Type} cannot be enhanced");
             return effect;
         }
-        
-        Logger.LogInformation($"[ApplyComboEnhancement] Enhancing {effect.Type} with {oppositeEffect.ComboType} combo (multiplier: {oppositeEffect.ComboMultiplier})");
         
         // Create enhanced copy of the effect
         var enhanced = new CoinEffect
@@ -1167,9 +1162,7 @@ public partial class Home : ComponentBase, IDisposable
             // Additive: add combo multiplier to bias or reduce auto-click interval
             if (effect.Type == CoinEffectType.Weighted || effect.Type == CoinEffectType.Shaved)
             {
-                double oldBias = enhanced.BiasStrength;
                 enhanced.BiasStrength += oppositeEffect.ComboMultiplier;
-                Logger.LogInformation($"[ApplyComboEnhancement] Additive: {oldBias:F3} + {oppositeEffect.ComboMultiplier:F3} = {enhanced.BiasStrength:F3}");
             }
             else if (effect.Type == CoinEffectType.AutoClick)
             {
@@ -1183,9 +1176,7 @@ public partial class Home : ComponentBase, IDisposable
             // Multiplicative: multiply bias or divide auto-click interval
             if (effect.Type == CoinEffectType.Weighted || effect.Type == CoinEffectType.Shaved)
             {
-                double oldBias = enhanced.BiasStrength;
                 enhanced.BiasStrength *= oppositeEffect.ComboMultiplier;
-                Logger.LogInformation($"[ApplyComboEnhancement] Multiplicative: {oldBias:F3} * {oppositeEffect.ComboMultiplier:F2} = {enhanced.BiasStrength:F3}");
             }
             else if (effect.Type == CoinEffectType.AutoClick)
             {
