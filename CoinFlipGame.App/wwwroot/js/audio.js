@@ -44,7 +44,8 @@ constructor() {
             { key: 'coinFlip', url: '/sounds/coin-flip.mp3' },
             { key: 'coinUnlock', url: '/sounds/coin-unlocked.mp3' },
             { key: 'drawerOpen', url: '/sounds/CoinDrawer_Open.mp3' },
-            { key: 'drawerClose', url: '/sounds/CoinDrawer_Close.mp3' }
+            { key: 'drawerClose', url: '/sounds/CoinDrawer_Close.mp3' },
+            { key: 'drawerHover', url: '/sounds/coin-drawer-hover.mp3' }
         ];
         
         try {
@@ -62,7 +63,7 @@ constructor() {
             }));
             
             this.isPreloaded = true;
-            console.log('? All sounds preloaded successfully');
+            console.log('?? All sounds preloaded successfully');
         } catch (error) {
             console.warn('Failed to preload sounds:', error);
         } finally {
@@ -196,6 +197,38 @@ constructor() {
             source.start(0);
         } catch (error) {
             console.warn('Failed to play drawer close sound:', error);
+        }
+    }
+    
+    // Load and play coin drawer hover sound from audio file
+    async playDrawerHover() {
+        if (this.isMuted || !this.audioContext) return;
+        
+        await this.resumeContext();
+        
+        try {
+            // Load the coin-drawer-hover.mp3 file if not already loaded
+            if (!this.sounds['drawerHover']) {
+                const response = await fetch('/sounds/coin-drawer-hover.mp3');
+                const arrayBuffer = await response.arrayBuffer();
+                this.sounds['drawerHover'] = await this.audioContext.decodeAudioData(arrayBuffer);
+            }
+            
+            // Create and play the sound
+            const source = this.audioContext.createBufferSource();
+            source.buffer = this.sounds['drawerHover'];
+            
+            const gainNode = this.audioContext.createGain();
+            gainNode.gain.value = 0.4; // Quieter for subtle hover feedback
+            
+            source.connect(gainNode);
+            gainNode.connect(this.masterGain);
+            
+            source.start(0);
+        } catch (error) {
+            console.warn('Failed to play drawer hover sound:', error);
+            // Fallback to synthesized hover sound if file fails to load
+            this.playHover();
         }
     }
     
@@ -445,6 +478,11 @@ window.playDrawerOpenSound = function() {
 window.playDrawerCloseSound = function() {
     const audio = window.initAudioSystem();
     audio.playDrawerClose();
+};
+
+window.playDrawerHoverSound = function() {
+    const audio = window.initAudioSystem();
+    audio.playDrawerHover();
 };
 
 window.setAudioVolume = function(volume) {

@@ -289,184 +289,187 @@
             }
         </div>
 
-        <!-- Right Panel - Prerequisites & Effects -->
+        <!-- Right Panel - Prerequisites & Effects Side by Side -->
         <div class="configuration-panel">
             @if (selectedCoin != null)
             {
                 <div class="config-scroll-area">
-                    <!-- Prerequisites -->
-                    <div class="luxury-card">
-                        <div class="card-header">
-                            <i class="bi bi-clipboard-check card-icon"></i>
-                            <h3 class="card-title">Prerequisites</h3>
-                        </div>
-                        
-                        <button class="luxury-btn-secondary" @onclick="AddPrerequisite">+ Add Prerequisite</button>
-                        
-                        @if (prerequisites.Any())
-                        {
-                            <div class="prerequisites-container">
-                                @for (int i = 0; i < prerequisites.Count; i++)
-                                {
-                                    var index = i;
-                                    var prereq = prerequisites[i];
-                                    <div class="prerequisite-card">
-                                        <div class="prereq-header">
-                                            <span class="prereq-number">#{i + 1}</span>
-                                            <button class="prereq-remove" @onclick="() => RemovePrerequisite(index)">×</button>
-                                        </div>
-                                        
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">Type</label>
-                                            <select class="luxury-select" @bind="prereq.Type">
-                                                @foreach (var type in Enum.GetValues<UnlockConditionType>().Where(t => t != UnlockConditionType.None))
-                                                {
-                                                    <option value="@type">@type</option>
-                                                }
-                                            </select>
-                                        </div>
-
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">Description</label>
-                                            <input type="text" class="luxury-input" @bind="prereq.Description" />
-                                        </div>
-
-                                        @switch (prereq.Type)
-                                        {
-                                            case UnlockConditionType.TotalFlips:
-                                            case UnlockConditionType.HeadsFlips:
-                                            case UnlockConditionType.TailsFlips:
-                                            case UnlockConditionType.Streak:
-                                                <div class="luxury-form-group">
-                                                    <label class="luxury-label">Required Count</label>
-                                                    <input type="number" class="luxury-input" @bind="prereq.RequiredCount" min="1" />
-                                                </div>
-                                                break;
-
-                                            case UnlockConditionType.LandOnCoin:
-                                                <div class="luxury-form-group">
-                                                    <label class="luxury-label">Required Coin</label>
-                                                    <div class="luxury-coin-picker" @onclick="() => OpenRequiredCoinSelector(index)">
-                                                        @if (!string.IsNullOrEmpty(prereq.RequiredCoinPath))
-                                                        {
-                                                            <img src="@prereq.RequiredCoinPath" alt="Required Coin" class="picker-coin-preview" />
-                                                            <span>@GetCoinNameFromPath(prereq.RequiredCoinPath)</span>
-                                                        }
-                                                        else
-                                                        {
-                                                            <span class="picker-placeholder">Select coin</span>
-                                                        }
-                                                    </div>
-                                                </div>
-                                                <div class="luxury-form-group">
-                                                    <label class="luxury-label">Times Required</label>
-                                                    <input type="number" class="luxury-input" @bind="prereq.RequiredCount" min="1" />
-                                                </div>
-                                                break;
-                                        }
-                                    </div>
-                                }
+                    <!-- Prerequisites & Effects Grid -->
+                    <div class="prereq-effects-grid">
+                        <!-- Prerequisites -->
+                        <div class="luxury-card">
+                            <div class="card-header">
+                                <i class="bi bi-clipboard-check card-icon"></i>
+                                <h3 class="card-title">Prerequisites</h3>
                             </div>
-                        }
-                    </div>
-
-                    <!-- Coin Effect -->
-                    <div class="luxury-card">
-                        <div class="card-header">
-                            <i class="bi bi-magic card-icon"></i>
-                            <h3 class="card-title">Coin Effect (Optional)</h3>
-                        </div>
-                        
-                        <div class="luxury-form">
-                            <div class="luxury-form-group">
-                                <label class="luxury-label">Effect Type</label>
-                                <select class="luxury-select" @bind="coinEffect.Type">
-                                    @foreach (var type in Enum.GetValues<CoinEffectType>())
-                                    {
-                                        <option value="@type">@type</option>
-                                    }
-                                </select>
-                            </div>
-
-                            @if (coinEffect.Type != CoinEffectType.None)
+                            
+                            <button class="luxury-btn-secondary" @onclick="AddPrerequisite">+ Add Prerequisite</button>
+                            
+                            @if (prerequisites.Any())
                             {
+                                <div class="prerequisites-container">
+                                    @for (int i = 0; i < prerequisites.Count; i++)
+                                    {
+                                        var index = i;
+                                        var prereq = prerequisites[i];
+                                        <div class="prerequisite-card">
+                                            <div class="prereq-header">
+                                                <span class="prereq-number">#{i + 1}</span>
+                                                <button class="prereq-remove" @onclick="() => RemovePrerequisite(index)">×</button>
+                                            </div>
+                                            
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">Type</label>
+                                                <select class="luxury-select" @bind="prereq.Type">
+                                                    @foreach (var type in Enum.GetValues<UnlockConditionType>().Where(t => t != UnlockConditionType.None))
+                                                    {
+                                                        <option value="@type">@type</option>
+                                                    }
+                                                </select>
+                                            </div>
+
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">Description</label>
+                                                <input type="text" class="luxury-input" @bind="prereq.Description" />
+                                            </div>
+
+                                            @switch (prereq.Type)
+                                            {
+                                                case UnlockConditionType.TotalFlips:
+                                                case UnlockConditionType.HeadsFlips:
+                                                case UnlockConditionType.TailsFlips:
+                                                case UnlockConditionType.Streak:
+                                                    <div class="luxury-form-group">
+                                                        <label class="luxury-label">Required Count</label>
+                                                        <input type="number" class="luxury-input" @bind="prereq.RequiredCount" min="1" />
+                                                    </div>
+                                                    break;
+
+                                                case UnlockConditionType.LandOnCoin:
+                                                    <div class="luxury-form-group">
+                                                        <label class="luxury-label">Required Coin</label>
+                                                        <div class="luxury-coin-picker" @onclick="() => OpenRequiredCoinSelector(index)">
+                                                            @if (!string.IsNullOrEmpty(prereq.RequiredCoinPath))
+                                                            {
+                                                                <img src="@prereq.RequiredCoinPath" alt="Required Coin" class="picker-coin-preview" />
+                                                                <span>@GetCoinNameFromPath(prereq.RequiredCoinPath)</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="picker-placeholder">Select coin</span>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                    <div class="luxury-form-group">
+                                                        <label class="luxury-label">Times Required</label>
+                                                        <input type="number" class="luxury-input" @bind="prereq.RequiredCount" min="1" />
+                                                    </div>
+                                                    break;
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Coin Effect -->
+                        <div class="luxury-card">
+                            <div class="card-header">
+                                <i class="bi bi-magic card-icon"></i>
+                                <h3 class="card-title">Coin Effect</h3>
+                            </div>
+                            
+                            <div class="luxury-form">
                                 <div class="luxury-form-group">
-                                    <label class="luxury-label">Effect Description</label>
-                                    <input type="text" class="luxury-input" @bind="coinEffect.Description" placeholder="Enter effect description..." />
+                                    <label class="luxury-label">Effect Type</label>
+                                    <select class="luxury-select" @bind="coinEffect.Type">
+                                        @foreach (var type in Enum.GetValues<CoinEffectType>())
+                                        {
+                                            <option value="@type">@type</option>
+                                        }
+                                    </select>
                                 </div>
 
-                                @switch (coinEffect.Type)
+                                @if (coinEffect.Type != CoinEffectType.None)
                                 {
-                                    case CoinEffectType.AutoClick:
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">Auto-Click Interval (ms)</label>
-                                            <input type="number" class="luxury-input" @bind="coinEffect.AutoClickInterval" min="100" step="100" />
-                                            <small class="luxury-hint">Time between automatic flips in milliseconds (1000 = 1 second)</small>
-                                        </div>
-                                        break;
+                                    <div class="luxury-form-group">
+                                        <label class="luxury-label">Effect Description</label>
+                                        <input type="text" class="luxury-input" @bind="coinEffect.Description" placeholder="Enter effect description..." />
+                                    </div>
 
-                                    case CoinEffectType.Weighted:
-                                    case CoinEffectType.Shaved:
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">Bias Strength (%)</label>
-                                            <input type="number" class="luxury-input" @bind="biasStrengthPercent" min="0" max="100" step="1" />
-                                            <small class="luxury-hint">Decimal: @(coinEffect.BiasStrength.ToString("F3"))</small>
-                                        </div>
-                                        break;
+                                    @switch (coinEffect.Type)
+                                    {
+                                        case CoinEffectType.AutoClick:
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">Auto-Click Interval (ms)</label>
+                                                <input type="number" class="luxury-input" @bind="coinEffect.AutoClickInterval" min="100" step="100" />
+                                                <small class="luxury-hint">Time between automatic flips in milliseconds (1000 = 1 second)</small>
+                                            </div>
+                                            break;
 
-                                    case CoinEffectType.Combo:
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">Combo Type</label>
-                                            <select class="luxury-select" @bind="coinEffect.ComboType">
-                                                @foreach (var type in Enum.GetValues<ComboType>())
-                                                {
-                                                    <option value="@type">@type</option>
-                                                }
-                                            </select>
-                                        </div>
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">@(coinEffect.ComboType == ComboType.Additive ? "Combo Modifier (Additive)" : "Combo Multiplier")</label>
-                                            <input type="number" class="luxury-input" @bind="coinEffect.ComboMultiplier" min="0" step="0.01" />
-                                            <small class="luxury-hint">
-                                                @if (coinEffect.ComboType == ComboType.Additive)
-                                                {
-                                                    <text>Value added to opposite side's effect (e.g., 0.05 = +5%)</text>
-                                                }
-                                                else
-                                                {
-                                                    <text>Multiplier for opposite side's effect (e.g., 1.5 = 150%)</text>
-                                                }
-                                            </small>
-                                        </div>
-                                        break;
+                                        case CoinEffectType.Weighted:
+                                        case CoinEffectType.Shaved:
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">Bias Strength (%)</label>
+                                                <input type="number" class="luxury-input" @bind="biasStrengthPercent" min="0" max="100" step="1" />
+                                                <small class="luxury-hint">Decimal: @(coinEffect.BiasStrength.ToString("F3"))</small>
+                                            </div>
+                                            break;
 
-                                    case CoinEffectType.Luck:
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">Luck Modifier Type</label>
-                                            <select class="luxury-select" @bind="coinEffect.LuckModifierType">
-                                                @foreach (var type in Enum.GetValues<ComboType>())
-                                                {
-                                                    <option value="@type">@type</option>
-                                                }
-                                            </select>
-                                        </div>
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">@(coinEffect.LuckModifierType == ComboType.Additive ? "Luck Modifier (Additive)" : "Luck Multiplier")</label>
-                                            <input type="number" class="luxury-input" @bind="coinEffect.LuckModifier" min="0" step="0.01" />
-                                            <small class="luxury-hint">
-                                                @if (coinEffect.LuckModifierType == ComboType.Additive)
-                                                {
-                                                    <text>Value added to unlock chances (e.g., 0.05 = +5%)</text>
-                                                }
-                                                else
-                                                {
-                                                    <text>Multiplier for unlock chances (e.g., 2.0 = 200%)</text>
-                                                }
-                                            </small>
-                                        </div>
-                                        break;
+                                        case CoinEffectType.Combo:
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">Combo Type</label>
+                                                <select class="luxury-select" @bind="coinEffect.ComboType">
+                                                    @foreach (var type in Enum.GetValues<ComboType>())
+                                                    {
+                                                        <option value="@type">@type</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">@(coinEffect.ComboType == ComboType.Additive ? "Combo Modifier (Additive)" : "Combo Multiplier")</label>
+                                                <input type="number" class="luxury-input" @bind="coinEffect.ComboMultiplier" min="0" step="0.01" />
+                                                <small class="luxury-hint">
+                                                    @if (coinEffect.ComboType == ComboType.Additive)
+                                                    {
+                                                        <text>Value added to opposite side's effect (e.g., 0.05 = +5%)</text>
+                                                    }
+                                                    else
+                                                    {
+                                                        <text>Multiplier for opposite side's effect (e.g., 1.5 = 150%)</text>
+                                                    }
+                                                </small>
+                                            </div>
+                                            break;
+
+                                        case CoinEffectType.Luck:
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">Luck Modifier Type</label>
+                                                <select class="luxury-select" @bind="coinEffect.LuckModifierType">
+                                                    @foreach (var type in Enum.GetValues<ComboType>())
+                                                    {
+                                                        <option value="@type">@type</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">@(coinEffect.LuckModifierType == ComboType.Additive ? "Luck Modifier (Additive)" : "Luck Multiplier")</label>
+                                                <input type="number" class="luxury-input" @bind="coinEffect.LuckModifier" min="0" step="0.01" />
+                                                <small class="luxury-hint">
+                                                    @if (coinEffect.LuckModifierType == ComboType.Additive)
+                                                    {
+                                                        <text>Value added to unlock chances (e.g., 0.05 = +5%)</text>
+                                                    }
+                                                    else
+                                                    {
+                                                        <text>Multiplier for unlock chances (e.g., 2.0 = 200%)</text>
+                                                    }
+                                                </small>
+                                            </div>
+                                            break;
+                                    }
                                 }
-                            }
+                            </div>
                         </div>
                     </div>
 
@@ -525,58 +528,63 @@
         </div>
     </div>
 
-    <!-- Bottom Coin Drawer (Collapsed) -->
-    <div class="bottom-coin-drawer @(showCoinDrawer ? "drawer-open" : "drawer-closed")" @onclick="ToggleDrawer">
-        <div class="drawer-handle-luxury">
+    <!-- Bottom Coin Drawer (Adapted from CoinDrawer) -->
+    <div class="bottom-coin-drawer @GetDrawerClass()" @onclick="HandleDrawerBackgroundClick">
+        <div class="drawer-handle-luxury" @onclick="ToggleDrawer" @onclick:stopPropagation="true">
             <div class="handle-bar-luxury"></div>
             <span class="drawer-label">@(showCoinDrawer ? "Close" : "Open") Coin Collection</span>
         </div>
         
-        @if (showCoinDrawer)
-        {
-            <div class="drawer-content-luxury" @onclick:stopPropagation="true">
-                <div class="drawer-inner">
-                    <!-- Filter Toggle -->
-                    <div class="drawer-filter-bar">
-                        <button class="filter-btn @(showOnlyUnmapped ? "" : "active")" @onclick="ShowAllCoins">
-                            <i class="bi bi-grid-3x3"></i>
-                            <span>All Coins (@GetAllCoinsCount())</span>
-                        </button>
-                        <button class="filter-btn @(showOnlyUnmapped ? "active" : "")" @onclick="ShowUnmappedCoins">
-                            <i class="bi bi-question-circle"></i>
-                            <span>Unmapped (@GetUnmappedCoinsCount())</span>
-                        </button>
-                    </div>
-                    
-                    @if (allCoinImages != null)
-                    {
-                        <div class="coins-grid-luxury">
-                            @foreach (var coin in GetFilteredCoins())
-                            {
-                                <div class="coin-grid-item @(coin.UnlockCondition == null && coin.Effect == null ? "new-coin" : "")" @onclick="() => HandleCoinSelected(coin)">
-                                    <div class="coin-item-inner">
-                                        <img src="@coin.Path" alt="@coin.DisplayName" class="grid-coin-img" />
-                                        <span class="grid-coin-name">@coin.DisplayName</span>
-                                        @if (coin.UnlockCondition == null && coin.Effect == null)
-                                        {
-                                            <span class="new-coin-badge">NEW</span>
-                                        }
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                        
-                        @if (!GetFilteredCoins().Any())
+        <div class="drawer-header-bab" @onclick:stopPropagation="true">
+            <h2 class="drawer-title-bab">Select A Coin To Configure</h2>
+        </div>
+        
+        <div class="drawer-content-luxury" @onclick:stopPropagation="true">
+            <div class="drawer-inner">
+                <!-- Filter Toggle -->
+                <div class="drawer-filter-bar">
+                    <button class="filter-btn @(showOnlyUnmapped ? "" : "active")" @onclick="ShowAllCoins">
+                        <i class="bi bi-grid-3x3"></i>
+                        <span>All Coins (@GetAllCoinsCount())</span>
+                    </button>
+                    <button class="filter-btn @(showOnlyUnmapped ? "active" : "")" @onclick="ShowUnmappedCoins">
+                        <i class="bi bi-question-circle"></i>
+                        <span>Unmapped (@GetUnmappedCoinsCount())</span>
+                    </button>
+                </div>
+                
+                @if (allCoinImages != null)
+                {
+                    <div class="coins-case-bab">
+                        @foreach (var coin in GetFilteredCoins())
                         {
-                            <div class="empty-coins-message">
-                                <i class="bi bi-inbox"></i>
-                                <p>@(showOnlyUnmapped ? "All coins have been configured!" : "No coins available")</p>
+                            var hasConfig = coin.UnlockCondition != null || coin.Effect != null;
+                            
+                            <div class="coin-case-slot-bab" 
+                                 @onclick="() => HandleCoinSelected(coin)" 
+                                 @onmouseenter="() => HandleCoinHover(coin)">
+                                <div class="coin-display-bab">
+                                    <img src="@coin.Path" alt="@coin.DisplayName" class="coin-image-bab" />
+                                    @if (!hasConfig)
+                                    {
+                                        <div class="coin-badge-new">NEW</div>
+                                    }
+                                </div>
+                                <div class="coin-label-bab">@coin.DisplayName</div>
                             </div>
                         }
+                    </div>
+                    
+                    @if (!GetFilteredCoins().Any())
+                    {
+                        <div class="empty-coins-message">
+                            <i class="bi bi-inbox"></i>
+                            <p>@(showOnlyUnmapped ? "All coins have been configured!" : "No coins available")</p>
+                        </div>
                     }
-                </div>
+                }
             </div>
-        }
+        </div>
     </div>
 </div>
 
@@ -596,6 +604,8 @@ private bool selectingForMain = false;
 private string streakSideSelection = "Any";
 private bool isClearingCache = false;
 private bool showOnlyUnmapped = false;
+private bool hasLoadedOnce = false;
+private bool hasInteractedWithDrawer = false;
     
 private double unlockChancePercent
 {
@@ -622,6 +632,17 @@ private double biasStrengthPercent
             {
                 allCoinImages.AddRange(coinTypeGroup);
             }
+        }
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Trigger peek animation after a short delay
+            await Task.Delay(500);
+            hasLoadedOnce = true;
+            StateHasChanged();
         }
     }
     
@@ -680,6 +701,8 @@ private double biasStrengthPercent
 
     private void ToggleDrawer()
     {
+        hasInteractedWithDrawer = true; // Track user interaction
+        
         if (selectingForMain || selectingForPrereqIndex.HasValue)
         {
             CloseCoinDrawer();
@@ -692,6 +715,7 @@ private double biasStrengthPercent
 
     private void OpenRequiredCoinSelector(int? prereqIndex)
     {
+        hasInteractedWithDrawer = true; // Track user interaction
         selectingForMain = prereqIndex == null;
         selectingForPrereqIndex = prereqIndex;
         showCoinDrawer = true;
@@ -706,6 +730,8 @@ private double biasStrengthPercent
 
     private void HandleCoinSelected(CoinImage coin)
     {
+        hasInteractedWithDrawer = true; // Track user interaction
+        
         if (selectingForPrereqIndex.HasValue)
         {
             prerequisites[selectingForPrereqIndex.Value].RequiredCoinPath = coin.Path;
@@ -1003,40 +1029,132 @@ private double biasStrengthPercent
                     code.AppendLine($@"{indent}                RequiredCount = {prereq.RequiredCount},");
 
                 if (!string.IsNullOrEmpty(prereq.RequiredCoinPath))
+                {
                     code.AppendLine($@"{indent}                RequiredCoinPath = ""{prereq.RequiredCoinPath}"",");
+                }
 
-                code.AppendLine($@"{indent}                Description = ""{prereq.Description}""");
+                code.AppendLine($@"{indent}                Description = ""{prereq.Description}"",");
+                code.AppendLine($@"{indent}                Rarity = UnlockRarity.{prereq.Rarity}");
                 code.AppendLine($@"{indent}            }},");
             }
 
-            code.AppendLine($@"{indent}        }}");
+            code.AppendLine($@"{indent}        }},");
         }
 
-        code.AppendLine($@"{indent}    }}");
-        code.AppendLine($@"{indent}}},");
+        if (coinEffect.Type != CoinEffectType.None)
+        {
+            code.AppendLine($@"{indent}        ,");
+            code.AppendLine($@"{indent}        Effect = new CoinEffect");
+            code.AppendLine($@"{indent}        {{");
+            code.AppendLine($@"{indent}            Type = CoinEffectType.{coinEffect.Type},");
+
+            if (coinEffect.AutoClickInterval > 0)
+                code.AppendLine($@"{indent}            AutoClickInterval = {coinEffect.AutoClickInterval},");
+
+            if (coinEffect.BiasStrength != 0)
+                code.AppendLine($@"{indent}            BiasStrength = {coinEffect.BiasStrength.ToString("F5")}, // {biasStrengthPercent:F2}%");
+
+            if (coinEffect.ComboMultiplier != 0)
+                code.AppendLine($@"{indent}            ComboMultiplier = {coinEffect.ComboMultiplier},");
+
+            if (coinEffect.LuckModifier != 1)
+                code.AppendLine($@"{indent}            LuckModifier = {coinEffect.LuckModifier},");
+
+            code.AppendLine($@"{indent}            Description = ""{coinEffect.Description}""");
+            code.AppendLine($@"{indent}        }},");
+        }
+
+        // Remove last comma and close the object
+        if (code.Length > 0)
+        {
+            code.Length -= 3; // Remove last comma and newline
+            code.AppendLine($@"{indent}    }}");
+        }
+
+        // Log the generated code for debugging
+        Console.WriteLine("Generated Code: ");
+        Console.WriteLine(code.ToString());
 
         generatedCode = code.ToString();
     }
 
-    private async Task CopyToClipboard()
+    private void CopyToClipboard()
     {
-        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", generatedCode);
+        JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", generatedCode);
     }
 
-private async Task ClearCacheAndReload()
-{
-    isClearingCache = true;
-    StateHasChanged();
-    
-    try
+    private async Task ClearCacheAndReload()
     {
-        await JSRuntime.InvokeVoidAsync("window.clearCachesAndReload");
+        isClearingCache = true;
+        StateHasChanged();
+        
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("window.clearCachesAndReload");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error clearing cache: {ex.Message}");
+            // Fallback to hard reload
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("location.reload", true);
+            }
+            catch
+            {
+                // If even location.reload fails, do nothing
+            }
+        }
+        finally
+        {
+            isClearingCache = false;
+        }
     }
-    catch (Exception ex)
+
+    private void HandleDrawerBackgroundClick()
     {
-        Console.WriteLine($"Error clearing cache: {ex.Message}");
-        // Fallback to hard reload
-        await JSRuntime.InvokeVoidAsync("location.reload", true);
+        // Close the drawer if the background is clicked and it's currently open
+        if (showCoinDrawer)
+        {
+            showCoinDrawer = false;
+        }
     }
-}
+
+    private async Task HandleCoinHover(CoinImage coin)
+    {
+        // Play hover sound when mouse enters a coin
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("playDrawerHoverSound");
+        }
+        catch (Exception ex)
+        {
+            // Silently fail if audio system isn't ready
+            Console.WriteLine($"Failed to play hover sound: {ex.Message}");
+        }
+    }
+
+    private string GetDrawerClass()
+    {
+        // Build the class string for the drawer
+        var classes = new List<string>();
+        
+        // Always add the appropriate state class
+        if (showCoinDrawer)
+        {
+            classes.Add("drawer-open");
+        }
+        else
+        {
+            classes.Add("drawer-closed");
+        }
+        
+        // Add peek class only if conditions are met
+        if (hasLoadedOnce && !hasInteractedWithDrawer && !showCoinDrawer)
+        {
+            classes.Add("drawer-peek");
+        }
+        
+        return string.Join(" ", classes);
+    }
 }
