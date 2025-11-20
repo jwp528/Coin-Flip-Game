@@ -24,7 +24,8 @@ public class ComboCoinType : CoinType
             { 
                 Type = UnlockConditionType.TotalFlips, 
                 RequiredCount = 150, 
-                Description = "Flip 150 times",
+                Description = "Complete 150 total flips",
+                FlavorText = "Where dragon meets warrior, power and precision combine.",
                 Rarity = UnlockRarity.Rare
             } 
         },
@@ -33,7 +34,8 @@ public class ComboCoinType : CoinType
             { 
                 Type = UnlockConditionType.TotalFlips, 
                 RequiredCount = 300, 
-                Description = "Flip 300 times",
+                Description = "Complete 300 total flips",
+                FlavorText = "Silent guardian of ancient mysteries. Its presence magnifies the strength of its counterpart.",
                 Rarity = UnlockRarity.Rare
             } 
         }
@@ -48,18 +50,18 @@ public class ComboCoinType : CoinType
             "DragonSamurai.png", new CoinEffect
             {
                 Type = CoinEffectType.Combo,
-                Description = "Adds +3% to opposite side's effect (bias/auto-click speed) or +3% to streak",
-                ComboType = ComboType.Additive,
-                ComboMultiplier = 0.03
+                Description = "Multiplies opposite side's effect by 2x (bias/auto-click speed) or doubles current streak",
+                ComboType = ComboType.Multiplicative,
+                ComboMultiplier = 2
             }
         },
         {
             "Moai.png", new CoinEffect
             {
                 Type = CoinEffectType.Combo,
-                Description = "Multiplies opposite side's effect by 2x (bias/auto-click speed) or boosts streak by 100%",
-                ComboType = ComboType.Multiplicative,
-                ComboMultiplier = 2
+                Description = "Adds +3% to opposite side's effect (bias/auto-click speed) or adds 3 to current streak",
+                ComboType = ComboType.Additive,
+                ComboMultiplier = 0.03
             }
         }
     };

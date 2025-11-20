@@ -27,7 +27,8 @@ public class PowersCoinType : CoinType
             {
                 Type = UnlockConditionType.TotalFlips,
                 RequiredCount = 100,
-                Description = "Flip 100 times",
+                Description = "Complete 100 total flips",
+                FlavorText = "Mechanical precision meets ancient tradition. Never tire, never falter, never stop flipping.",
                 Rarity = UnlockRarity.Rare
             }
         },
@@ -36,7 +37,8 @@ public class PowersCoinType : CoinType
             {
                 Type = UnlockConditionType.Streak,
                 RequiredCount = 5,
-                Description = "Soar on the wings of a dragon!",
+                Description = "Achieve a 5-flip streak on any side",
+                FlavorText = "Within this coin beats the heart of a dragon. Feel its power surge with each consecutive flip.",
                 Rarity = UnlockRarity.Common
             }
         },
@@ -45,7 +47,8 @@ public class PowersCoinType : CoinType
             {
                 Type = UnlockConditionType.Streak,
                 RequiredCount = 6,
-                Description = "oooh So heavy!",
+                Description = "Achieve a 6-flip streak on any side",
+                FlavorText = "Dense as a collapsing star, this coin pulls destiny toward its weighted side.",
                 Rarity = UnlockRarity.Common
             }
         },
@@ -59,7 +62,8 @@ public class PowersCoinType : CoinType
                 SideRequirement = SideRequirement.Both,
                 RequiresActiveCoin = true,
                 RequiredCoinPath = "/img/coins/Random.png",
-                Description = "Land on coins with RandomChance unlock conditions 10 times in a row while Random is set as both active sides",
+                Description = "Land on random-chance coins 10 consecutive times while Random is set on both sides",
+                FlavorText = "Triple sevens. The house always wins, but sometimes... just sometimes... luck defies all odds.",
                 Rarity = UnlockRarity.Legendary
             }
         }

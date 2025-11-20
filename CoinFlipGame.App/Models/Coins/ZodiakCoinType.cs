@@ -32,7 +32,8 @@ public class ZodiakCoinType : CoinType
             { 
                 Type = UnlockConditionType.TotalFlips, 
                 RequiredCount = 10, 
-                Description = "Flip 10 times",
+                Description = "Complete 10 total flips",
+                FlavorText = "Twin-faced and ever-changing, the Gemini represents duality in all things. Heads or tails? Why not both?",
                 Rarity = UnlockRarity.Common
             } 
         },
@@ -41,7 +42,8 @@ public class ZodiakCoinType : CoinType
             { 
                 Type = UnlockConditionType.TotalFlips, 
                 RequiredCount = 20, 
-                Description = "Flip 20 times",
+                Description = "Complete 20 total flips",
+                FlavorText = "Clever and resourceful, the Rat thrives in chaos. Every flip is another opportunity seized.",
                 Rarity = UnlockRarity.Common
             } 
         },
@@ -50,7 +52,8 @@ public class ZodiakCoinType : CoinType
             {
                 Type = UnlockConditionType.HeadsFlips,
                 RequiredCount = 10,
-                Description = "Flip heads 10 times",
+                Description = "Land heads 10 times",
+                FlavorText = "Bold and headstrong, the Ram charges forward without hesitation. Victory favors the brave.",
                 Rarity = UnlockRarity.Common
             }
         },
@@ -59,7 +62,8 @@ public class ZodiakCoinType : CoinType
             {
                 Type = UnlockConditionType.TotalFlips,
                 RequiredCount = 100,
-                Description = "Flip 100 times",
+                Description = "Complete 100 total flips",
+                FlavorText = "Loyal companion through countless flips, the Dog rewards persistence and dedication.",
                 Rarity = UnlockRarity.Common
             }
         },
@@ -68,7 +72,8 @@ public class ZodiakCoinType : CoinType
             { 
                 Type = UnlockConditionType.TailsFlips, 
                 RequiredCount = 10, 
-                Description = "Flip tails 10 times",
+                Description = "Land tails 10 times",
+                FlavorText = "Patient and steadfast, the bull knows that fortune comes to those who wait for their moment.",
                 Rarity = UnlockRarity.Common
             } 
         },
@@ -77,7 +82,8 @@ public class ZodiakCoinType : CoinType
             { 
                 Type = UnlockConditionType.Streak, 
                 RequiredCount = 5, 
-                Description = "Get a 5-flip streak with any side",
+                Description = "Achieve a 5-flip streak on any side",
+                FlavorText = "The Rooster crows at dawn, heralding consistency. Five in a row marks your awakening.",
                 Rarity = UnlockRarity.Uncommon
             } 
         },
@@ -86,7 +92,8 @@ public class ZodiakCoinType : CoinType
             {
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.07, // 7% chance
-                Description = "7% chance after flipping tails 25 times",
+                Description = "7% chance to unlock per flip (requires 25 tails flips first)",
+                FlavorText = "Swift and elusive, the Rabbit appears only to those who have walked the shadowed path.",
                 Rarity = UnlockRarity.Uncommon,
                 Prerequisites = new List<UnlockCondition>
                 {
@@ -94,7 +101,7 @@ public class ZodiakCoinType : CoinType
                     {
                         Type = UnlockConditionType.TailsFlips,
                         RequiredCount = 25,
-                        Description = "Flip tails 25 times"
+                        Description = "Must have landed tails 25 times"
                     }
                 }
             }
@@ -106,6 +113,7 @@ public class ZodiakCoinType : CoinType
                 RequiredCount = 10,
                 RequiredCoinPath = "/img/coins/AI/Zodiak/Ram.png",
                 Description = "Land on the Ram coin 10 times",
+                FlavorText = "Prosperous and content, the Pig values comfort. Master the Ram's courage to earn this reward.",
                 Rarity = UnlockRarity.Uncommon
             } 
         },
@@ -125,7 +133,8 @@ public class ZodiakCoinType : CoinType
                     "/img/coins/AI/Zodiak/Rooster.png",
                     "/img/coins/AI/Zodiak/Pig.png"
                 },
-                Description = "Flip each other Zodiak coin at least 10 times",
+                Description = "Land on each of the 8 other Zodiak coins at least 10 times",
+                FlavorText = "Majestic and powerful, the Dragon reigns supreme. Only those who have mastered all signs may claim its power.",
                 Rarity = UnlockRarity.Rare
             } 
         },
@@ -136,7 +145,8 @@ public class ZodiakCoinType : CoinType
                 RequiredCount = 1,
                 RequiredCoinPath = "/img/coins/AI/Zodiak/Dragon.png",
                 UnlockChance = 0.005, // 0.5% chance
-                Description = "0.5% chance when Dragon coin is selected",
+                Description = "0.5% chance per flip when using the Dragon coin (requires Dragon unlocked)",
+                FlavorText = "Legends speak of a celestial dragon, born when the common dragon transcends its mortal form. Will you witness its ascension?",
                 Rarity = UnlockRarity.Legendary,
                 RequiresActiveCoin = true, // Only rolls when Dragon is actively selected
                 Prerequisites = new List<UnlockCondition>
@@ -146,7 +156,7 @@ public class ZodiakCoinType : CoinType
                         Type = UnlockConditionType.LandOnCoin,
                         RequiredCoinPath = "/img/coins/AI/Zodiak/Dragon.png",
                         RequiredCount = 1,
-                        Description = "Dragon must be unlocked"
+                        Description = "Must have unlocked the Dragon coin"
                     }
                 }
             } 

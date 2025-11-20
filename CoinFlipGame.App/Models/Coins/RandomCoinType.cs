@@ -32,7 +32,8 @@ public class RandomCoinType : CoinType
             {
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.02,
-                Description = "2% chance to unlock on any flip",
+                Description = "2% chance to unlock per flip",
+                FlavorText = "The river flows eternal, sometimes revealing treasures to those patient enough to watch.",
                 Rarity = UnlockRarity.Common
             }
         },
@@ -41,7 +42,8 @@ public class RandomCoinType : CoinType
             {
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.06,
-                Description = "6% chance to unlock on any flip",
+                Description = "6% chance to unlock per flip",
+                FlavorText = "Winter's first snow arrives without warning, blanketing the world in quiet possibility.",
                 Rarity = UnlockRarity.Uncommon
             }
         },
@@ -50,7 +52,8 @@ public class RandomCoinType : CoinType
             {
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.05,
-                Description = "5% chance to unlock on any flip",
+                Description = "5% chance to unlock per flip",
+                FlavorText = "In the urban sprawl, millions of stories unfold. This coin captures but one fleeting moment.",
                 Rarity = UnlockRarity.Rare
             }
         },
@@ -59,7 +62,8 @@ public class RandomCoinType : CoinType
             {
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.005, // 0.5% chance
-                Description = "0.5% chance to unlock on any flip",
+                Description = "0.5% chance to unlock per flip (requires 200 total flips first)",
+                FlavorText = "From order emerges chaos. From chaos, beauty. The coin spins between both eternally.",
                 Rarity = UnlockRarity.Rare,
                 Prerequisites = new List<UnlockCondition>
                 {
@@ -67,7 +71,7 @@ public class RandomCoinType : CoinType
                     {
                         Type = UnlockConditionType.TotalFlips,
                         RequiredCount = 200,
-                        Description = "Flip 200 times"
+                        Description = "Must have completed 200 total flips"
                     }
                 }
             }
@@ -77,7 +81,8 @@ public class RandomCoinType : CoinType
             {
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.005, // 0.5% chance
-                Description = "0.5% chance to unlock on any flip",
+                Description = "0.5% chance to unlock per flip",
+                FlavorText = "A mysterious smile captured in metal. What secrets does she keep behind those enigmatic eyes?",
                 Rarity = UnlockRarity.Rare
             }
         },
@@ -86,7 +91,8 @@ public class RandomCoinType : CoinType
             {
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.01, // 1% chance
-                Description = "1% chance to unlock on any flip",
+                Description = "1% chance to unlock per flip",
+                FlavorText = "A vista frozen in time, where mountains meet sky in perfect harmony.",
                 Rarity = UnlockRarity.Rare
             }
         },
@@ -95,7 +101,8 @@ public class RandomCoinType : CoinType
             {
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.001, // 0.1% chance
-                Description = "0.1% chance to unlock on any flip",
+                Description = "0.1% chance to unlock per flip (ultra rare!)",
+                FlavorText = "Gentle giant of the bamboo forests. To witness one is to witness rarity itself.",
                 Rarity = UnlockRarity.Rare
             }
         },
@@ -104,7 +111,8 @@ public class RandomCoinType : CoinType
             {
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.005, // 0.5% chance
-                Description = "0.5% chance to unlock after 500 flips while Panda is active",
+                Description = "0.5% chance per flip when Panda is active (requires 500 total flips and Panda unlocked)",
+                FlavorText = "Inner peace found through the rarest of companions. Tranquility and rarity unite.",
                 Rarity = UnlockRarity.Rare,
                 RequiresActiveCoin = true,
                 RequiredCoinPath = "/img/coins/AI/Random/Panda.png",
@@ -114,14 +122,14 @@ public class RandomCoinType : CoinType
                     {
                         Type = UnlockConditionType.TotalFlips,
                         RequiredCount = 500,
-                        Description = "500 total flips"
+                        Description = "Must have completed 500 total flips"
                     },
                     new UnlockCondition
                     {
                         Type = UnlockConditionType.LandOnCoin,
                         RequiredCoinPath = "/img/coins/AI/Random/Panda.png",
                         RequiredCount = 1,
-                        Description = "Have the Panda coin active"
+                        Description = "Must have Panda coin unlocked"
 
                     }
                 }
@@ -132,7 +140,8 @@ public class RandomCoinType : CoinType
             {
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.01, // 1% chance
-                Description = "1% chance to unlock on any flip after unlocking Zen and Dragon_Rare.",
+                Description = "1% chance per flip (requires Zen and Dragon_Rare unlocked)",
+                FlavorText = "Where calm waters meet celestial fire, only the most dedicated seekers may find this treasure.",
                 Rarity = UnlockRarity.Rare,
                 Prerequisites = new List<UnlockCondition>
                 {
@@ -141,14 +150,14 @@ public class RandomCoinType : CoinType
                         Type = UnlockConditionType.LandOnCoin,
                         RequiredCoinPath = "/img/coins/AI/Random/Zen.png",
                         RequiredCount = 1,
-                        Description = "Zen must be unlocked"
+                        Description = "Must have Zen coin unlocked"
                     },
                     new UnlockCondition
                     {
                         Type = UnlockConditionType.LandOnCoin,
                         RequiredCoinPath = "/img/coins/AI/Zodiak/Dragon_Rare.png",
                         RequiredCount = 1,
-                        Description = "Dragon_Rare must be unlocked"
+                        Description = "Must have Dragon_Rare coin unlocked"
                     }
                 }
             }
@@ -157,7 +166,8 @@ public class RandomCoinType : CoinType
             "Dillon.png", new UnlockCondition
             {
                 Type = UnlockConditionType.None,
-                Description = "The Dillon coin! Thank you for the coin Dillon it's VERY nice!",
+                Description = "Complete 100 heads flips and 100 tails flips (balanced dedication)",
+                FlavorText = "A gift from Dillon, keeper of balance. Where heads and tails meet in perfect harmony, this treasure awaits.",
                 Rarity = UnlockRarity.Rare,
                 Prerequisites = new List<UnlockCondition>
                 {
@@ -165,13 +175,13 @@ public class RandomCoinType : CoinType
                     {
                         Type = UnlockConditionType.HeadsFlips,
                         RequiredCount = 100,
-                        Description = "Flip heads 100 times."
+                        Description = "Must have landed heads 100 times"
                     },
                     new UnlockCondition
                     {
                         Type = UnlockConditionType.TailsFlips,
                         RequiredCount = 100,
-                        Description = "Flip tails 100 times."
+                        Description = "Must have landed tails 100 times"
                     }
                 }
             }

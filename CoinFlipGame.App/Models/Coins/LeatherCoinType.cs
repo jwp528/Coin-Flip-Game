@@ -23,7 +23,8 @@ public class LeatherCoinType : CoinType
             { 
                 Type = UnlockConditionType.TotalFlips, 
                 RequiredCount = 250, 
-                Description = "Flip 250 times",
+                Description = "Complete 250 total flips",
+                FlavorText = "A coin forged from homestead and heritage. Each flip echoes with the weight of belonging.",
                 Rarity = UnlockRarity.Uncommon
             } 
         }

@@ -45,7 +45,8 @@ public class AchievementCoinType : CoinType
             { 
                 Type = UnlockConditionType.TotalFlips, 
                 RequiredCount = 10, 
-                Description = "Flip 10 times",
+                Description = "Complete 10 total flips",
+                FlavorText = "Every journey begins with a single flip. Ten marks your first steps into the unknown.",
                 Rarity = UnlockRarity.Common
             }
         },
@@ -54,7 +55,8 @@ public class AchievementCoinType : CoinType
             { 
                 Type = UnlockConditionType.TotalFlips, 
                 RequiredCount = 25, 
-                Description = "Flip 25 times",
+                Description = "Complete 25 total flips",
+                FlavorText = "The coin becomes familiar in your hand. Twenty-five flips, and you're just getting started.",
                 Rarity = UnlockRarity.Uncommon
             }
         },
@@ -63,7 +65,8 @@ public class AchievementCoinType : CoinType
             { 
                 Type = UnlockConditionType.TotalFlips, 
                 RequiredCount = 50, 
-                Description = "Flip 50 times",
+                Description = "Complete 50 total flips",
+                FlavorText = "Half a hundred spins through the air. Persistence is beginning to pay dividends.",
                 Rarity = UnlockRarity.Uncommon
             }
         },
@@ -72,7 +75,8 @@ public class AchievementCoinType : CoinType
             { 
                 Type = UnlockConditionType.TotalFlips, 
                 RequiredCount = 100, 
-                Description = "Flip 100 times",
+                Description = "Complete 100 total flips",
+                FlavorText = "A century of chances taken. The coin remembers each and every one.",
                 Rarity = UnlockRarity.Rare
             }
         },
@@ -81,7 +85,8 @@ public class AchievementCoinType : CoinType
             {
                 Type = UnlockConditionType.TotalFlips,
                 RequiredCount = 500,
-                Description = "Flip 500 times",
+                Description = "Complete 500 total flips",
+                FlavorText = "Five hundred revolutions. What was once random now feels like destiny.",
                 Rarity = UnlockRarity.Rare
             }
         },
@@ -90,7 +95,8 @@ public class AchievementCoinType : CoinType
             {
                 Type = UnlockConditionType.TotalFlips,
                 RequiredCount = 1000,
-                Description = "Flip 1,000 times",
+                Description = "Complete 1,000 total flips",
+                FlavorText = "A thousand decisions made. Each flip a heartbeat in the rhythm of chance.",
                 Rarity = UnlockRarity.Legendary
             }
         },
@@ -99,7 +105,8 @@ public class AchievementCoinType : CoinType
             {
                 Type = UnlockConditionType.TotalFlips,
                 RequiredCount = 1500,
-                Description = "Flip 1,500 times",
+                Description = "Complete 1,500 total flips",
+                FlavorText = "The masses call it obsession. You call it dedication.",
                 Rarity = UnlockRarity.Legendary
             }
         },
@@ -108,7 +115,8 @@ public class AchievementCoinType : CoinType
             {
                 Type = UnlockConditionType.TotalFlips,
                 RequiredCount = 2000,
-                Description = "Flip 2,000 times",
+                Description = "Complete 2,000 total flips",
+                FlavorText = "Two thousand times the coin has danced. You've become one with its motion.",
                 Rarity = UnlockRarity.Legendary
             }
         },
@@ -117,7 +125,8 @@ public class AchievementCoinType : CoinType
             {
                 Type = UnlockConditionType.TotalFlips,
                 RequiredCount = 5000,
-                Description = "Flip 5,000 times",
+                Description = "Complete 5,000 total flips",
+                FlavorText = "Five thousand moments where fate hung in the balance. You were there for all of them.",
                 Rarity = UnlockRarity.Legendary
             }
         },
@@ -126,7 +135,8 @@ public class AchievementCoinType : CoinType
             {
                 Type = UnlockConditionType.TotalFlips,
                 RequiredCount = 10000,
-                Description = "Flip 10,000 times",
+                Description = "Complete 10,000 total flips",
+                FlavorText = "Ten thousand flips. Legends will be told of your devotion to the ancient art of the toss.",
                 Rarity = UnlockRarity.Legendary
             }
         },
@@ -136,7 +146,8 @@ public class AchievementCoinType : CoinType
                 Type = UnlockConditionType.Streak,
                 RequiredCount = 3,
                 StreakSide = StreakSide.Heads,
-                Description = "Land on heads 3 times in a row",
+                Description = "Achieve a 3-heads streak",
+                FlavorText = "Three heads in a row. Coincidence? Or is luck finally on your side?",
                 Rarity = UnlockRarity.Common
             }
         },
@@ -146,7 +157,8 @@ public class AchievementCoinType : CoinType
                 Type = UnlockConditionType.Streak,
                 RequiredCount = 4,
                 StreakSide = StreakSide.Heads,
-                Description = "Land on heads 4 times in a row",
+                Description = "Achieve a 4-heads streak",
+                FlavorText = "Four consecutive heads. The crowd begins to take notice of your skill.",
                 Rarity = UnlockRarity.Uncommon
             }
         },
@@ -156,7 +168,8 @@ public class AchievementCoinType : CoinType
                 Type = UnlockConditionType.Streak,
                 RequiredCount = 5,
                 StreakSide = StreakSide.Heads,
-                Description = "Land on heads 5 times in a row",
+                Description = "Achieve a 5-heads streak",
+                FlavorText = "Five heads straight. At this point, you're either blessed by fate or defying it.",
                 Rarity = UnlockRarity.Rare
             }
         },
@@ -166,7 +179,8 @@ public class AchievementCoinType : CoinType
                 Type = UnlockConditionType.Streak,
                 RequiredCount = 10,
                 StreakSide = StreakSide.Heads,
-                Description = "Land on heads 10 times in a row",
+                Description = "Achieve a 10-heads streak",
+                FlavorText = "Ten heads without faltering. The mathematicians are starting to get suspicious.",
                 Rarity = UnlockRarity.Legendary
             }
         },
@@ -176,7 +190,8 @@ public class AchievementCoinType : CoinType
                 Type = UnlockConditionType.Streak,
                 RequiredCount = 50,
                 StreakSide = StreakSide.Heads,
-                Description = "Land on heads 50 times in a row",
+                Description = "Achieve a 50-heads streak",
+                FlavorText = "Fifty consecutive heads. Probability itself kneels before you.",
                 Rarity = UnlockRarity.Legendary
             }
         },
@@ -186,7 +201,8 @@ public class AchievementCoinType : CoinType
                 Type = UnlockConditionType.Streak,
                 RequiredCount = 100,
                 StreakSide = StreakSide.Heads,
-                Description = "Land on heads 100 times in a row!",
+                Description = "Achieve a 100-heads streak",
+                FlavorText = "One hundred heads. You've transcended mere luck and entered the realm of legend.",
                 Rarity = UnlockRarity.Legendary
             }
         },
@@ -196,7 +212,8 @@ public class AchievementCoinType : CoinType
                 Type = UnlockConditionType.Streak,
                 RequiredCount = 3,
                 StreakSide = StreakSide.Tails,
-                Description = "Land on tails 3 times in a row",
+                Description = "Achieve a 3-tails streak",
+                FlavorText = "Three tails consecutive. The shadow side reveals itself.",
                 Rarity = UnlockRarity.Common
             }
         },
@@ -206,7 +223,8 @@ public class AchievementCoinType : CoinType
                 Type = UnlockConditionType.Streak,
                 RequiredCount = 4,
                 StreakSide = StreakSide.Tails,
-                Description = "Land on tails 4 times in a row",
+                Description = "Achieve a 4-tails streak",
+                FlavorText = "Four tails straight. The underside of fortune favors you.",
                 Rarity = UnlockRarity.Uncommon
             }
         },
@@ -216,7 +234,8 @@ public class AchievementCoinType : CoinType
                 Type = UnlockConditionType.Streak,
                 RequiredCount = 5,
                 StreakSide = StreakSide.Tails,
-                Description = "Land on tails 5 times in a row",
+                Description = "Achieve a 5-tails streak",
+                FlavorText = "Five tails unbroken. You've found harmony in the coin's darker half.",
                 Rarity = UnlockRarity.Rare
             }
         },
@@ -226,7 +245,8 @@ public class AchievementCoinType : CoinType
                 Type = UnlockConditionType.Streak,
                 RequiredCount = 10,
                 StreakSide = StreakSide.Tails,
-                Description = "Land on tails 10 times in a row",
+                Description = "Achieve a 10-tails streak",
+                FlavorText = "Ten tails in succession. Chaos smiles upon the audacious.",
                 Rarity = UnlockRarity.Legendary
             }
         },
@@ -236,7 +256,8 @@ public class AchievementCoinType : CoinType
                 Type = UnlockConditionType.Streak,
                 RequiredCount = 50,
                 StreakSide = StreakSide.Tails,
-                Description = "Land on tails 50 times in a row",
+                Description = "Achieve a 50-tails streak",
+                FlavorText = "Fifty tails without wavering. The coin has chosen its champion.",
                 Rarity = UnlockRarity.Legendary
             }
         },
@@ -246,7 +267,8 @@ public class AchievementCoinType : CoinType
                 Type = UnlockConditionType.Streak,
                 RequiredCount = 100,
                 StreakSide = StreakSide.Tails,
-                Description = "Land on tails 100 times in a row",
+                Description = "Achieve a 100-tails streak",
+                FlavorText = "One hundred tails. Master of shadows, keeper of the eternal flip's darker truth.",
                 Rarity = UnlockRarity.Legendary
             }
         },
@@ -256,7 +278,8 @@ public class AchievementCoinType : CoinType
                 Type = UnlockConditionType.LandOnMultipleCoins, 
                 RequiredCount = 1,
                 UseDynamicCoinList = true, // Automatically includes all coins in the game
-                Description = "Unlock all other coins in the game",
+                Description = "Land on every other coin in the game at least once",
+                FlavorText = "To have seen every face, touched every surface, spun every story. The collection is complete.",
                 Rarity = UnlockRarity.Legendary
             }
         }

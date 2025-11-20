@@ -74,111 +74,215 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 24px;
+    gap: 16px;
 }
 
-.preview-title {
-    font-size: 1.75rem;
+.preview-subtitle {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin: -8px 0 0 0;
+    text-align: center;
+    font-style: italic;
+}
+
+/* TCG Card Frame */
+.preview-card-frame {
+    width: 100%;
+    background: linear-gradient(135deg, rgba(20, 25, 35, 0.95) 0%, rgba(30, 35, 45, 0.95) 100%);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Card Header */
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
+    border-bottom: 2px solid rgba(255, 215, 0, 0.2);
+}
+
+.card-title {
+    font-size: 1.5rem;
     font-weight: 700;
     background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     margin: 0;
-    text-align: center;
-}
-
-.preview-subtitle {
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.6);
-    margin: -16px 0 0 0;
-    text-align: center;
-    font-style: italic;
-}
-
-/* Preview Stats Section */
-.preview-stats {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding: 16px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.preview-stat {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-}
-
-.preview-stat-icon {
-    font-size: 1.5rem;
-    flex-shrink: 0;
-}
-
-.preview-stat-content {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    flex: 1;
-}
-
-.preview-stat-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: rgba(255, 215, 0, 0.9);
-    text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-.preview-stat-value {
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.9);
-    line-height: 1.4;
-}
-
-/* Rarity-based coloring for rarity stat */
-.preview-stat-value.rarity-common {
-    color: rgba(156, 163, 175, 1);
-    font-weight: 600;
-}
-
-.preview-stat-value.rarity-uncommon {
-    color: rgba(96, 165, 250, 1);
-    font-weight: 600;
-}
-
-.preview-stat-value.rarity-rare {
-    color: rgba(168, 85, 247, 1);
+.card-rarity {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
     font-weight: 700;
-    text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: 2px solid;
 }
 
-.preview-stat-value.rarity-legendary {
-    background: linear-gradient(135deg, #ff6b35 0%, #f7971e 50%, #ffd200 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    font-weight: 800;
-    text-shadow: 0 0 15px rgba(255, 165, 0, 0.8);
-    animation: legendaryGlow 2s ease-in-out infinite;
+.card-rarity.rarity-common {
+    background: rgba(156, 163, 175, 0.2);
+    border-color: rgba(156, 163, 175, 0.5);
+    color: rgba(156, 163, 175, 1);
 }
 
-@keyframes legendaryGlow {
+.card-rarity.rarity-uncommon {
+    background: rgba(96, 165, 250, 0.2);
+    border-color: rgba(96, 165, 250, 0.5);
+    color: rgba(96, 165, 250, 1);
+}
+
+.card-rarity.rarity-rare {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(168, 85, 247, 0.5);
+    color: rgba(168, 85, 247, 1);
+    text-shadow: 0 0 8px rgba(168, 85, 247, 0.5);
+}
+
+.card-rarity.rarity-legendary {
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.2), rgba(255, 215, 0, 0.2));
+    border-color: #ff6b35;
+    background-clip: padding-box;
+    color: #ffd700;
+    text-shadow: 0 0 12px rgba(255, 165, 0, 0.8);
+    animation: legendaryPulse 2s ease-in-out infinite;
+}
+
+@keyframes legendaryPulse {
     0%, 100% {
-        filter: drop-shadow(0 0 5px rgba(255, 165, 0, 0.6));
+        border-color: #ff6b35;
+        box-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
     }
     50% {
-        filter: drop-shadow(0 0 15px rgba(255, 165, 0, 1));
+        border-color: #ffd700;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
     }
+}
+
+/* Card Sections */
+.card-section {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.card-section:last-of-type {
+    border-bottom: none;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.section-icon {
+    font-size: 1.2rem;
+}
+
+.section-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 215, 0, 0.9);
+}
+
+.section-content {
+    padding-left: 28px;
+}
+
+.unlock-description {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Flavor Text Section */
+.flavor-section {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(255, 215, 0, 0.02) 100%);
+    border-top: 1px solid rgba(255, 215, 0, 0.1);
+    border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+    padding: 16px 20px;
+    position: relative;
+    font-style: italic;
+}
+
+.flavor-quote-mark {
+    position: absolute;
+    font-size: 3rem;
+    color: rgba(255, 215, 0, 0.15);
+    font-family: Georgia, serif;
+    line-height: 1;
+}
+
+.flavor-quote-mark:first-of-type {
+    top: 8px;
+    left: 12px;
+}
+
+.flavor-quote-mark:last-of-type {
+    bottom: -8px;
+    right: 12px;
+    transform: rotate(180deg);
+}
+
+.flavor-text {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0 16px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+
+/* Card Footer */
+.card-footer {
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 20px;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.footer-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.footer-icon {
+    font-size: 1.2rem;
+}
+
+.footer-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 215, 0, 0.7);
+}
+
+.footer-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .preview-coin-container {
     width: 100%;
-    height: 400px;
+    height: 320px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -188,14 +292,14 @@
 }
 
 .preview-coin {
-    width: 280px;
-    height: 280px;
+    width: 240px;
+    height: 240px;
     position: relative;
     transform-style: preserve-3d;
     cursor: grab;
     transition: transform 0.1s ease-out;
     filter: drop-shadow(0 10px 40px rgba(255, 215, 0, 0.3)) drop-shadow(0 20px 60px rgba(0, 0, 0, 0.5));
-    margin: 0 auto; /* Ensure horizontal centering */
+    margin: 0 auto;
 }
 
 .preview-coin:active {
@@ -368,33 +472,36 @@
     }
     
     .preview-coin-container {
-        height: 350px;
+        height: 280px;
     }
     
     .preview-coin {
-        width: 240px;
-        height: 240px;
+        width: 200px;
+        height: 200px;
     }
     
-    .preview-title {
-        font-size: 1.5rem;
+    .card-title {
+        font-size: 1.25rem;
     }
     
-    .preview-stats {
-        padding: 14px;
-        gap: 10px;
+    .card-header {
+        padding: 12px 16px;
     }
     
-    .preview-stat-icon {
-        font-size: 1.3rem;
+    .card-section {
+        padding: 12px 16px;
     }
     
-    .preview-stat-label {
-        font-size: 0.75rem;
+    .section-content {
+        padding-left: 24px;
     }
     
-    .preview-stat-value {
-        font-size: 0.9rem;
+    .flavor-section {
+        padding: 12px 16px;
+    }
+    
+    .card-footer {
+        padding: 10px 16px;
     }
 }
 
@@ -404,36 +511,43 @@
     }
     
     .preview-coin-container {
-        height: 300px;
+        height: 240px;
     }
     
     .preview-coin {
-        width: 200px;
-        height: 200px;
+        width: 180px;
+        height: 180px;
     }
     
-    .preview-title {
-        font-size: 1.35rem;
+    .card-title {
+        font-size: 1.1rem;
     }
     
-    .preview-subtitle {
+    .card-header {
+        padding: 10px 14px;
+    }
+    
+    .card-section {
+        padding: 10px 14px;
+    }
+    
+    .section-content {
+        padding-left: 20px;
+    }
+    
+    .flavor-section {
+        padding: 10px 14px;
+    }
+    
+    .unlock-description {
         font-size: 0.85rem;
     }
     
-    .preview-stats {
-        padding: 12px;
-        gap: 8px;
+    .flavor-text {
+        font-size: 0.8rem;
     }
     
-    .preview-stat-icon {
-        font-size: 1.2rem;
-    }
-    
-    .preview-stat-label {
-        font-size: 0.7rem;
-    }
-    
-    .preview-stat-value {
-        font-size: 0.85rem;
+    .card-footer {
+        padding: 8px 14px;
     }
 }

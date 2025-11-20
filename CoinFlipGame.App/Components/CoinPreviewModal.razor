@@ -12,75 +12,7 @@
         </button>
         
         <div class="preview-content">
-            <h3 class="preview-title">@CoinImage?.DisplayName</h3>
-            <p class="preview-subtitle">Drag to rotate</p>
-            
-            @if (CoinImage != null)
-            {
-                <!-- Coin Stats -->
-                <div class="preview-stats">
-                    @if (CoinImage.UnlockCondition != null)
-                    {
-                        <div class="preview-stat">
-                            <span class="preview-stat-icon">??</span>
-                            <div class="preview-stat-content">
-                                <span class="preview-stat-label">Unlock Type</span>
-                                <span class="preview-stat-value">@FormatUnlockType(CoinImage.UnlockCondition.Type)</span>
-                            </div>
-                        </div>
-                        
-                        <div class="preview-stat">
-                            <span class="preview-stat-icon">??</span>
-                            <div class="preview-stat-content">
-                                <span class="preview-stat-label">Condition</span>
-                                <span class="preview-stat-value">@CoinImage.UnlockCondition.Description</span>
-                            </div>
-                        </div>
-                        
-                        <div class="preview-stat">
-                            <span class="preview-stat-icon">?</span>
-                            <div class="preview-stat-content">
-                                <span class="preview-stat-label">Rarity</span>
-                                <span class="preview-stat-value rarity-@CoinImage.UnlockCondition.Rarity.ToString().ToLower()">@CoinImage.UnlockCondition.Rarity</span>
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="preview-stat">
-                            <span class="preview-stat-icon">??</span>
-                            <div class="preview-stat-content">
-                                <span class="preview-stat-label">Availability</span>
-                                <span class="preview-stat-value">Always Unlocked</span>
-                            </div>
-                        </div>
-                    }
-                    
-                    @{
-                        var unlockDate = UnlockProgress.GetUnlockTimestamp(CoinImage.Path);
-                        if (unlockDate.HasValue)
-                        {
-                            <div class="preview-stat">
-                                <span class="preview-stat-icon">??</span>
-                                <div class="preview-stat-content">
-                                    <span class="preview-stat-label">Unlocked On</span>
-                                    <span class="preview-stat-value">@FormatUnlockDate(unlockDate.Value)</span>
-                                </div>
-                            </div>
-                        }
-                        
-                        var timesLanded = UnlockProgress.GetCoinLandCount(CoinImage.Path);
-                        <div class="preview-stat">
-                            <span class="preview-stat-icon">??</span>
-                            <div class="preview-stat-content">
-                                <span class="preview-stat-label">Times Landed</span>
-                                <span class="preview-stat-value">@timesLanded</span>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-            
+            <!-- TCG Card Layout: Coin at Top -->
             <div class="preview-coin-container">
                 <div class="preview-coin"
                      @ref="previewCoinElement"
@@ -98,6 +30,84 @@
                     </div>
                 </div>
             </div>
+            
+            <p class="preview-subtitle">Drag to rotate</p>
+            
+            <!-- TCG Card Stats Section -->
+            @if (CoinImage != null)
+            {
+                <div class="preview-card-frame">
+                    <!-- Card Header -->
+                    <div class="card-header">
+                        <h3 class="card-title">@CoinImage.DisplayName</h3>
+                        @if (CoinImage.UnlockCondition != null)
+                        {
+                            <div class="card-rarity rarity-@CoinImage.UnlockCondition.Rarity.ToString().ToLower()">
+                                @CoinImage.UnlockCondition.Rarity
+                            </div>
+                        }
+                    </div>
+                    
+                    <!-- Unlock Condition -->
+                    @if (CoinImage.UnlockCondition != null)
+                    {
+                        <div class="card-section">
+                            <div class="section-header">
+                                <span class="section-icon">??</span>
+                                <span class="section-label">How to Unlock</span>
+                            </div>
+                            <div class="section-content">
+                                <p class="unlock-description">@CoinImage.UnlockCondition.Description</p>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="card-section">
+                            <div class="section-header">
+                                <span class="section-icon">??</span>
+                                <span class="section-label">Availability</span>
+                            </div>
+                            <div class="section-content">
+                                <p class="unlock-description">Always Unlocked</p>
+                            </div>
+                        </div>
+                    }
+                    
+                    <!-- Flavor Text -->
+                    @if (!string.IsNullOrEmpty(CoinImage.UnlockCondition?.FlavorText))
+                    {
+                        <div class="card-section flavor-section">
+                            <div class="flavor-quote-mark">"</div>
+                            <p class="flavor-text">@CoinImage.UnlockCondition.FlavorText</p>
+                            <div class="flavor-quote-mark">"</div>
+                        </div>
+                    }
+                    
+                    <!-- Stats Footer -->
+                    <div class="card-footer">
+                        @{
+                            var unlockDate = UnlockProgress.GetUnlockTimestamp(CoinImage.Path);
+                            var timesLanded = UnlockProgress.GetCoinLandCount(CoinImage.Path);
+                        }
+                        
+                        <div class="footer-stat">
+                            <span class="footer-icon">??</span>
+                            <span class="footer-label">Landed</span>
+                            <span class="footer-value">@timesLanded</span>
+                        </div>
+                        
+                        @if (unlockDate.HasValue)
+                        {
+                            <div class="footer-stat">
+                                <span class="footer-icon">??</span>
+                                <span class="footer-label">Unlocked</span>
+                                <span class="footer-value">@FormatUnlockDate(unlockDate.Value)</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
         </div>
     </div>
 </div>

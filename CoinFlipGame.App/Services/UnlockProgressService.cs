@@ -19,6 +19,13 @@ public class UnlockProgressService
     // Track consecutive characteristic landings for each unlock condition
     // Key: coin path (the coin to unlock), Value: current consecutive count
     private Dictionary<string, int> _characteristicConsecutiveCounts = new();
+    // Track previous streak values to detect threshold crossings
+    private int _prevHeadsStreak = 0;
+    private int _prevTailsStreak = 0;
+    private int _prevTotalFlips = 0;
+    private int _prevHeadsFlips = 0;
+    private int _prevTailsFlips = 0;
+    
     private int _totalFlips = 0;
     private int _headsFlips = 0;
     private int _tailsFlips = 0;
@@ -61,6 +68,13 @@ public class UnlockProgressService
     {
         try
         {
+            // Capture previous values BEFORE updating
+            _prevTotalFlips = _totalFlips;
+            _prevHeadsFlips = _headsFlips;
+            _prevTailsFlips = _tailsFlips;
+            _prevHeadsStreak = _longestHeadsStreak;
+            _prevTailsStreak = _longestTailsStreak;
+            
             // Track total flips
             _totalFlips++;
             
@@ -147,27 +161,34 @@ public class UnlockProgressService
                 switch (coin.UnlockCondition.Type)
                 {
                     case UnlockConditionType.TotalFlips:
-                        justUnlocked = _totalFlips == coin.UnlockCondition.RequiredCount;
+                        // Check if we crossed the threshold (previous < required AND current >= required)
+                        justUnlocked = _prevTotalFlips < coin.UnlockCondition.RequiredCount 
+                                    && _totalFlips >= coin.UnlockCondition.RequiredCount;
                         break;
                     case UnlockConditionType.HeadsFlips:
-                        justUnlocked = _headsFlips == coin.UnlockCondition.RequiredCount;
+                        justUnlocked = _prevHeadsFlips < coin.UnlockCondition.RequiredCount 
+                                    && _headsFlips >= coin.UnlockCondition.RequiredCount;
                         break;
                     case UnlockConditionType.TailsFlips:
-                        justUnlocked = _tailsFlips == coin.UnlockCondition.RequiredCount;
+                        justUnlocked = _prevTailsFlips < coin.UnlockCondition.RequiredCount 
+                                    && _tailsFlips >= coin.UnlockCondition.RequiredCount;
                         break;
                     case UnlockConditionType.Streak:
                         // Check if streak side is specified
                         if (coin.UnlockCondition.StreakSide.HasValue)
                         {
                             if (coin.UnlockCondition.StreakSide.Value == Models.Unlocks.StreakSide.Heads)
-                                justUnlocked = _longestHeadsStreak == coin.UnlockCondition.RequiredCount;
+                                justUnlocked = _prevHeadsStreak < coin.UnlockCondition.RequiredCount 
+                                            && _longestHeadsStreak >= coin.UnlockCondition.RequiredCount;
                             else
-                                justUnlocked = _longestTailsStreak == coin.UnlockCondition.RequiredCount;
+                                justUnlocked = _prevTailsStreak < coin.UnlockCondition.RequiredCount 
+                                            && _longestTailsStreak >= coin.UnlockCondition.RequiredCount;
                         }
                         else
                         {
-                            // Legacy: any streak
-                            justUnlocked = _longestStreak == coin.UnlockCondition.RequiredCount;
+                            // Legacy: any streak (not used in current coins but keeping for compatibility)
+                            justUnlocked = _longestStreak >= coin.UnlockCondition.RequiredCount
+                                        && !_notificationShownFor.Contains(coin.Path);
                         }
                         break;
                     case UnlockConditionType.LandOnCoin:

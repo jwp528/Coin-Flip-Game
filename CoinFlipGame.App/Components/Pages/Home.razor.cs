@@ -519,6 +519,9 @@ public partial class Home : ComponentBase, IDisposable
             
         UpdateStreak(result);
         
+        // Apply combo streak bonus if applicable (adds to streak counter, not probability)
+        ApplyComboStreakBonus(headsEffect, tailsEffect);
+        
         // Track coin landing for unlock progress and check for newly unlocked coins
         var allCoins = GetAllCoinsFlat();
         var newlyUnlocked = UnlockProgress.TrackCoinLanding(landedCoinPath, isHeads, currentStreak, allCoins, selectedHeadsImage, selectedTailsImage);
@@ -1085,20 +1088,26 @@ public partial class Home : ComponentBase, IDisposable
         }
         
         // Apply combo streak boost if applicable (when opposite side has no effect)
+        // If both sides have combo, they cancel out - no streak boost
         double streakBoost = 0.0;
         
-        // Check if heads has combo and tails has no effect
-        if (headsEffect?.Type == CoinEffectType.Combo && 
-            (tailsEffect == null || tailsEffect.Type == CoinEffectType.None || tailsEffect.Type == CoinEffectType.Combo))
-        {
-            streakBoost += ApplyComboStreakBoost(headsEffect, lastResult == "heads");
-        }
+        bool bothAreCombo = headsEffect?.Type == CoinEffectType.Combo && tailsEffect?.Type == CoinEffectType.Combo;
         
-        // Check if tails has combo and heads has no effect
-        if (tailsEffect?.Type == CoinEffectType.Combo && 
-            (headsEffect == null || headsEffect.Type == CoinEffectType.None || headsEffect.Type == CoinEffectType.Combo))
+        if (!bothAreCombo)
         {
-            streakBoost += ApplyComboStreakBoost(tailsEffect, lastResult == "tails");
+            // Check if heads has combo and tails has no effect
+            if (headsEffect?.Type == CoinEffectType.Combo && 
+                (tailsEffect == null || tailsEffect.Type == CoinEffectType.None))
+            {
+                streakBoost += ApplyComboStreakBoost(headsEffect, lastResult == "heads");
+            }
+            
+            // Check if tails has combo and heads has no effect
+            if (tailsEffect?.Type == CoinEffectType.Combo && 
+                (headsEffect == null || headsEffect.Type == CoinEffectType.None))
+            {
+                streakBoost += ApplyComboStreakBoost(tailsEffect, lastResult == "tails");
+            }
         }
         
         // Apply final biases and streak boost to probability
@@ -1112,18 +1121,36 @@ public partial class Home : ComponentBase, IDisposable
     
     /// <summary>
     /// Apply combo enhancement to an effect based on opposite side's combo
+    /// If both sides have combo effects, they cancel each other out
     /// </summary>
     private CoinEffect? ApplyComboEnhancement(CoinEffect? effect, CoinEffect? oppositeEffect)
     {
+        Logger.LogInformation($"[ApplyComboEnhancement] effect: {effect?.Type}, oppositeEffect: {oppositeEffect?.Type}");
+        
+        // If both sides have combo, they cancel out - no enhancement
+        if (effect?.Type == CoinEffectType.Combo && oppositeEffect?.Type == CoinEffectType.Combo)
+        {
+            Logger.LogInformation("[ApplyComboEnhancement] Both sides have combo - canceling out");
+            return effect;
+        }
+        
         // If no effect or opposite side doesn't have combo, return original
         if (effect == null || oppositeEffect?.Type != CoinEffectType.Combo)
+        {
+            Logger.LogInformation($"[ApplyComboEnhancement] No enhancement - effect null: {effect == null}, opposite is combo: {oppositeEffect?.Type == CoinEffectType.Combo}");
             return effect;
+        }
         
         // Only enhance Weighted, Shaved, and AutoClick effects
         if (effect.Type != CoinEffectType.Weighted && 
             effect.Type != CoinEffectType.Shaved && 
             effect.Type != CoinEffectType.AutoClick)
+        {
+            Logger.LogInformation($"[ApplyComboEnhancement] Effect type {effect.Type} cannot be enhanced");
             return effect;
+        }
+        
+        Logger.LogInformation($"[ApplyComboEnhancement] Enhancing {effect.Type} with {oppositeEffect.ComboType} combo (multiplier: {oppositeEffect.ComboMultiplier})");
         
         // Create enhanced copy of the effect
         var enhanced = new CoinEffect
@@ -1140,7 +1167,9 @@ public partial class Home : ComponentBase, IDisposable
             // Additive: add combo multiplier to bias or reduce auto-click interval
             if (effect.Type == CoinEffectType.Weighted || effect.Type == CoinEffectType.Shaved)
             {
+                double oldBias = enhanced.BiasStrength;
                 enhanced.BiasStrength += oppositeEffect.ComboMultiplier;
+                Logger.LogInformation($"[ApplyComboEnhancement] Additive: {oldBias:F3} + {oppositeEffect.ComboMultiplier:F3} = {enhanced.BiasStrength:F3}");
             }
             else if (effect.Type == CoinEffectType.AutoClick)
             {
@@ -1154,11 +1183,13 @@ public partial class Home : ComponentBase, IDisposable
             // Multiplicative: multiply bias or divide auto-click interval
             if (effect.Type == CoinEffectType.Weighted || effect.Type == CoinEffectType.Shaved)
             {
+                double oldBias = enhanced.BiasStrength;
                 enhanced.BiasStrength *= oppositeEffect.ComboMultiplier;
+                Logger.LogInformation($"[ApplyComboEnhancement] Multiplicative: {oldBias:F3} * {oppositeEffect.ComboMultiplier:F2} = {enhanced.BiasStrength:F3}");
             }
             else if (effect.Type == CoinEffectType.AutoClick)
             {
-                // For multiplicative, divide interval (1.5x -> 1/1.5 = 0.667 of original time)
+                // For multiplicative, divide interval (2x -> 1/2 = 0.5 of original time, i.e., twice as fast)
                 enhanced.AutoClickInterval = (int)(effect.AutoClickInterval / oppositeEffect.ComboMultiplier);
                 enhanced.AutoClickInterval = Math.Max(100, enhanced.AutoClickInterval); // Min 100ms
             }
@@ -1169,6 +1200,7 @@ public partial class Home : ComponentBase, IDisposable
     
     /// <summary>
     /// Calculate streak boost probability adjustment from combo effect
+    /// This only affects probability when opposite side HAS an effect
     /// </summary>
     private double ApplyComboStreakBoost(CoinEffect comboEffect, bool favorCurrentStreak)
     {
@@ -1179,13 +1211,13 @@ public partial class Home : ComponentBase, IDisposable
         
         if (comboEffect.ComboType == ComboType.Additive)
         {
-            // Additive: add the multiplier value (e.g., +0.05 = +5% to continue streak)
+            // Additive: add the multiplier value (e.g., +0.03 = +3% to continue streak)
             boost = comboEffect.ComboMultiplier;
         }
         else // Multiplicative
         {
             // Multiplicative: increase probability by percentage of current 50% base
-            // e.g., 1.5x means 50% * 0.5 = 25% boost
+            // e.g., 2x means 50% * (2 - 1.0) = 50% boost
             boost = 0.5 * (comboEffect.ComboMultiplier - 1.0);
         }
         
@@ -1196,6 +1228,99 @@ public partial class Home : ComponentBase, IDisposable
         }
         
         return boost;
+    }
+    
+    /// <summary>
+    /// Apply combo streak bonus directly to the streak counter
+    /// This is called AFTER the flip when opposite side has NO effect
+    /// Moai (Additive 0.03): Adds 3 to streak (0.03 * 100 = 3)
+    /// DragonSamurai (Multiplicative 2x): Multiplies current streak by multiplier (streak * 2)
+    /// </summary>
+    private void ApplyComboStreakBonus(CoinEffect? headsEffect, CoinEffect? tailsEffect)
+    {
+        try
+        {
+            // Only apply if one side has combo and other has no effect
+            // If both sides have combo, they cancel out
+            bool headsHasCombo = headsEffect?.Type == CoinEffectType.Combo;
+            bool tailsHasCombo = tailsEffect?.Type == CoinEffectType.Combo;
+            
+            // Both combo coins cancel each other out
+            if (headsHasCombo && tailsHasCombo)
+            {
+                Logger.LogInformation("Both sides have combo - effects cancel out, no streak bonus applied");
+                return;
+            }
+            
+            bool headsHasEffect = headsEffect != null && 
+                (headsEffect.Type == CoinEffectType.Weighted || 
+                 headsEffect.Type == CoinEffectType.Shaved || 
+                 headsEffect.Type == CoinEffectType.AutoClick);
+            
+            bool tailsHasEffect = tailsEffect != null && 
+                (tailsEffect.Type == CoinEffectType.Weighted || 
+                 tailsEffect.Type == CoinEffectType.Shaved || 
+                 tailsEffect.Type == CoinEffectType.AutoClick);
+            
+            // Check if heads has combo and tails has no effect
+            if (headsHasCombo && !tailsHasEffect && headsEffect != null)
+            {
+                if (headsEffect.ComboType == ComboType.Additive)
+                {
+                    // Moai (Additive 0.03): adds 3 to streak
+                    // Convert percentage to whole number: 0.03 * 100 = 3
+                    int streakBonus = (int)Math.Round(headsEffect.ComboMultiplier * 100);
+                    currentStreak += streakBonus;
+                    
+                    Logger.LogInformation($"Combo (Additive) streak bonus: +{streakBonus} (new streak: {currentStreak})");
+                }
+                else // Multiplicative (DragonSamurai)
+                {
+                    // DragonSamurai (Multiplicative 2x): multiplies current streak
+                    int oldStreak = currentStreak;
+                    currentStreak = (int)Math.Round(currentStreak * headsEffect.ComboMultiplier);
+                    
+                    Logger.LogInformation($"Combo (Multiplicative) streak bonus: {oldStreak} * {headsEffect.ComboMultiplier} = {currentStreak}");
+                }
+                
+                // Update longest streak if needed
+                if (currentStreak > longestStreak)
+                {
+                    longestStreak = currentStreak;
+                }
+            }
+            
+            // Check if tails has combo and heads has no effect
+            if (tailsHasCombo && !headsHasEffect && tailsEffect != null)
+            {
+                if (tailsEffect.ComboType == ComboType.Additive)
+                {
+                    // Moai (Additive 0.03): adds 3 to streak
+                    int streakBonus = (int)Math.Round(tailsEffect.ComboMultiplier * 100);
+                    currentStreak += streakBonus;
+                    
+                    Logger.LogInformation($"Combo (Additive) streak bonus: +{streakBonus} (new streak: {currentStreak})");
+                }
+                else // Multiplicative (DragonSamurai)
+                {
+                    // DragonSamurai (Multiplicative 2x): multiplies current streak
+                    int oldStreak = currentStreak;
+                    currentStreak = (int)Math.Round(currentStreak * tailsEffect.ComboMultiplier);
+                    
+                    Logger.LogInformation($"Combo (Multiplicative) streak bonus: {oldStreak} * {tailsEffect.ComboMultiplier} = {currentStreak}");
+                }
+                
+                // Update longest streak if needed
+                if (currentStreak > longestStreak)
+                {
+                    longestStreak = currentStreak;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error applying combo streak bonus");
+        }
     }
     
     /// <summary>

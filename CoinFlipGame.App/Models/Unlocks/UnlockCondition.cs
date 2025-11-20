@@ -19,8 +19,10 @@ public class UnlockCondition
     public UnlockConditionType Type { get; set; }
     public int RequiredCount { get; set; }
     public string? RequiredCoinPath { get; set; } // For LandOnCoin or RandomChance condition
-    public string Description { get; set; } = string.Empty;
-    
+    public string Description { get; set; } = string.Empty; // Should describe how to unlock the coin
+
+    public string FlavorText { get; set; } = string.Empty; // Additional flavor text for the unlock
+
     /// <summary>
     /// Chance to unlock (0.0 to 1.0) - Used for RandomChance type
     /// Example: 0.00005 = 0.005% chance, 0.07 = 7% chance
