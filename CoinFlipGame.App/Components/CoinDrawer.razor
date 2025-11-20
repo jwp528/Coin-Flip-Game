@@ -28,8 +28,8 @@
                     type="text" 
                     class="drawer-search-input" 
                     placeholder="Search coins..." 
-                    @bind="searchQuery"
-                    @bind:event="oninput" />
+                    value="@searchQuery"
+                    @oninput="OnSearchInput" />
                 @if (string.IsNullOrEmpty(searchQuery))
                 {
                     <i class="bi bi-search drawer-search-icon"></i>
@@ -152,6 +152,8 @@ private const double LONG_PRESS_DURATION = 500; // 500ms for long press
 private bool previousIsVisible = false;
 private bool isClosing = false;
 private string searchQuery = "";
+private string debouncedSearchQuery = ""; // The actual query used for filtering
+private System.Threading.Timer? searchDebounceTimer = null;
     
 [Parameter]
 public bool IsVisible { get; set; }
@@ -200,6 +202,9 @@ private System.Threading.Timer? longPressTimer = null;
                 else
                 {
                     await JSRuntime.InvokeVoidAsync("playDrawerCloseSound");
+                    
+                    // Clear particles when drawer closes to improve performance
+                    await JSRuntime.InvokeVoidAsync("clearParticles");
                 }
             }
             catch (Exception)
@@ -368,14 +373,35 @@ private System.Threading.Timer? longPressTimer = null;
     private void ClearSearch()
     {
         searchQuery = "";
+        debouncedSearchQuery = "";
+        searchDebounceTimer?.Dispose();
+        searchDebounceTimer = null;
+    }
+    
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        searchQuery = e.Value?.ToString() ?? "";
+        
+        // Cancel previous timer
+        searchDebounceTimer?.Dispose();
+        
+        // Set new timer - only update after 300ms of no typing
+        searchDebounceTimer = new System.Threading.Timer(_ =>
+        {
+            InvokeAsync(() =>
+            {
+                debouncedSearchQuery = searchQuery;
+                StateHasChanged();
+            });
+        }, null, 300, Timeout.Infinite);
     }
     
     private bool MatchesSearch(CoinImage coin)
     {
-        if (string.IsNullOrWhiteSpace(searchQuery))
+        if (string.IsNullOrWhiteSpace(debouncedSearchQuery))  // Use debounced value
             return true;
         
-        var query = searchQuery.ToLower();
+        var query = debouncedSearchQuery.ToLower();
         return coin.DisplayName.ToLower().Contains(query) ||
                (coin.UnlockCondition?.Description?.ToLower().Contains(query) ?? false);
     }
@@ -404,5 +430,6 @@ private System.Threading.Timer? longPressTimer = null;
     public void Dispose()
     {
         longPressTimer?.Dispose();
+        searchDebounceTimer?.Dispose();
     }
 }

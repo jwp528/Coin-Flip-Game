@@ -1,62 +1,119 @@
 # ?? Coin Flip Game
 
-**An addictive coin-flipping experience with unlockable coins, streak mechanics, and super flips.**
+**An addictive coin-flipping experience with 100+ unlockable coins, coin effects, streak mechanics, and super flips.**
 
-Play now: [coinflipgame.app](https://coinflipgame.app)
+? **[Play Now: coinflipgame.app](https://coinflipgame.app)** ?
+
+---
+
+## ?? Quick Start
+
+### First Time Playing?
+
+1. **Click or drag the coin** to flip it
+2. **Hold for 750ms** for a Super Flip (3x unlock chances!)
+3. **Tap the counters** at the top to customize coin faces
+4. **Unlock new coins** through achievements and random drops
+
+**Full Guide**: [Getting Started ?](docs/getting-started.md)
+
+---
+
+## ?? Documentation
+
+### For Players
+- **[? Getting Started](docs/getting-started.md)** - New to the game? Start here!
+- **[?? Gameplay Guide](docs/gameplay-guide.md)** - Complete guide to all mechanics
+- **[?? Unlock System](docs/unlock-system.md)** - How to unlock all coins + **Double-Chance** feature
+- **[?? Coin Effects](docs/coin-effects.md)** - Special abilities and combos
+- **[?? Data & Privacy](docs/data-privacy.md)** - How your progress is saved
+
+### For Developers
+- **[?? Technical Architecture](docs/technical-architecture.md)** - Code structure & design patterns
+- **[?? Contributing Guide](CONTRIBUTING.md)** - How to contribute
+- **[?? Local Development](LOCAL_DEVELOPMENT.md)** - Dev environment setup
+
+---
+
+## ?? Key Features
+
+### ?? 100+ Unlockable Coins
+Multiple themed collections with unique unlock requirements
+
+### ?? Double-Chance System (NEW!)
+Set **both heads AND tails** to the required coin for **2x unlock rate**:
+- Dragon_Rare: 0.5% ? **1.0%** with double-chance
+- **Stacks with Super Flip** for **6x total multiplier**!
+
+### ?? Super Flip Mechanic
+Hold coin for 750ms to charge:
+- **3x unlock chance** for random coins
+- Enhanced animation and particle effects
+- **Combines with double-chance** for maximum efficiency
+
+### ?? Coin Effects System
+Special abilities that change gameplay:
+- **Auto-Click**: Passive flipping (1 flip/second)
+- **Weighted**: Bias coin to land DOWN on this side
+- **Shaved**: Bias coin to land UP on this side
+- **Combo**: Boost effects on opposite side
+
+### ?? Progressive Unlock System
+- **8 unlock condition types**
+- **4 rarity tiers** (Common ? Legendary)
+- **Achievement milestones** (10 flips ? 10,000 flips)
+- **Streak challenges** (3-flip ? 100-flip streaks)
 
 ---
 
 ## ?? How to Play
 
 ### The Basics
-1. **Flip**: Tap, click, or drag the coin to flip it
-2. **Pick Your Side**: Tap the heads/tails counters to customize which coin appears on each side
-3. **Unlock Coins**: Complete challenges to unlock new coin designs
-4. **Build Streaks**: Land the same side repeatedly for bonus achievements
+1. **Flip**: Tap, click, or drag the coin
+2. **Customize**: Tap heads/tails counters to select coin faces
+3. **Unlock**: Complete challenges and random drops
+4. **Strategize**: Use effects and double-chance for efficiency
 
-### Coin Selection
-- Choose any unlocked coin for heads and tails
-- Or select **Random** to get surprise coins based on rarity
-- Your custom selections are saved automatically
+### Pro Tips
+- **Always Super Flip** for random-chance coins (3x multiplier)
+- **Set both faces** to required coin for active unlocks (2x multiplier)
+- **Combine both** for maximum efficiency (6x multiplier!)
+- Use **coin effects** strategically to bias flips
 
----
-
-## ? Super Flip Mechanic
-
-Hold down on the coin to charge a **Super Flip**:
-- Takes 1.5 seconds to fully charge (configurable in `GameSettings.cs`)
-- Coin shakes and glows when ready
-- Triple unlock chance for random-chance coins
-- More dramatic animation and effects
-
-Super Flips are your best bet for unlocking rare coins faster.
-
-**Configuration**: Modify `CoinFlipGame.App/Models/GameSettings.cs` to adjust:
-- `SUPER_FLIP_CHARGE_TIME`: Charge time in milliseconds (default: 1500ms)
-- `SUPER_FLIP_UNLOCK_MULTIPLIER`: Unlock chance multiplier (default: 3.0x)
-- Animation durations for normal and super flips
+**Full Gameplay Guide**: [docs/gameplay-guide.md](docs/gameplay-guide.md)
 
 ---
 
-## ?? Unlock System
+## ?? Example: Unlocking Dragon_Rare
 
-### Achievement Coins
-Complete milestones to unlock:
-- **Total Flips**: 10, 25, 50, 100, 500, 1K, 1.5K, 2K, 5K, 10K
-- **Streaks**: Land 3, 4, 5, 10, 50, or 100 in a row (heads or tails)
-- **Completionist**: Unlock every other coin in the game
+**Goal**: Unlock Dragon_Rare (0.5% base chance, requires Dragon active)
 
-### Zodiac Coins
-Random chance unlocks with prerequisites:
-- Most require a certain number of heads or tails first
-- Small percentage chance on each flip (higher with Super Flip)
-- Some coins only unlock when specific coins are active
+**Optimal Strategy**:
+1. Unlock Dragon first (land on all Zodiac coins 10x each)
+2. Set **Heads = Dragon** ?
+3. Set **Tails = Dragon** ? (enables double-chance!)
+4. **Super Flip every time** (hold coin) ?
 
-### Rarity Tiers
-- **Common** (white): Easy to unlock, frequent drops
-- **Uncommon** (blue): Moderate challenges
-- **Rare** (purple): Tough streaks or high flip counts
-- **Legendary** (orange/red): Ultimate achievements
+**Result**:
+- Base: 0.5%
+- Super Flip: 0.5% × 3 = 1.5%
+- Double-Chance: 0.5% × 2 = 1.0%
+- **Combined: 0.5% × 3 × 2 = 3.0%** ?
+
+**Expected flips**: ~33 (vs 200 without strategy!)
+
+**Learn more**: [Unlock System Guide ?](docs/unlock-system.md)
+
+---
+
+## ?? Rarity Tiers
+
+| Rarity | Color | Examples | Difficulty |
+|--------|-------|----------|------------|
+| **Common** | White/Blue | 10Flips, Gemini, Ram | Easy milestones |
+| **Uncommon** | Light Blue | 25Flips, Rooster | Moderate challenges |
+| **Rare** | Purple | Dragon, 100Flips, Panda | Tough requirements |
+| **Legendary** | Orange/Red | Dragon_Rare, Completionist, Headmaster | Ultimate achievements |
 
 ---
 

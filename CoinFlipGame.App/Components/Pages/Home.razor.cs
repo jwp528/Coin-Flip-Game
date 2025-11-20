@@ -14,7 +14,7 @@ public class WindowDimensions
     public double Height { get; set; }
 }
 
-public partial class Home : ComponentBase
+public partial class Home : ComponentBase, IDisposable
 {
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
@@ -333,6 +333,9 @@ public partial class Home : ComponentBase
         
         try
         {
+            // Preload sounds on first interaction (fire and forget)
+            _ = JSRuntime.InvokeVoidAsync("preloadGameSounds");
+            
             await JSRuntime.InvokeVoidAsync("coinDragHandler.startDrag");
             await JSRuntime.InvokeVoidAsync("coinPhysics.startDrag", coinCenterX, coinCenterY);
             
@@ -522,7 +525,8 @@ public partial class Home : ComponentBase
         
         // Try random unlocks based on the landed coin (with double chance for super flip)
         double unlockMultiplier = isSuperFlip ? GameSettings.SUPER_FLIP_UNLOCK_MULTIPLIER : 1.0;
-        var randomUnlocked = UnlockProgress.TryRandomUnlocks(landedCoinPath, allCoins, unlockMultiplier);
+        // Pass both selected coin paths to enable double chance when both faces match the required coin
+        var randomUnlocked = UnlockProgress.TryRandomUnlocks(landedCoinPath, allCoins, unlockMultiplier, selectedHeadsImage, selectedTailsImage);
         newlyUnlocked.AddRange(randomUnlocked);
         
         // If a coin was unlocked, show it as the landed face for added effect
@@ -832,7 +836,8 @@ public partial class Home : ComponentBase
             
             var token = chargeCancellationTokenSource.Token;
             
-            // Update UI every 100ms for smooth progress bar
+            // Update UI every 200ms for smooth progress bar with reduced overhead
+            // Changed from 50ms (20 updates/sec) to 200ms (5 updates/sec) = 75% reduction in re-renders
             while (isSuperFlipCharging && !token.IsCancellationRequested)
             {
                 if (!chargeStartTime.HasValue)
@@ -867,13 +872,10 @@ public partial class Home : ComponentBase
                     break;
                 }
                 
-                // Update UI less frequently to reduce overhead
-                if ((int)elapsed % 50 == 0)
-                {
-                    await InvokeAsync(StateHasChanged);
-                }
-                
-                await Task.Delay(50, token);
+                // Update UI every 200ms to reduce re-render overhead (was 50ms)
+                // Progress bar still appears smooth but with 75% fewer state updates
+                await InvokeAsync(StateHasChanged);
+                await Task.Delay(200, token);
             }
         }
         catch (TaskCanceledException)
@@ -1289,6 +1291,27 @@ public partial class Home : ComponentBase
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error stopping auto-click");
+        }
+    }
+    
+    /// <summary>
+    /// Dispose resources when component is destroyed
+    /// </summary>
+    public void Dispose()
+    {
+        try
+        {
+            // Stop auto-click timer
+            StopAutoClick();
+            
+            // Stop super flip charging
+            StopSuperFlipCharge();
+            
+            Logger.LogInformation("Home component disposed");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error disposing Home component");
         }
     }
 }

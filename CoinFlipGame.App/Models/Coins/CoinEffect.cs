@@ -28,7 +28,12 @@ public enum CoinEffectType
     /// <summary>
     /// Enhances the opposite side's effect (or adds to streak if no effect)
     /// </summary>
-    Combo
+    Combo,
+    
+    /// <summary>
+    /// Increases random unlock chance modifier
+    /// </summary>
+    Luck
 }
 
 /// <summary>
@@ -87,4 +92,16 @@ public class CoinEffect
     /// For no effect on opposite side: adds to current streak
     /// </summary>
     public double ComboMultiplier { get; set; } = 0.05;
+    
+    /// <summary>
+    /// Luck modifier value
+    /// For Additive: added to unlock chance (e.g., +0.05 adds 5% to unlock chance)
+    /// For Multiplicative: multiplies unlock chance (e.g., 1.5 = 150% of original)
+    /// </summary>
+    public double LuckModifier { get; set; } = 0.05;
+    
+    /// <summary>
+    /// Luck modifier type for Luck effects (Additive or Multiplicative)
+    /// </summary>
+    public ComboType LuckModifierType { get; set; } = ComboType.Additive;
 }

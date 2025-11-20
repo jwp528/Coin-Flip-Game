@@ -267,7 +267,12 @@ public class UnlockProgressService
     /// Try to randomly unlock coins when using a specific coin
     /// Returns list of coins that were newly unlocked
     /// </summary>
-    public List<CoinImage> TryRandomUnlocks(string usedCoinPath, List<CoinImage> allCoins, double unlockChanceMultiplier = 1.0)
+    /// <param name="usedCoinPath">The coin path that was landed on</param>
+    /// <param name="allCoins">List of all available coins</param>
+    /// <param name="unlockChanceMultiplier">Base unlock chance multiplier (e.g., for super flips)</param>
+    /// <param name="headsCoinPath">The coin selected for heads face (optional, for double chance check)</param>
+    /// <param name="tailsCoinPath">The coin selected for tails face (optional, for double chance check)</param>
+    public List<CoinImage> TryRandomUnlocks(string usedCoinPath, List<CoinImage> allCoins, double unlockChanceMultiplier = 1.0, string? headsCoinPath = null, string? tailsCoinPath = null)
     {
         try
         {
@@ -320,8 +325,25 @@ public class UnlockProgressService
                     
                     if (shouldRoll)
                     {
-                        // Apply unlock chance multiplier for super flips
-                        double effectiveChance = coin.UnlockCondition.UnlockChance * unlockChanceMultiplier;
+                        // Start with base unlock chance multiplier (e.g., super flip bonus)
+                        double effectiveMultiplier = unlockChanceMultiplier;
+                        
+                        // Check if both heads and tails are set to the required coin for double chance
+                        if (coin.UnlockCondition.RequiresActiveCoin && 
+                            !string.IsNullOrEmpty(coin.UnlockCondition.RequiredCoinPath) &&
+                            !string.IsNullOrEmpty(headsCoinPath) &&
+                            !string.IsNullOrEmpty(tailsCoinPath))
+                        {
+                            // If both faces match the required coin, double the multiplier
+                            if (headsCoinPath == coin.UnlockCondition.RequiredCoinPath && 
+                                tailsCoinPath == coin.UnlockCondition.RequiredCoinPath)
+                            {
+                                effectiveMultiplier *= 2.0; // Double the chance!
+                            }
+                        }
+                        
+                        // Apply effective multiplier to unlock chance
+                        double effectiveChance = coin.UnlockCondition.UnlockChance * effectiveMultiplier;
                         
                         // Roll for unlock
                         if (_random.NextDouble() <= effectiveChance)

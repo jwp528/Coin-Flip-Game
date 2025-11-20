@@ -17,10 +17,12 @@ class ParticleSystem {
         
         this.ctx = this.canvas.getContext('2d');
         this.particles = [];
+        this.animationFrameId = null;  // Track animation frame for cleanup
+        this.isAnimating = false;      // Track animation state
         this.resize();
         
         window.addEventListener('resize', () => this.resize());
-        this.animate();
+        // Don't start animation loop yet - wait for particles
     }
     
     resize() {
@@ -51,6 +53,12 @@ class ParticleSystem {
         for (let i = 0; i < count; i++) {
             this.createParticle(x, y, options);
         }
+        
+        // Start animation only when particles are added
+        if (!this.isAnimating) {
+            this.isAnimating = true;
+            this.animate();
+        }
     }
     
     confetti(x, y, count = 50) {
@@ -67,6 +75,12 @@ class ParticleSystem {
                 shape: Math.random() > 0.5 ? 'square' : 'circle'
             });
         }
+        
+        // Start animation when particles are added
+        if (!this.isAnimating) {
+            this.isAnimating = true;
+            this.animate();
+        }
     }
     
     sparkle(x, y, count = 20) {
@@ -80,9 +94,21 @@ class ParticleSystem {
                 gravity: 0.05
             });
         }
+        
+        // Start animation when particles are added
+        if (!this.isAnimating) {
+            this.isAnimating = true;
+            this.animate();
+        }
     }
     
     animate() {
+        // Stop animation if no particles
+        if (this.particles.length === 0) {
+            this.isAnimating = false;
+            return; // Don't schedule next frame
+        }
+        
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
         for (let i = this.particles.length - 1; i >= 0; i--) {
@@ -134,7 +160,12 @@ class ParticleSystem {
             this.ctx.restore();
         }
         
-        requestAnimationFrame(() => this.animate());
+        // Only continue animation if particles exist
+        if (this.particles.length > 0) {
+            this.animationFrameId = requestAnimationFrame(() => this.animate());
+        } else {
+            this.isAnimating = false;
+        }
     }
     
     clear() {
@@ -166,4 +197,17 @@ window.triggerConfetti = function(x, y, count) {
 window.triggerSparkle = function(x, y, count) {
     const ps = window.initParticleSystem();
     ps.sparkle(x, y, count);
+};
+
+// Clear all particles (e.g., when drawer closes)
+window.clearParticles = function() {
+    const ps = window.particleSystem;
+    if (ps) {
+        ps.particles = [];
+        ps.isAnimating = false;
+        if (ps.animationFrameId) {
+            cancelAnimationFrame(ps.animationFrameId);
+            ps.animationFrameId = null;
+        }
+    }
 };

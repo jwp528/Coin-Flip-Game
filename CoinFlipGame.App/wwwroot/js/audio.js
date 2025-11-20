@@ -1,14 +1,16 @@
 // Premium Audio System for Coin Flip Game
 class AudioSystem {
-    constructor() {
-        this.audioContext = null;
-        this.sounds = {};
-        this.isMuted = false;
-        this.volume = 0.7;
+constructor() {
+    this.audioContext = null;
+    this.sounds = {};
+    this.isMuted = false;
+    this.volume = 0.7;
+    this.isPreloading = false;
+    this.isPreloaded = false;
         
-        // Initialize Web Audio API (user gesture required)
-        this.initAudioContext();
-    }
+    // Initialize Web Audio API (user gesture required)
+    this.initAudioContext();
+}
     
     initAudioContext() {
         try {
@@ -29,11 +31,55 @@ class AudioSystem {
         }
     }
     
+    // Preload all sound files in parallel after first user interaction
+    async preloadAllSounds() {
+        if (this.isPreloading || this.isPreloaded || !this.audioContext) {
+            return; // Already preloaded or preloading
+        }
+        
+        this.isPreloading = true;
+        await this.resumeContext();
+        
+        const soundFiles = [
+            { key: 'coinFlip', url: '/sounds/coin-flip.mp3' },
+            { key: 'coinUnlock', url: '/sounds/coin-unlocked.mp3' },
+            { key: 'drawerOpen', url: '/sounds/CoinDrawer_Open.mp3' },
+            { key: 'drawerClose', url: '/sounds/CoinDrawer_Close.mp3' }
+        ];
+        
+        try {
+            // Load all sounds in parallel for faster preloading
+            await Promise.all(soundFiles.map(async (sound) => {
+                if (!this.sounds[sound.key]) {
+                    try {
+                        const response = await fetch(sound.url);
+                        const arrayBuffer = await response.arrayBuffer();
+                        this.sounds[sound.key] = await this.audioContext.decodeAudioData(arrayBuffer);
+                    } catch (error) {
+                        console.warn(`Failed to preload sound: ${sound.key}`, error);
+                    }
+                }
+            }));
+            
+            this.isPreloaded = true;
+            console.log('? All sounds preloaded successfully');
+        } catch (error) {
+            console.warn('Failed to preload sounds:', error);
+        } finally {
+            this.isPreloading = false;
+        }
+    }
+    
     // Load and play coin flip sound from audio file
     async playFlip() {
         if (this.isMuted || !this.audioContext) return;
         
         await this.resumeContext();
+        
+        // Trigger preload on first use if not already done
+        if (!this.isPreloaded && !this.isPreloading) {
+            this.preloadAllSounds(); // Fire and forget
+        }
         
         try {
             // Load the coin-flip.mp3 file if not already loaded
@@ -415,4 +461,10 @@ window.toggleAudioMute = function() {
 window.setSoundEnabled = function(enabled) {
     const audio = window.initAudioSystem();
     audio.setMuted(!enabled);
+};
+
+// Preload all game sounds (call after first user interaction)
+window.preloadGameSounds = function() {
+    const audio = window.initAudioSystem();
+    return audio.preloadAllSounds();
 };

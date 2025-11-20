@@ -107,6 +107,7 @@ public class RandomCoinType : CoinType
                 Description = "0.5% chance to unlock after 500 flips while Panda is active",
                 Rarity = UnlockRarity.Rare,
                 RequiresActiveCoin = true,
+                RequiredCoinPath = "/img/coins/AI/Random/Panda.png",
                 Prerequisites = new List<UnlockCondition>
                 {
                     new UnlockCondition
@@ -118,7 +119,7 @@ public class RandomCoinType : CoinType
                     new UnlockCondition
                     {
                         Type = UnlockConditionType.LandOnCoin,
-                        RequiredCoinPath = "Panda.png",
+                        RequiredCoinPath = "/img/coins/AI/Random/Panda.png",
                         RequiredCount = 1,
                         Description = "Have the Panda coin active"
 
@@ -131,20 +132,23 @@ public class RandomCoinType : CoinType
             {
                 Type = UnlockConditionType.RandomChance,
                 UnlockChance = 0.01, // 1% chance
-                Description = "1% chance to unlock on any flip. The Dillon coin.",
+                Description = "1% chance to unlock on any flip after unlocking Zen and Dragon_Rare.",
                 Rarity = UnlockRarity.Rare,
                 Prerequisites = new List<UnlockCondition>
                 {
                     new UnlockCondition
                     {
                         Type = UnlockConditionType.LandOnCoin,
-                        RequiredCoinPaths = new List<string>
-                        {
-                            "/img/coins/AI/Random/Zen.png",
-                            "/img/coins/AI/Zodiak/Dragon_Rare.png"
-                        },
+                        RequiredCoinPath = "/img/coins/AI/Random/Zen.png",
                         RequiredCount = 1,
-                        Description = "Must have unlocked Dragon_Rare and Zen coins."
+                        Description = "Zen must be unlocked"
+                    },
+                    new UnlockCondition
+                    {
+                        Type = UnlockConditionType.LandOnCoin,
+                        RequiredCoinPath = "/img/coins/AI/Zodiak/Dragon_Rare.png",
+                        RequiredCount = 1,
+                        Description = "Dragon_Rare must be unlocked"
                     }
                 }
             }
