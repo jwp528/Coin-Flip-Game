@@ -99,7 +99,7 @@
                                             {
                                                 <div class="coin-badge">@landCount</div>
                                             }
-                                            @if (coin.Effect != null)
+                                            @if (coin.Effect != null && !string.IsNullOrEmpty(GetEffectIcon(coin.Effect.Type)))
                                             {
                                                 <div class="coin-effect-badge @GetEffectBadgeClass(coin.Effect.Type)" title="@coin.Effect.Description">
                                                     @((MarkupString)GetEffectIcon(coin.Effect.Type))

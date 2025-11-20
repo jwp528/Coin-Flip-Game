@@ -81,7 +81,7 @@ public class CoinService
             // Get unlock conditions from the coin type
             var unlockConditions = coinType.GetUnlockConditions();
             
-            // Get effects from the coin type (if it's a PowersCoinType or ComboCoinType)
+            // Get effects from the coin type (if it has a GetCoinEffects method)
             Dictionary<string, CoinEffect>? coinEffects = null;
             if (coinType is PowersCoinType powersCoinType)
             {
@@ -90,6 +90,10 @@ public class CoinService
             else if (coinType is ComboCoinType comboCoinType)
             {
                 coinEffects = comboCoinType.GetCoinEffects();
+            }
+            else if (coinType is AchievementCoinType achievementCoinType)
+            {
+                coinEffects = achievementCoinType.GetCoinEffects();
             }
             
             var coinImages = files

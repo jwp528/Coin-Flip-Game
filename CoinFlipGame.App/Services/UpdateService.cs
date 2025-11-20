@@ -1,5 +1,5 @@
 using Microsoft.JSInterop;
-using CoinFlipGame.App.Models;
+using CoinFlipGame.Shared;
 
 namespace CoinFlipGame.App.Services;
 
@@ -10,7 +10,7 @@ public class UpdateService
 {
     private readonly IJSRuntime _jsRuntime;
     private readonly ApiVersionService _apiVersionService;
-    private const string LAST_VERSION_KEY = "app_last_version";
+    private const string CACHED_VERSION_KEY = "app_cached_version";
     
     public UpdateService(IJSRuntime jsRuntime, ApiVersionService apiVersionService)
     {
@@ -19,32 +19,75 @@ public class UpdateService
     }
     
     /// <summary>
-    /// Check if the app has been updated since last visit by querying the API
-    /// Only checks API - does not fall back to prevent false positives
+    /// Cache the current app version if not already cached
+    /// Should be called on app startup
+    /// </summary>
+    public async Task CacheCurrentVersionAsync()
+    {
+        try
+        {
+            var cachedVersion = await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", CACHED_VERSION_KEY);
+            
+            // If no version is cached, cache the current version
+            if (string.IsNullOrEmpty(cachedVersion))
+            {
+                await _jsRuntime.InvokeVoidAsync("localStorage.setItem", CACHED_VERSION_KEY, AppVersion.FullVersion);
+            }
+        }
+        catch
+        {
+            // Silent fail - if caching fails, we'll just compare against current version
+        }
+    }
+    
+    /// <summary>
+    /// Check if an update is available by comparing API version with cached client version
+    /// Only shows update prompt if API is reachable AND versions differ
     /// </summary>
     public async Task<bool> IsUpdateAvailable()
     {
         try
         {
-            // Check the API for the server version
-            var apiUpdateAvailable = await _apiVersionService.IsUpdateAvailableAsync();
-            return apiUpdateAvailable;
+            // Get the API version
+            var apiVersion = await _apiVersionService.GetVersionAsync();
+            
+            // If API is unavailable or returns null, silently continue without update prompt
+            // This prevents the modal from showing when testing locally without API
+            if (apiVersion == null)
+            {
+                Console.WriteLine("Update check: API unavailable - skipping update check");
+                return false;
+            }
+            
+            // Get cached version (fallback to current version if not cached)
+            var cachedVersion = await _jsRuntime.InvokeAsync<string?>("localStorage.getItem", CACHED_VERSION_KEY);
+            var versionToCompare = string.IsNullOrEmpty(cachedVersion) ? AppVersion.FullVersion : cachedVersion;
+            
+            // Compare API version with cached version
+            var isUpdateAvailable = apiVersion.FullVersion != versionToCompare;
+            
+            Console.WriteLine($"Update check: API={apiVersion.FullVersion}, Cached={versionToCompare}, UpdateAvailable={isUpdateAvailable}");
+            
+            return isUpdateAvailable;
         }
-        catch
+        catch (Exception ex)
         {
-            // If API check fails, don't show update prompt
+            // If check fails for any reason (network error, timeout, etc.), 
+            // silently continue without showing update prompt
+            Console.WriteLine($"Update check: Exception occurred - {ex.Message}");
             return false;
         }
     }
     
     /// <summary>
-    /// Mark the current version as seen
+    /// Update the cached version to the current version
+    /// Called after user updates the app
     /// </summary>
-    public async Task MarkVersionAsSeen()
+    public async Task UpdateCachedVersionAsync()
     {
         try
         {
-            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", LAST_VERSION_KEY, AppVersion.FullVersion);
+            await _jsRuntime.InvokeVoidAsync("localStorage.setItem", CACHED_VERSION_KEY, AppVersion.FullVersion);
         }
         catch
         {
@@ -59,6 +102,9 @@ public class UpdateService
     {
         try
         {
+            // Update cached version before reloading
+            await UpdateCachedVersionAsync();
+            
             await _jsRuntime.InvokeVoidAsync("window.clearCachesAndReload");
         }
         catch

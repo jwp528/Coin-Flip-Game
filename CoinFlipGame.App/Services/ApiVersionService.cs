@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using CoinFlipGame.App.Models;
+using CoinFlipGame.Shared;
 
 namespace CoinFlipGame.App.Services;
 

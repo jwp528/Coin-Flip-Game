@@ -3,7 +3,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text.Json;
-using CoinFlipGame.Api.Models;
+using CoinFlipGame.Shared;
 
 namespace CoinFlipGame.Api.Functions;
 

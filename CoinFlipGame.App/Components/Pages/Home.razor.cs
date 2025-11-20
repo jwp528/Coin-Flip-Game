@@ -66,6 +66,7 @@ public partial class Home : ComponentBase, IDisposable
     private bool isTailsRandom = true; // Default to random
     private string faceShowing = "/img/coins/logo.png"; // The current face displayed
     private Dictionary<CoinType, List<CoinImage>>? availableCoins;
+
     private bool showCustomizeTip = true;
     
     // Super flip state
@@ -1048,7 +1049,34 @@ public partial class Home : ComponentBase, IDisposable
     /// <returns>True if heads, false if tails</returns>
     private bool ApplyCoinEffectBias(double flipValue, CoinEffect? headsEffect, CoinEffect? tailsEffect)
     {
-        // Base probability is 0.5 (50/50)
+        // Check if EITHER side has AlwaysHeads effect (Headmaster coin)
+        bool hasAlwaysHeads = headsEffect?.Type == CoinEffectType.AlwaysHeads || tailsEffect?.Type == CoinEffectType.AlwaysHeads;
+        
+        // Check if EITHER side has AlwaysTails effect (TailMaster coin)
+        bool hasAlwaysTails = headsEffect?.Type == CoinEffectType.AlwaysTails || tailsEffect?.Type == CoinEffectType.AlwaysTails;
+        
+        // If both are equipped, cancel out to 50/50
+        if (hasAlwaysHeads && hasAlwaysTails)
+        {
+            Logger.LogInformation("Both AlwaysHeads and AlwaysTails equipped - effects cancel to 50/50");
+            return flipValue < 0.5; // Normal 50/50 flip
+        }
+        
+        // If only AlwaysHeads is equipped (on either side), always return heads
+        if (hasAlwaysHeads)
+        {
+            Logger.LogInformation("AlwaysHeads effect active - forcing heads result");
+            return true; // Always heads
+        }
+        
+        // If only AlwaysTails is equipped (on either side), always return tails
+        if (hasAlwaysTails)
+        {
+            Logger.LogInformation("AlwaysTails effect active - forcing tails result");
+            return false; // Always tails
+        }
+        
+        // No always-effects, proceed with normal bias logic
         double headsProbability = 0.5;
         double headsBias = 0.0;
         double tailsBias = 0.0;

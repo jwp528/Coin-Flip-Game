@@ -33,7 +33,17 @@ public enum CoinEffectType
     /// <summary>
     /// Increases random unlock chance modifier
     /// </summary>
-    Luck
+    Luck,
+    
+    /// <summary>
+    /// Always lands on heads (100% bias towards heads)
+    /// </summary>
+    AlwaysHeads,
+    
+    /// <summary>
+    /// Always lands on tails (100% bias towards tails)
+    /// </summary>
+    AlwaysTails
 }
 
 /// <summary>

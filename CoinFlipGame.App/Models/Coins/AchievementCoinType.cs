@@ -284,4 +284,25 @@ public class AchievementCoinType : CoinType
             }
         }
     };
+    
+    /// <summary>
+    /// Get effects for each coin in this type
+    /// </summary>
+    public Dictionary<string, CoinEffect> GetCoinEffects() => new()
+    {
+        {
+            "Headmaster.png", new CoinEffect
+            {
+                Type = CoinEffectType.AlwaysHeads,
+                Description = "Always lands on heads - 100% bias towards heads"
+            }
+        },
+        {
+            "TailMaster.png", new CoinEffect
+            {
+                Type = CoinEffectType.AlwaysTails,
+                Description = "Always lands on tails - 100% bias towards tails"
+            }
+        }
+    };
 }

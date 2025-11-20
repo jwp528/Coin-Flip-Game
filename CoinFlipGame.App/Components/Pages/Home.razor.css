@@ -576,7 +576,7 @@
 /* Streak Counter - Top Center */
 .streak-counter {
     position: absolute;
-    top: 24px;
+    top: 80px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;

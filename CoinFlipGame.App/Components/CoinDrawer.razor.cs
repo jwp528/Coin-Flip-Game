@@ -186,6 +186,9 @@ public partial class CoinDrawer : IDisposable
             CoinEffectType.Weighted => "<i class=\"bi bi-train-freight-front-fill\"></i>",
             CoinEffectType.Shaved => "<i class=\"bi bi-feather\"></i>",
             CoinEffectType.Combo => "<i class=\"bi bi-lightning-charge-fill\"></i>",
+            // AlwaysHeads and AlwaysTails don't show badges - their existence is power enough
+            CoinEffectType.AlwaysHeads => "",
+            CoinEffectType.AlwaysTails => "",
             _ => ""
         };
     }
@@ -198,6 +201,9 @@ public partial class CoinDrawer : IDisposable
             CoinEffectType.Weighted => "weighted",
             CoinEffectType.Shaved => "shaved",
             CoinEffectType.Combo => "combo",
+            // AlwaysHeads and AlwaysTails don't show badges - their existence is power enough
+            CoinEffectType.AlwaysHeads => "",
+            CoinEffectType.AlwaysTails => "",
             _ => ""
         };
     }

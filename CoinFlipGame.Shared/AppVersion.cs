@@ -1,20 +1,21 @@
-namespace CoinFlipGame.App.Models;
+namespace CoinFlipGame.Shared;
 
 /// <summary>
 /// Tracks the application version and build information
+/// This is shared between the client app and API
 /// </summary>
 public class AppVersion
 {
     /// <summary>
     /// Current application version
     /// </summary>
-    public const string Version = "1.3.0";
+    public const string Version = "1.4.2";
     
     /// <summary>
     /// Build timestamp - updated on each build
     /// Format: yyyyMMddHHmmss
     /// </summary>
-    public const string BuildTime = "20250119000000";
+    public const string BuildTime = "20250120000000";
     
     /// <summary>
     /// Gets the cache busting query parameter
