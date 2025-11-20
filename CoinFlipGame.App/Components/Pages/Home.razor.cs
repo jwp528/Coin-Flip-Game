@@ -521,7 +521,7 @@ public partial class Home : ComponentBase, IDisposable
         
         // Track coin landing for unlock progress and check for newly unlocked coins
         var allCoins = GetAllCoinsFlat();
-        var newlyUnlocked = UnlockProgress.TrackCoinLanding(landedCoinPath, isHeads, currentStreak, allCoins);
+        var newlyUnlocked = UnlockProgress.TrackCoinLanding(landedCoinPath, isHeads, currentStreak, allCoins, selectedHeadsImage, selectedTailsImage);
         
         // Try random unlocks based on the landed coin (with double chance for super flip)
         double unlockMultiplier = isSuperFlip ? GameSettings.SUPER_FLIP_UNLOCK_MULTIPLIER : 1.0;
@@ -728,14 +728,14 @@ public partial class Home : ComponentBase, IDisposable
         if (selectingFor == "heads")
         {
             isHeadsRandom = true;
-            // Set a question mark icon or keep current for display
-            selectedHeadsImage = "/img/coins/logo.png"; // Fallback display
+            // Set to Random.png to enable characteristic tracking for random coins
+            selectedHeadsImage = "/img/coins/Random.png";
         }
         else if (selectingFor == "tails")
         {
             isTailsRandom = true;
-            // Set a question mark icon or keep current for display
-            selectedTailsImage = "/img/coins/logo.png"; // Fallback display
+            // Set to Random.png to enable characteristic tracking for random coins
+            selectedTailsImage = "/img/coins/Random.png";
         }
         
         await SaveCoinSelectionPreferencesAsync();
@@ -760,9 +760,12 @@ public partial class Home : ComponentBase, IDisposable
     {
         try
         {
-            // Get all unlocked coins
+            // Get all unlocked coins that have unlock conditions or effects (i.e., "assigned" coins)
+            // This prevents unassigned default coins like logo.png or Random.png from being selected
             var unlockedCoins = GetAllCoinsFlat()
-                .Where(c => c != null && UnlockProgress.IsUnlocked(c))
+                .Where(c => c != null && 
+                           UnlockProgress.IsUnlocked(c) && 
+                           (c.UnlockCondition != null || c.Effect != null))
                 .ToList();
             
             if (unlockedCoins == null || !unlockedCoins.Any())

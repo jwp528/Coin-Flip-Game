@@ -1,3 +1,5 @@
+using CoinFlipGame.App.Models;
+
 namespace CoinFlipGame.App.Models.Unlocks;
 
 /// <summary>
@@ -61,4 +63,41 @@ public class UnlockCondition
     /// This makes "collect all" achievements automatically track new coins without manual updates.
     /// </summary>
     public bool UseDynamicCoinList { get; set; } = false;
+    
+    // ===== Properties for LandOnCoinsWithCharacteristics =====
+    
+    /// <summary>
+    /// For LandOnCoinsWithCharacteristics type - defines how to filter coins
+    /// </summary>
+    public CoinCharacteristicFilter CharacteristicFilter { get; set; } = CoinCharacteristicFilter.SpecificCoins;
+    
+    /// <summary>
+    /// For LandOnCoinsWithCharacteristics type - specific unlock condition type to filter by
+    /// Used when CharacteristicFilter = UnlockConditionType
+    /// </summary>
+    public UnlockConditionType? FilterUnlockConditionType { get; set; }
+    
+    /// <summary>
+    /// For LandOnCoinsWithCharacteristics type - specific effect type to filter by
+    /// Used when CharacteristicFilter = EffectType
+    /// </summary>
+    public CoinEffectType? FilterEffectType { get; set; }
+    
+    /// <summary>
+    /// For LandOnCoinsWithCharacteristics type - prerequisite count for filtering
+    /// Used when CharacteristicFilter = PrerequisiteCountEquals/GreaterThan/LessThan
+    /// </summary>
+    public int FilterPrerequisiteCount { get; set; } = 0;
+    
+    /// <summary>
+    /// For LandOnCoinsWithCharacteristics type - side requirement (heads/tails/both/either)
+    /// Determines which side(s) the matching coins must be on
+    /// </summary>
+    public SideRequirement SideRequirement { get; set; } = SideRequirement.Either;
+    
+    /// <summary>
+    /// For LandOnCoinsWithCharacteristics type - number of consecutive times required
+    /// Must land on matching coins X times in a row
+    /// </summary>
+    public int ConsecutiveCount { get; set; } = 1;
 }

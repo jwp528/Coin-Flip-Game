@@ -56,6 +56,12 @@ public class UserProgress
     /// Key: coin path, Value: unlock timestamp (UTC)
     /// </summary>
     public Dictionary<string, DateTime> CoinUnlockTimestamps { get; set; } = new();
+    
+    /// <summary>
+    /// Dictionary tracking consecutive characteristic-based landings
+    /// Key: coin path (the coin to unlock), Value: current consecutive count
+    /// </summary>
+    public Dictionary<string, int> CharacteristicConsecutiveCounts { get; set; } = new();
 }
 
 /// <summary>

@@ -15,7 +15,9 @@ public class PowersCoinType : CoinType
     {
         "Digital_Ox.png",
         "DragonCore.png",
-        "Heavy.png"
+        "Heavy.png",
+        "Lucky.png",
+        "Slots.png"
     };
 
     public override Dictionary<string, UnlockCondition> GetUnlockConditions() => new()
@@ -45,6 +47,20 @@ public class PowersCoinType : CoinType
                 RequiredCount = 6,
                 Description = "oooh So heavy!",
                 Rarity = UnlockRarity.Common
+            }
+        },
+        {
+            "Slots.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.LandOnCoinsWithCharacteristics,
+                ConsecutiveCount = 10,
+                CharacteristicFilter = CoinCharacteristicFilter.UnlockConditionType,
+                FilterUnlockConditionType = UnlockConditionType.RandomChance,
+                SideRequirement = SideRequirement.Both,
+                RequiresActiveCoin = true,
+                RequiredCoinPath = "/img/coins/Random.png",
+                Description = "Land on coins with RandomChance unlock conditions 10 times in a row while Random is set as both active sides",
+                Rarity = UnlockRarity.Legendary
             }
         }
     };

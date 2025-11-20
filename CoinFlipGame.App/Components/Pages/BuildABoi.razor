@@ -3,9 +3,6 @@
 @using CoinFlipGame.App.Models.Unlocks
 @using CoinFlipGame.App.Services
 @using Microsoft.JSInterop
-@inject CoinService CoinService
-@inject UnlockProgressService UnlockProgress
-@inject IJSRuntime JSRuntime
 
 <HeadContent>
     <title>Build-A-Boi - Coin Builder</title>
@@ -20,139 +17,130 @@
         </div>
         <p class="luxury-subtitle">Coin Craftsman</p>
         
-        <!-- Clear Cache Button -->
-        <button class="btn-clear-cache-header" @onclick="ClearCacheAndReload" disabled="@isClearingCache" title="Clear cache and reload">
-            @if (isClearingCache)
-            {
-                <span class="spinner-border-sm"></span>
-            }
-            else
-            {
-                <i class="bi bi-arrow-clockwise"></i>
-            }
-        </button>
+        <!-- Header Actions -->
+        <div class="header-actions">
+            <button class="btn-felt-control" @onclick="ShowValidationGuide" title="Show validation rules">
+                <i class="bi bi-book"></i>
+                <span>Validation Rules</span>
+            </button>
+            <button class="btn-felt-control" @onclick="ClearCacheAndReload" disabled="@isClearingCache" title="Clear cache and reload">
+                @if (isClearingCache)
+                {
+                    <span class="spinner-border-sm"></span>
+                }
+                else
+                {
+                    <i class="bi bi-arrow-repeat"></i>
+                    <span>Refresh</span>
+                }
+            </button>
+        </div>
     </div>
 
     <!-- Main Content Area -->
     <div class="buildaboi-workspace">
-        
-        <!-- Left Panel - Coin Display & Configuration -->
-        <div class="coin-showcase-panel">
+        <!-- Centered Coin Display Hero -->
+        <div class="coin-display-hero">
             @if (selectedCoin != null)
             {
-                <!-- Unified Coin Card with Configuration -->
-                <div class="coin-unified-card">
-                    <!-- Coin Display -->
-                    <div class="coin-display-section">
-                        <div class="coin-pedestal">
-                            <img src="@selectedCoin.Path" alt="@selectedCoin.DisplayName" class="showcase-coin" />
-                        </div>
-                        <div class="coin-nameplate">
-                            <span class="coin-name">@selectedCoin.DisplayName</span>
-                        </div>
+                <div class="coin-hero-section">
+                    <!-- Large Coin Display -->
+                    <div class="coin-pedestal-large">
+                        <img src="@selectedCoin.Path" alt="@selectedCoin.DisplayName" class="hero-coin" />
+                        <div class="coin-glow"></div>
                     </div>
-                    
-                    <!-- Configuration Form -->
-                    <div class="config-divider"></div>
-                    
-                    <!-- Main Unlock Condition -->
-                    <div class="config-group">
-                        <div class="config-header">
-                            <i class="bi bi-gear-fill"></i>
-                            <span>Unlock Condition</span>
-                        </div>
-                        
-                        <div class="luxury-form">
-                            <div class="luxury-form-group">
-                                <label class="luxury-label">Condition Type</label>
-                                <select class="luxury-select" @bind="mainCondition.Type">
-                                    @foreach (var type in Enum.GetValues<UnlockConditionType>())
-                                    {
-                                        <option value="@type">@type</option>
-                                    }
-                                </select>
-                            </div>
-
-                            @if (mainCondition.Type != UnlockConditionType.None)
+                    <h2 class="coin-hero-name">@selectedCoin.DisplayName</h2>
+                    @if (selectedCoin.UnlockCondition != null || selectedCoin.Effect != null)
+                    {
+                        <div class="coin-status-badges">
+                            @if (selectedCoin.UnlockCondition != null)
                             {
-                                <div class="luxury-form-group">
-                                    <label class="luxury-label">Description</label>
-                                    <input type="text" class="luxury-input" @bind="mainCondition.Description" placeholder="Enter description..." />
-                                </div>
-
-                                <div class="luxury-form-group">
-                                    <label class="luxury-label">Rarity</label>
-                                    <select class="luxury-select" @bind="mainCondition.Rarity">
-                                        @foreach (var rarity in Enum.GetValues<UnlockRarity>())
-                                        {
-                                            <option value="@rarity">@rarity</option>
-                                        }
-                                    </select>
-                                </div>
-
-                                @switch (mainCondition.Type)
-                                {
-                                    case UnlockConditionType.TotalFlips:
-                                    case UnlockConditionType.HeadsFlips:
-                                    case UnlockConditionType.TailsFlips:
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">Required Count</label>
-                                            <input type="number" class="luxury-input" @bind="mainCondition.RequiredCount" min="1" />
-                                        </div>
-                                        break;
-
-                                    case UnlockConditionType.Streak:
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">Required Streak Length</label>
-                                            <input type="number" class="luxury-input" @bind="mainCondition.RequiredCount" min="1" />
-                                        </div>
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">Streak Side</label>
-                                            <select class="luxury-select" @bind="streakSideSelection">
-                                                <option value="Any">Any Side</option>
-                                                <option value="Heads">Heads Only</option>
-                                                <option value="Tails">Tails Only</option>
+                                <span class="status-badge unlock-badge">
+                                    <i class="bi bi-unlock-fill"></i>
+                                    <span>@selectedCoin.UnlockCondition.Type</span>
+                                </span>
+                            }
+                            @if (selectedCoin.Effect != null)
+                            {
+                                <span class="status-badge effect-badge">
+                                    <i class="bi bi-magic"></i>
+                                    <span>@selectedCoin.Effect.Type</span>
+                                </span>
+                            }
+                        </div>
+                    }
+                    
+                    <!-- Configuration Tabs/Sections -->
+                    <div class="hero-config-container">
+                        <!-- Unlock Condition Section -->
+                        <div class="hero-config-section">
+                            <div class="hero-section-header">
+                                <i class="bi bi-unlock-fill"></i>
+                                <h3>Unlock Condition</h3>
+                            </div>
+                            <div class="hero-section-content">
+                                <div class="config-row">
+                                    <div class="config-field config-field-flex-2">
+                                        <i class="bi bi-gear-fill field-icon"></i>
+                                        <select class="inline-select" @bind="mainCondition.Type">
+                                            @foreach (var type in Enum.GetValues<UnlockConditionType>())
+                                            {
+                                                <option value="@type">@type</option>
+                                            }
+                                        </select>
+                                    </div>
+                                    @if (mainCondition.Type != UnlockConditionType.None)
+                                    {
+                                        <div class="config-field config-field-flex-1">
+                                            <i class="bi bi-star field-icon"></i>
+                                            <select class="inline-select" @bind="mainCondition.Rarity">
+                                                @foreach (var rarity in Enum.GetValues<UnlockRarity>())
+                                                {
+                                                    <option value="@rarity">@rarity</option>
+                                                }
                                             </select>
                                         </div>
-                                        break;
+                                    }
+                                </div>
 
-                                    case UnlockConditionType.LandOnCoin:
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">Required Coin</label>
-                                            <div class="luxury-coin-picker" @onclick="() => OpenRequiredCoinSelector(null)">
-                                                @if (!string.IsNullOrEmpty(mainCondition.RequiredCoinPath))
-                                                {
-                                                    <img src="@mainCondition.RequiredCoinPath" alt="Required Coin" class="picker-coin-preview" />
-                                                    <span>@GetCoinNameFromPath(mainCondition.RequiredCoinPath)</span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="picker-placeholder">Select coin</span>
-                                                }
-                                            </div>
+                                @if (mainCondition.Type != UnlockConditionType.None)
+                                {
+                                    <div class="config-row">
+                                        <div class="config-field config-field-full">
+                                            <i class="bi bi-text-left field-icon"></i>
+                                            <input type="text" class="inline-input" @bind="mainCondition.Description" placeholder="Description..." />
                                         </div>
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">Times Required</label>
-                                            <input type="number" class="luxury-input" @bind="mainCondition.RequiredCount" min="1" />
-                                        </div>
-                                        break;
+                                    </div>
 
-                                    case UnlockConditionType.RandomChance:
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">Unlock Chance (%)</label>
-                                            <input type="number" class="luxury-input" @bind="unlockChancePercent" min="0.001" max="100" step="0.001" />
-                                            <small class="luxury-hint">Decimal: @(mainCondition.UnlockChance.ToString("F5"))</small>
-                                        </div>
-                                        <div class="luxury-checkbox-group">
-                                            <label class="luxury-checkbox-label">
-                                                <input type="checkbox" @bind="mainCondition.RequiresActiveCoin" />
-                                                <span class="checkbox-text">Requires Active Coin</span>
-                                            </label>
-                                        </div>
-                                        @if (mainCondition.RequiresActiveCoin)
-                                        {
+                                    @switch (mainCondition.Type)
+                                    {
+                                        case UnlockConditionType.TotalFlips:
+                                        case UnlockConditionType.HeadsFlips:
+                                        case UnlockConditionType.TailsFlips:
                                             <div class="luxury-form-group">
-                                                <label class="luxury-label">Required Active Coin</label>
+                                                <label class="luxury-label">Required Count</label>
+                                                <input type="number" class="luxury-input" @bind="mainCondition.RequiredCount" min="1" />
+                                            </div>
+                                            break;
+
+                                        case UnlockConditionType.Streak:
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">Required Streak Length</label>
+                                                <input type="number" class="luxury-input" @bind="mainCondition.RequiredCount" min="1" />
+                                            </div>
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">Streak Side</label>
+                                                <select class="luxury-select" @bind="streakSideSelection">
+                                                    <option value="Any">Any Side</option>
+                                                    <option value="Heads">Heads Only</option>
+                                                    <option value="Tails">Tails Only</option>
+                                                </select>
+                                            </div>
+                                            break;
+
+                                        case UnlockConditionType.LandOnCoin:
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">Required Coin</label>
                                                 <div class="luxury-coin-picker" @onclick="() => OpenRequiredCoinSelector(null)">
                                                     @if (!string.IsNullOrEmpty(mainCondition.RequiredCoinPath))
                                                     {
@@ -165,321 +153,375 @@
                                                     }
                                                 </div>
                                             </div>
-                                        }
-                                        break;
-
-                                    case UnlockConditionType.LandOnMultipleCoins:
-                                        <div class="luxury-form-group">
-                                            <label class="luxury-label">Required Count (per coin)</label>
-                                            <input type="number" class="luxury-input" @bind="mainCondition.RequiredCount" min="1" />
-                                        </div>
-                                        <div class="luxury-checkbox-group">
-                                            <label class="luxury-checkbox-label">
-                                                <input type="checkbox" @bind="mainCondition.UseDynamicCoinList" />
-                                                <span class="checkbox-text">Use Dynamic Coin List</span>
-                                            </label>
-                                        </div>
-                                        @if (!mainCondition.UseDynamicCoinList)
-                                        {
                                             <div class="luxury-form-group">
-                                                <label class="luxury-label">Required Coins</label>
-                                                <button class="luxury-btn-secondary" @onclick="AddRequiredCoin">+ Add Coin</button>
-                                                @if (mainCondition.RequiredCoinPaths != null && mainCondition.RequiredCoinPaths.Any())
-                                                {
-                                                    <div class="coin-chips-container">
-                                                        @for (int i = 0; i < mainCondition.RequiredCoinPaths.Count; i++)
+                                                <label class="luxury-label">Times Required</label>
+                                                <input type="number" class="luxury-input" @bind="mainCondition.RequiredCount" min="1" />
+                                            </div>
+                                            break;
+
+                                        case UnlockConditionType.RandomChance:
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">Unlock Chance (%)</label>
+                                                <input type="number" class="luxury-input" @bind="unlockChancePercent" min="0.001" max="100" step="0.001" />
+                                                <small class="luxury-hint">Decimal: @(mainCondition.UnlockChance.ToString("F5"))</small>
+                                            </div>
+                                            <div class="luxury-checkbox-group">
+                                                <label class="luxury-checkbox-label">
+                                                    <input type="checkbox" @bind="mainCondition.RequiresActiveCoin" />
+                                                    <span class="checkbox-text">Requires Active Coin</span>
+                                                </label>
+                                            </div>
+                                            @if (mainCondition.RequiresActiveCoin)
+                                            {
+                                                <div class="luxury-form-group">
+                                                    <label class="luxury-label">Required Active Coin</label>
+                                                    <div class="luxury-coin-picker" @onclick="() => OpenRequiredCoinSelector(null)">
+                                                        @if (!string.IsNullOrEmpty(mainCondition.RequiredCoinPath))
                                                         {
-                                                            var index = i;
-                                                            var path = mainCondition.RequiredCoinPaths[i];
-                                                            <div class="coin-chip">
-                                                                <img src="@path" alt="Coin" class="chip-coin" />
-                                                                <span>@GetCoinNameFromPath(path)</span>
-                                                                <button class="chip-remove" @onclick="() => RemoveRequiredCoin(index)">×</button>
-                                                            </div>
+                                                            <img src="@mainCondition.RequiredCoinPath" alt="Required Coin" class="picker-coin-preview" />
+                                                            <span>@GetCoinNameFromPath(mainCondition.RequiredCoinPath)</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="picker-placeholder">Select coin</span>
                                                         }
                                                     </div>
-                                                }
-                                            </div>
-                                        }
-                                        break;
-                                }
-                            }
-                        </div>
-                    </div>
-                    
-                    <!-- Existing Configuration (if any) - Now shown as preview -->
-                    @if (selectedCoin.UnlockCondition != null || selectedCoin.Effect != null)
-                    {
-                        <div class="existing-config-section">
-                            <div class="config-divider"></div>
-                            
-                            <div class="config-group">
-                                <div class="config-header">
-                                    <i class="bi bi-eye-fill"></i>
-                                    <span>Current Configuration</span>
-                                </div>
-                            </div>
-                            
-                            @if (selectedCoin.UnlockCondition != null)
-                            {
-                                <div class="config-group">
-                                    <div class="config-header">
-                                        <i class="bi bi-unlock-fill"></i>
-                                        <span>Unlock Condition</span>
-                                    </div>
-                                    <div class="config-grid">
-                                        <div class="config-item">
-                                            <span class="config-label">Type:</span>
-                                            <span class="config-value">@selectedCoin.UnlockCondition.Type</span>
-                                        </div>
-                                        @if (selectedCoin.UnlockCondition.RequiredCount > 0)
-                                        {
-                                            <div class="config-item">
-                                                <span class="config-label">Count:</span>
-                                                <span class="config-value">@selectedCoin.UnlockCondition.RequiredCount</span>
-                                            </div>
-                                        }
-                                        <div class="config-item">
-                                            <span class="config-label">Rarity:</span>
-                                            <span class="config-value rarity-@selectedCoin.UnlockCondition.Rarity.ToString().ToLower()">@selectedCoin.UnlockCondition.Rarity</span>
-                                        </div>
-                                    </div>
-                                    @if (!string.IsNullOrEmpty(selectedCoin.UnlockCondition.Description))
-                                    {
-                                        <div class="config-description">
-                                            @selectedCoin.UnlockCondition.Description
-                                        </div>
-                                    }
-                                </div>
-                            }
-                            
-                            @if (selectedCoin.Effect != null)
-                            {
-                                <div class="config-group">
-                                    <div class="config-header">
-                                        <i class="bi bi-magic"></i>
-                                        <span>Effect</span>
-                                    </div>
-                                    <div class="config-grid">
-                                        <div class="config-item">
-                                            <span class="config-label">Type:</span>
-                                            <span class="config-value">@selectedCoin.Effect.Type</span>
-                                        </div>
-                                    </div>
-                                    @if (!string.IsNullOrEmpty(selectedCoin.Effect.Description))
-                                    {
-                                        <div class="config-description">
-                                            @selectedCoin.Effect.Description
-                                        </div>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="coin-unified-card empty">
-                    <div class="empty-case-content">
-                        <i class="bi bi-coin empty-icon"></i>
-                        <p class="empty-text">Select a coin from the drawer below</p>
-                    </div>
-                </div>
-            }
-        </div>
+                                                </div>
+                                            }
+                                            break;
 
-        <!-- Right Panel - Prerequisites & Effects Side by Side -->
-        <div class="configuration-panel">
-            @if (selectedCoin != null)
-            {
-                <div class="config-scroll-area">
-                    <!-- Prerequisites & Effects Grid -->
-                    <div class="prereq-effects-grid">
-                        <!-- Prerequisites -->
-                        <div class="luxury-card">
-                            <div class="card-header">
-                                <i class="bi bi-clipboard-check card-icon"></i>
-                                <h3 class="card-title">Prerequisites</h3>
-                            </div>
-                            
-                            <button class="luxury-btn-secondary" @onclick="AddPrerequisite">+ Add Prerequisite</button>
-                            
-                            @if (prerequisites.Any())
-                            {
-                                <div class="prerequisites-container">
-                                    @for (int i = 0; i < prerequisites.Count; i++)
-                                    {
-                                        var index = i;
-                                        var prereq = prerequisites[i];
-                                        <div class="prerequisite-card">
-                                            <div class="prereq-header">
-                                                <span class="prereq-number">#{i + 1}</span>
-                                                <button class="prereq-remove" @onclick="() => RemovePrerequisite(index)">×</button>
+                                        case UnlockConditionType.LandOnMultipleCoins:
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">Required Count (per coin)</label>
+                                                <input type="number" class="luxury-input" @bind="mainCondition.RequiredCount" min="1" />
+                                            </div>
+                                            <div class="luxury-checkbox-group">
+                                                <label class="luxury-checkbox-label">
+                                                    <input type="checkbox" @bind="mainCondition.UseDynamicCoinList" />
+                                                    <span class="checkbox-text">Use Dynamic Coin List</span>
+                                                </label>
+                                            </div>
+                                            @if (!mainCondition.UseDynamicCoinList)
+                                            {
+                                                <div class="luxury-form-group">
+                                                    <label class="luxury-label">Required Coins</label>
+                                                    <button class="luxury-btn-secondary" @onclick="AddRequiredCoin">+ Add Coin</button>
+                                                    @if (mainCondition.RequiredCoinPaths != null && mainCondition.RequiredCoinPaths.Any())
+                                                    {
+                                                        <div class="coin-gallery-container">
+                                                            @for (int i = 0; i < mainCondition.RequiredCoinPaths.Count; i++)
+                                                            {
+                                                                var index = i;
+                                                                var path = mainCondition.RequiredCoinPaths[i];
+                                                                <div class="coin-gallery-item" title="@GetCoinNameFromPath(path)">
+                                                                    <img src="@path" alt="@GetCoinNameFromPath(path)" class="coin-gallery-img" />
+                                                                    <button class="coin-gallery-remove" @onclick="() => RemoveRequiredCoin(index)" title="Remove">×</button>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                            break;
+
+                                        case UnlockConditionType.LandOnCoinsWithCharacteristics:
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">Consecutive Count</label>
+                                                <input type="number" class="luxury-input" @bind="mainCondition.ConsecutiveCount" min="1" />
+                                                <small class="luxury-hint">Number of times to land on matching coins in a row</small>
                                             </div>
                                             
                                             <div class="luxury-form-group">
-                                                <label class="luxury-label">Type</label>
-                                                <select class="luxury-select" @bind="prereq.Type">
-                                                    @foreach (var type in Enum.GetValues<UnlockConditionType>().Where(t => t != UnlockConditionType.None))
+                                                <label class="luxury-label">Characteristic Filter</label>
+                                                <select class="luxury-select" @bind="mainCondition.CharacteristicFilter">
+                                                    @foreach (var filter in Enum.GetValues<CoinCharacteristicFilter>())
                                                     {
-                                                        <option value="@type">@type</option>
+                                                        <option value="@filter">@GetCharacteristicFilterDisplayName(filter)</option>
                                                     }
                                                 </select>
                                             </div>
-
-                                            <div class="luxury-form-group">
-                                                <label class="luxury-label">Description</label>
-                                                <input type="text" class="luxury-input" @bind="prereq.Description" />
-                                            </div>
-
-                                            @switch (prereq.Type)
+                                            
+                                            @switch (mainCondition.CharacteristicFilter)
                                             {
-                                                case UnlockConditionType.TotalFlips:
-                                                case UnlockConditionType.HeadsFlips:
-                                                case UnlockConditionType.TailsFlips:
-                                                case UnlockConditionType.Streak:
+                                                case CoinCharacteristicFilter.SpecificCoins:
                                                     <div class="luxury-form-group">
-                                                        <label class="luxury-label">Required Count</label>
-                                                        <input type="number" class="luxury-input" @bind="prereq.RequiredCount" min="1" />
+                                                        <label class="luxury-label">Required Coins</label>
+                                                        <button class="luxury-btn-secondary" @onclick="AddRequiredCoin">+ Add Coin</button>
+                                                        @if (mainCondition.RequiredCoinPaths != null && mainCondition.RequiredCoinPaths.Any())
+                                                        {
+                                                            <div class="coin-gallery-container">
+                                                                @for (int i = 0; i < mainCondition.RequiredCoinPaths.Count; i++)
+                                                                {
+                                                                    var index = i;
+                                                                    var path = mainCondition.RequiredCoinPaths[i];
+                                                                    <div class="coin-gallery-item" title="@GetCoinNameFromPath(path)">
+                                                                        <img src="@path" alt="@GetCoinNameFromPath(path)" class="coin-gallery-img" />
+                                                                        <button class="coin-gallery-remove" @onclick="() => RemoveRequiredCoin(index)" title="Remove">×</button>
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                        }
                                                     </div>
                                                     break;
+                                                    
+                                                case CoinCharacteristicFilter.UnlockConditionType:
+                                                    <div class="luxury-form-group">
+                                                        <label class="luxury-label">Unlock Condition Type</label>
+                                                        <select class="luxury-select" @bind="mainCondition.FilterUnlockConditionType">
+                                                            @foreach (var type in Enum.GetValues<UnlockConditionType>().Where(t => t != UnlockConditionType.None))
+                                                            {
+                                                                <option value="@type">@type</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                    break;
+                                                    
+                                                case CoinCharacteristicFilter.EffectType:
+                                                    <div class="luxury-form-group">
+                                                        <label class="luxury-label">Effect Type</label>
+                                                        <select class="luxury-select" @bind="mainCondition.FilterEffectType">
+                                                            @foreach (var type in Enum.GetValues<CoinEffectType>().Where(t => t != CoinEffectType.None))
+                                                            {
+                                                                <option value="@type">@type</option>
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                    break;
+                                                    
+                                                case CoinCharacteristicFilter.PrerequisiteCountEquals:
+                                                case CoinCharacteristicFilter.PrerequisiteCountGreaterThan:
+                                                case CoinCharacteristicFilter.PrerequisiteCountLessThan:
+                                                    <div class="luxury-form-group">
+                                                        <label class="luxury-label">Prerequisite Count</label>
+                                                        <input type="number" class="luxury-input" @bind="mainCondition.FilterPrerequisiteCount" min="0" />
+                                                    </div>
+                                                    break;
+                                            }
+                                            
+                                            <div class="luxury-form-group">
+                                                <label class="luxury-label">Side Requirement</label>
+                                                <select class="luxury-select" @bind="mainCondition.SideRequirement">
+                                                    @foreach (var side in Enum.GetValues<SideRequirement>())
+                                                    {
+                                                        <option value="@side">@GetSideRequirementDisplayName(side)</option>
+                                                    }
+                                                </select>
+                                                <small class="luxury-hint">@GetSideRequirementHint(mainCondition.SideRequirement)</small>
+                                            </div>
+                                            
+                                            <div class="luxury-checkbox-group">
+                                                <label class="luxury-checkbox-label">
+                                                    <input type="checkbox" @bind="mainCondition.RequiresActiveCoin" />
+                                                    <span class="checkbox-text">Requires Specific Active Coin</span>
+                                                </label>
+                                            </div>
+                                            
+                                            @if (mainCondition.RequiresActiveCoin)
+                                            {
+                                                <div class="luxury-form-group">
+                                                    <label class="luxury-label">Required Active Coin</label>
+                                                    <div class="luxury-coin-picker" @onclick="() => OpenRequiredCoinSelector(null)">
+                                                        @if (!string.IsNullOrEmpty(mainCondition.RequiredCoinPath))
+                                                        {
+                                                            <img src="@mainCondition.RequiredCoinPath" alt="Required Coin" class="picker-coin-preview" />
+                                                            <span>@GetCoinNameFromPath(mainCondition.RequiredCoinPath)</span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="picker-placeholder">Select coin</span>
+                                                        }
+                                                    </div>
+                                                    <small class="luxury-hint">The coin that must be active based on side requirement (e.g., Random.png for both sides)</small>
+                                                </div>
+                                            }
+                                            break;
+                                    }
+                                }
+                            </div>
+                        </div>
 
-                                                case UnlockConditionType.LandOnCoin:
-                                                    <div class="luxury-form-group">
-                                                        <label class="luxury-label">Required Coin</label>
-                                                        <div class="luxury-coin-picker" @onclick="() => OpenRequiredCoinSelector(index)">
-                                                            @if (!string.IsNullOrEmpty(prereq.RequiredCoinPath))
-                                                            {
-                                                                <img src="@prereq.RequiredCoinPath" alt="Required Coin" class="picker-coin-preview" />
-                                                                <span>@GetCoinNameFromPath(prereq.RequiredCoinPath)</span>
-                                                            }
-                                                            else
-                                                            {
-                                                                <span class="picker-placeholder">Select coin</span>
-                                                            }
-                                                        </div>
+                        <!-- Prerequisites & Effects Side by Side -->
+                        <div class="hero-two-column">
+                            <!-- Prerequisites Section -->
+                            <div class="hero-config-section">
+                                <div class="hero-section-header">
+                                    <i class="bi bi-clipboard-check"></i>
+                                    <h3>Prerequisites</h3>
+                                </div>
+                                <div class="hero-section-content">
+                                    <button class="luxury-btn-secondary" @onclick="AddPrerequisite">+ Add Prerequisite</button>
+                                    
+                                    @if (prerequisites.Any())
+                                    {
+                                        <div class="prerequisites-container">
+                                            @for (int i = 0; i < prerequisites.Count; i++)
+                                            {
+                                                var index = i;
+                                                var prereq = prerequisites[i];
+                                                <div class="prerequisite-card">
+                                                    <div class="prereq-header">
+                                                        <span class="prereq-number">#{i + 1}</span>
+                                                        <button class="prereq-remove" @onclick="() => RemovePrerequisite(index)">×</button>
                                                     </div>
+                                                    
                                                     <div class="luxury-form-group">
-                                                        <label class="luxury-label">Times Required</label>
-                                                        <input type="number" class="luxury-input" @bind="prereq.RequiredCount" min="1" />
+                                                        <label class="luxury-label">Type</label>
+                                                        <select class="luxury-select" @bind="prereq.Type">
+                                                            @foreach (var type in Enum.GetValues<UnlockConditionType>().Where(t => t != UnlockConditionType.None))
+                                                            {
+                                                                <option value="@type">@type</option>
+                                                            }
+                                                        </select>
                                                     </div>
-                                                    break;
+
+                                                    <div class="luxury-form-group">
+                                                        <label class="luxury-label">Description</label>
+                                                        <input type="text" class="luxury-input" @bind="prereq.Description" />
+                                                    </div>
+
+                                                    @switch (prereq.Type)
+                                                    {
+                                                        case UnlockConditionType.TotalFlips:
+                                                        case UnlockConditionType.HeadsFlips:
+                                                        case UnlockConditionType.TailsFlips:
+                                                        case UnlockConditionType.Streak:
+                                                            <div class="luxury-form-group">
+                                                                <label class="luxury-label">Required Count</label>
+                                                                <input type="number" class="luxury-input" @bind="prereq.RequiredCount" min="1" />
+                                                            </div>
+                                                            break;
+
+                                                        case UnlockConditionType.LandOnCoin:
+                                                            <div class="luxury-form-group">
+                                                                <label class="luxury-label">Required Coin</label>
+                                                                <div class="luxury-coin-picker" @onclick="() => OpenRequiredCoinSelector(index)">
+                                                                    @if (!string.IsNullOrEmpty(prereq.RequiredCoinPath))
+                                                                    {
+                                                                        <img src="@prereq.RequiredCoinPath" alt="Required Coin" class="picker-coin-preview" />
+                                                                        <span>@GetCoinNameFromPath(prereq.RequiredCoinPath)</span>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <span class="picker-placeholder">Select coin</span>
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                            <div class="luxury-form-group">
+                                                                <label class="luxury-label">Times Required</label>
+                                                                <input type="number" class="luxury-input" @bind="prereq.RequiredCount" min="1" />
+                                                            </div>
+                                                            break;
+                                                    }
+                                                </div>
                                             }
                                         </div>
                                     }
                                 </div>
-                            }
-                        </div>
-
-                        <!-- Coin Effect -->
-                        <div class="luxury-card">
-                            <div class="card-header">
-                                <i class="bi bi-magic card-icon"></i>
-                                <h3 class="card-title">Coin Effect</h3>
                             </div>
-                            
-                            <div class="luxury-form">
-                                <div class="luxury-form-group">
-                                    <label class="luxury-label">Effect Type</label>
-                                    <select class="luxury-select" @bind="coinEffect.Type">
-                                        @foreach (var type in Enum.GetValues<CoinEffectType>())
-                                        {
-                                            <option value="@type">@type</option>
-                                        }
-                                    </select>
-                                </div>
 
-                                @if (coinEffect.Type != CoinEffectType.None)
-                                {
+                            <!-- Coin Effect Section -->
+                            <div class="hero-config-section">
+                                <div class="hero-section-header">
+                                    <i class="bi bi-magic"></i>
+                                    <h3>Coin Effect</h3>
+                                </div>
+                                <div class="hero-section-content">
                                     <div class="luxury-form-group">
-                                        <label class="luxury-label">Effect Description</label>
-                                        <input type="text" class="luxury-input" @bind="coinEffect.Description" placeholder="Enter effect description..." />
+                                        <label class="luxury-label">Effect Type</label>
+                                        <select class="luxury-select" @bind="coinEffect.Type">
+                                            @foreach (var type in Enum.GetValues<CoinEffectType>())
+                                            {
+                                                <option value="@type">@type</option>
+                                            }
+                                        </select>
                                     </div>
 
-                                    @switch (coinEffect.Type)
+                                    @if (coinEffect.Type != CoinEffectType.None)
                                     {
-                                        case CoinEffectType.AutoClick:
-                                            <div class="luxury-form-group">
-                                                <label class="luxury-label">Auto-Click Interval (ms)</label>
-                                                <input type="number" class="luxury-input" @bind="coinEffect.AutoClickInterval" min="100" step="100" />
-                                                <small class="luxury-hint">Time between automatic flips in milliseconds (1000 = 1 second)</small>
-                                            </div>
-                                            break;
+                                        <div class="luxury-form-group">
+                                            <label class="luxury-label">Effect Description</label>
+                                            <input type="text" class="luxury-input" @bind="coinEffect.Description" placeholder="Enter effect description..." />
+                                        </div>
 
-                                        case CoinEffectType.Weighted:
-                                        case CoinEffectType.Shaved:
-                                            <div class="luxury-form-group">
-                                                <label class="luxury-label">Bias Strength (%)</label>
-                                                <input type="number" class="luxury-input" @bind="biasStrengthPercent" min="0" max="100" step="1" />
-                                                <small class="luxury-hint">Decimal: @(coinEffect.BiasStrength.ToString("F3"))</small>
-                                            </div>
-                                            break;
+                                        @switch (coinEffect.Type)
+                                        {
+                                            case CoinEffectType.AutoClick:
+                                                <div class="luxury-form-group">
+                                                    <label class="luxury-label">Auto-Click Interval (ms)</label>
+                                                    <input type="number" class="luxury-input" @bind="coinEffect.AutoClickInterval" min="100" step="100" />
+                                                    <small class="luxury-hint">Time between automatic flips in milliseconds (1000 = 1 second)</small>
+                                                </div>
+                                                break;
 
-                                        case CoinEffectType.Combo:
-                                            <div class="luxury-form-group">
-                                                <label class="luxury-label">Combo Type</label>
-                                                <select class="luxury-select" @bind="coinEffect.ComboType">
-                                                    @foreach (var type in Enum.GetValues<ComboType>())
-                                                    {
-                                                        <option value="@type">@type</option>
-                                                    }
-                                                </select>
-                                            </div>
-                                            <div class="luxury-form-group">
-                                                <label class="luxury-label">@(coinEffect.ComboType == ComboType.Additive ? "Combo Modifier (Additive)" : "Combo Multiplier")</label>
-                                                <input type="number" class="luxury-input" @bind="coinEffect.ComboMultiplier" min="0" step="0.01" />
-                                                <small class="luxury-hint">
-                                                    @if (coinEffect.ComboType == ComboType.Additive)
-                                                    {
-                                                        <text>Value added to opposite side's effect (e.g., 0.05 = +5%)</text>
-                                                    }
-                                                    else
-                                                    {
-                                                        <text>Multiplier for opposite side's effect (e.g., 1.5 = 150%)</text>
-                                                    }
-                                                </small>
-                                            </div>
-                                            break;
+                                            case CoinEffectType.Weighted:
+                                            case CoinEffectType.Shaved:
+                                                <div class="luxury-form-group">
+                                                    <label class="luxury-label">Bias Strength (%)</label>
+                                                    <input type="number" class="luxury-input" @bind="biasStrengthPercent" min="0" max="100" step="1" />
+                                                    <small class="luxury-hint">Decimal: @(coinEffect.BiasStrength.ToString("F3"))</small>
+                                                </div>
+                                                break;
 
-                                        case CoinEffectType.Luck:
-                                            <div class="luxury-form-group">
-                                                <label class="luxury-label">Luck Modifier Type</label>
-                                                <select class="luxury-select" @bind="coinEffect.LuckModifierType">
-                                                    @foreach (var type in Enum.GetValues<ComboType>())
-                                                    {
-                                                        <option value="@type">@type</option>
-                                                    }
-                                                </select>
-                                            </div>
-                                            <div class="luxury-form-group">
-                                                <label class="luxury-label">@(coinEffect.LuckModifierType == ComboType.Additive ? "Luck Modifier (Additive)" : "Luck Multiplier")</label>
-                                                <input type="number" class="luxury-input" @bind="coinEffect.LuckModifier" min="0" step="0.01" />
-                                                <small class="luxury-hint">
-                                                    @if (coinEffect.LuckModifierType == ComboType.Additive)
-                                                    {
-                                                        <text>Value added to unlock chances (e.g., 0.05 = +5%)</text>
-                                                    }
-                                                    else
-                                                    {
-                                                        <text>Multiplier for unlock chances (e.g., 2.0 = 200%)</text>
-                                                    }
-                                                </small>
-                                            </div>
-                                            break;
+                                            case CoinEffectType.Combo:
+                                                <div class="luxury-form-group">
+                                                    <label class="luxury-label">Combo Type</label>
+                                                    <select class="luxury-select" @bind="coinEffect.ComboType">
+                                                        @foreach (var type in Enum.GetValues<ComboType>())
+                                                        {
+                                                            <option value="@type">@type</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                                <div class="luxury-form-group">
+                                                    <label class="luxury-label">@(coinEffect.ComboType == ComboType.Additive ? "Combo Modifier (Additive)" : "Combo Multiplier")</label>
+                                                    <input type="number" class="luxury-input" @bind="coinEffect.ComboMultiplier" min="0" step="0.01" />
+                                                    <small class="luxury-hint">
+                                                        @if (coinEffect.ComboType == ComboType.Additive)
+                                                        {
+                                                            <text>Value added to opposite side's effect (e.g., 0.05 = +5%)</text>
+                                                        }
+                                                        else
+                                                        {
+                                                            <text>Multiplier for opposite side's effect (e.g., 1.5 = 150%)</text>
+                                                        }
+                                                    </small>
+                                                </div>
+                                                break;
+
+                                            case CoinEffectType.Luck:
+                                                <div class="luxury-form-group">
+                                                    <label class="luxury-label">Luck Modifier Type</label>
+                                                    <select class="luxury-select" @bind="coinEffect.LuckModifierType">
+                                                        @foreach (var type in Enum.GetValues<ComboType>())
+                                                        {
+                                                            <option value="@type">@type</option>
+                                                        }
+                                                    </select>
+                                                </div>
+                                                <div class="luxury-form-group">
+                                                    <label class="luxury-label">@(coinEffect.LuckModifierType == ComboType.Additive ? "Luck Modifier (Additive)" : "Luck Multiplier")</label>
+                                                    <input type="number" class="luxury-input" @bind="coinEffect.LuckModifier" min="0" step="0.01" />
+                                                    <small class="luxury-hint">
+                                                        @if (coinEffect.LuckModifierType == ComboType.Additive)
+                                                        {
+                                                            <text>Value added to unlock chances (e.g., 0.05 = +5%)</text>
+                                                        }
+                                                        else
+                                                        {
+                                                            <text>Multiplier for unlock chances (e.g., 2.0 = 200%)</text>
+                                                        }
+                                                    </small>
+                                                </div>
+                                                break;
+                                        }
                                     }
-                                }
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Validation & Output -->
-                    <div class="luxury-card">
-                        <div class="card-header">
-                            <i class="bi bi-stars card-icon"></i>
-                            <h3 class="card-title">Generate Code</h3>
-                        </div>
-                        
+                    <!-- Validate & Generate Button -->
+                    <div class="coin-action-section">
                         <button class="luxury-btn-primary" @onclick="ValidateAndGenerate">
                             <i class="bi bi-hammer btn-icon"></i>
                             <span>Validate & Generate</span>
@@ -522,6 +564,16 @@
                                 <pre class="code-display"><code>@generatedCode</code></pre>
                             </div>
                         }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="coin-hero-section empty">
+                    <div class="empty-hero-content">
+                        <i class="bi bi-coin empty-hero-icon"></i>
+                        <p class="empty-hero-text">Select a coin from the collection below</p>
+                        <p class="empty-hero-subtext">Choose a coin to configure its unlock conditions and effects</p>
                     </div>
                 </div>
             }
@@ -587,574 +639,3 @@
         </div>
     </div>
 </div>
-
-@code {
-private Dictionary<CoinType, List<CoinImage>>? availableCoins;
-private List<CoinImage>? allCoinImages; // All images from directory
-private CoinImage? selectedCoin;
-private UnlockCondition mainCondition = new() { Type = UnlockConditionType.None, Rarity = UnlockRarity.Common };
-private List<UnlockCondition> prerequisites = new();
-private CoinEffect coinEffect = new() { Type = CoinEffectType.None };
-private List<string> validationErrors = new();
-private bool isValid = false;
-private string generatedCode = string.Empty;
-private bool showCoinDrawer = false;
-private int? selectingForPrereqIndex = null;
-private bool selectingForMain = false;
-private string streakSideSelection = "Any";
-private bool isClearingCache = false;
-private bool showOnlyUnmapped = false;
-private bool hasLoadedOnce = false;
-private bool hasInteractedWithDrawer = false;
-    
-private double unlockChancePercent
-{
-    get => mainCondition.UnlockChance * 100;
-    set => mainCondition.UnlockChance = value / 100.0;
-}
-
-private double biasStrengthPercent
-{
-    get => coinEffect.BiasStrength * 100;
-    set => coinEffect.BiasStrength = value / 100.0;
-}
-
-    protected override async Task OnInitializedAsync()
-    {
-        await UnlockProgress.InitializeAsync();
-        availableCoins = await CoinService.GetAllAvailableCoinsAsync();
-        
-        // Load ALL coin images from directory
-        allCoinImages = new List<CoinImage>();
-        if (availableCoins != null)
-        {
-            foreach (var coinTypeGroup in availableCoins.Values)
-            {
-                allCoinImages.AddRange(coinTypeGroup);
-            }
-        }
-    }
-    
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            // Trigger peek animation after a short delay
-            await Task.Delay(500);
-            hasLoadedOnce = true;
-            StateHasChanged();
-        }
-    }
-    
-    private List<CoinImage> GetFilteredCoins()
-    {
-        if (allCoinImages == null)
-            return new List<CoinImage>();
-        
-        var filtered = allCoinImages.AsEnumerable();
-        
-        // Exclude Random.png and logo.png from the list
-        filtered = filtered.Where(c => !c.Path.Contains("Random.png") && !c.Path.Contains("logo.png"));
-        
-        if (showOnlyUnmapped)
-        {
-            // Show only coins without unlock conditions and effects
-            filtered = filtered.Where(c => c.UnlockCondition == null && c.Effect == null);
-        }
-        
-        return filtered.ToList();
-    }
-    
-    private int GetAllCoinsCount()
-    {
-        if (allCoinImages == null)
-            return 0;
-        
-        // Exclude Random.png and logo.png
-        return allCoinImages.Count(c => !c.Path.Contains("Random.png") && !c.Path.Contains("logo.png"));
-    }
-    
-    private int GetUnmappedCoinsCount()
-    {
-        if (allCoinImages == null)
-            return 0;
-        
-        // Count coins without conditions/effects, excluding Random.png and logo.png
-        return allCoinImages.Count(c => 
-            !c.Path.Contains("Random.png") && 
-            !c.Path.Contains("logo.png") && 
-            c.UnlockCondition == null && 
-            c.Effect == null);
-    }
-    
-    private void ShowAllCoins()
-    {
-        showOnlyUnmapped = false;
-        StateHasChanged();
-    }
-    
-    private void ShowUnmappedCoins()
-    {
-        showOnlyUnmapped = true;
-        StateHasChanged();
-    }
-
-    private void ToggleDrawer()
-    {
-        hasInteractedWithDrawer = true; // Track user interaction
-        
-        if (selectingForMain || selectingForPrereqIndex.HasValue)
-        {
-            CloseCoinDrawer();
-        }
-        else
-        {
-            showCoinDrawer = !showCoinDrawer;
-        }
-    }
-
-    private void OpenRequiredCoinSelector(int? prereqIndex)
-    {
-        hasInteractedWithDrawer = true; // Track user interaction
-        selectingForMain = prereqIndex == null;
-        selectingForPrereqIndex = prereqIndex;
-        showCoinDrawer = true;
-    }
-
-    private void CloseCoinDrawer()
-    {
-        showCoinDrawer = false;
-        selectingForMain = false;
-        selectingForPrereqIndex = null;
-    }
-
-    private void HandleCoinSelected(CoinImage coin)
-    {
-        hasInteractedWithDrawer = true; // Track user interaction
-        
-        if (selectingForPrereqIndex.HasValue)
-        {
-            prerequisites[selectingForPrereqIndex.Value].RequiredCoinPath = coin.Path;
-            CloseCoinDrawer();
-        }
-        else if (selectingForMain)
-        {
-            if (mainCondition.Type == UnlockConditionType.LandOnMultipleCoins && !mainCondition.UseDynamicCoinList)
-            {
-                if (mainCondition.RequiredCoinPaths == null)
-                    mainCondition.RequiredCoinPaths = new List<string>();
-                
-                if (!mainCondition.RequiredCoinPaths.Contains(coin.Path))
-                    mainCondition.RequiredCoinPaths.Add(coin.Path);
-            }
-            else
-            {
-                mainCondition.RequiredCoinPath = coin.Path;
-            }
-            CloseCoinDrawer();
-        }
-        else
-        {
-            selectedCoin = coin;
-            LoadExistingConfiguration();
-            showCoinDrawer = false;
-        }
-    }
-
-    private void LoadExistingConfiguration()
-    {
-        if (selectedCoin?.UnlockCondition != null)
-        {
-            // Load main condition
-            mainCondition = new UnlockCondition
-            {
-                Type = selectedCoin.UnlockCondition.Type,
-                RequiredCount = selectedCoin.UnlockCondition.RequiredCount,
-                RequiredCoinPath = selectedCoin.UnlockCondition.RequiredCoinPath,
-                Description = selectedCoin.UnlockCondition.Description ?? string.Empty,
-                UnlockChance = selectedCoin.UnlockCondition.UnlockChance,
-                RequiresActiveCoin = selectedCoin.UnlockCondition.RequiresActiveCoin,
-                RequiredCoinPaths = selectedCoin.UnlockCondition.RequiredCoinPaths?.ToList(),
-                Rarity = selectedCoin.UnlockCondition.Rarity,
-                UseDynamicCoinList = selectedCoin.UnlockCondition.UseDynamicCoinList,
-                StreakSide = selectedCoin.UnlockCondition.StreakSide
-            };
-
-            // Set streak side selection
-            if (selectedCoin.UnlockCondition.StreakSide.HasValue)
-            {
-                streakSideSelection = selectedCoin.UnlockCondition.StreakSide.Value.ToString();
-            }
-            else
-            {
-                streakSideSelection = "Any";
-            }
-
-            // Load prerequisites
-            prerequisites.Clear();
-            if (selectedCoin.UnlockCondition.Prerequisites != null)
-            {
-                foreach (var prereq in selectedCoin.UnlockCondition.Prerequisites)
-                {
-                    prerequisites.Add(new UnlockCondition
-                    {
-                        Type = prereq.Type,
-                        RequiredCount = prereq.RequiredCount,
-                        RequiredCoinPath = prereq.RequiredCoinPath,
-                        Description = prereq.Description ?? string.Empty
-                    });
-                }
-            }
-        }
-        else
-        {
-            // Reset to defaults
-            mainCondition = new UnlockCondition { Type = UnlockConditionType.None, Rarity = UnlockRarity.Common };
-            prerequisites.Clear();
-            streakSideSelection = "Any";
-        }
-
-        // Load coin effect
-        if (selectedCoin?.Effect != null)
-        {
-            coinEffect = new CoinEffect
-            {
-                Type = selectedCoin.Effect.Type,
-                Description = selectedCoin.Effect.Description ?? string.Empty,
-                AutoClickInterval = selectedCoin.Effect.AutoClickInterval,
-                BiasStrength = selectedCoin.Effect.BiasStrength,
-                ComboType = selectedCoin.Effect.ComboType,
-                ComboMultiplier = selectedCoin.Effect.ComboMultiplier,
-                LuckModifier = selectedCoin.Effect.LuckModifier,
-                LuckModifierType = selectedCoin.Effect.LuckModifierType
-            };
-        }
-        else
-        {
-            coinEffect = new CoinEffect { Type = CoinEffectType.None };
-        }
-
-        // Clear validation
-        validationErrors.Clear();
-        isValid = false;
-        generatedCode = string.Empty;
-    }
-
-    private void AddPrerequisite()
-    {
-        prerequisites.Add(new UnlockCondition 
-        { 
-            Type = UnlockConditionType.TotalFlips,
-            RequiredCount = 10
-        });
-    }
-
-    private void RemovePrerequisite(int index)
-    {
-        prerequisites.RemoveAt(index);
-    }
-
-    private void AddRequiredCoin()
-    {
-        if (mainCondition.RequiredCoinPaths == null)
-            mainCondition.RequiredCoinPaths = new List<string>();
-        
-        selectingForMain = true;
-        showCoinDrawer = true;
-    }
-
-    private void RemoveRequiredCoin(int index)
-    {
-        mainCondition.RequiredCoinPaths?.RemoveAt(index);
-    }
-
-    private string GetCoinNameFromPath(string path)
-    {
-        return System.IO.Path.GetFileNameWithoutExtension(path);
-    }
-
-    private void ValidateAndGenerate()
-    {
-        validationErrors.Clear();
-        isValid = false;
-
-        if (mainCondition.Type == UnlockConditionType.None && prerequisites.Any())
-        {
-            validationErrors.Add("Main condition type cannot be 'None' if prerequisites exist.");
-        }
-
-        if (string.IsNullOrWhiteSpace(mainCondition.Description) && mainCondition.Type != UnlockConditionType.None)
-        {
-            validationErrors.Add("Description is required for the main condition.");
-        }
-
-        switch (mainCondition.Type)
-        {
-            case UnlockConditionType.TotalFlips:
-            case UnlockConditionType.HeadsFlips:
-            case UnlockConditionType.TailsFlips:
-            case UnlockConditionType.Streak:
-                if (mainCondition.RequiredCount <= 0)
-                    validationErrors.Add($"Required count must be greater than 0 for {mainCondition.Type}.");
-                break;
-
-            case UnlockConditionType.LandOnCoin:
-                if (string.IsNullOrEmpty(mainCondition.RequiredCoinPath))
-                    validationErrors.Add("Required coin path must be set for LandOnCoin type.");
-                if (mainCondition.RequiredCount <= 0)
-                    validationErrors.Add("Required count must be greater than 0.");
-                break;
-
-            case UnlockConditionType.RandomChance:
-                if (mainCondition.UnlockChance <= 0 || mainCondition.UnlockChance > 1)
-                    validationErrors.Add("Unlock chance must be between 0 and 1 (0% to 100%).");
-                if (mainCondition.RequiresActiveCoin && string.IsNullOrEmpty(mainCondition.RequiredCoinPath))
-                    validationErrors.Add("Required coin path must be set when RequiresActiveCoin is true.");
-                break;
-
-            case UnlockConditionType.LandOnMultipleCoins:
-                if (mainCondition.RequiredCount <= 0)
-                    validationErrors.Add("Required count must be greater than 0.");
-                if (!mainCondition.UseDynamicCoinList && (mainCondition.RequiredCoinPaths == null || !mainCondition.RequiredCoinPaths.Any()))
-                    validationErrors.Add("At least one required coin must be specified, or enable UseDynamicCoinList.");
-                break;
-        }
-
-        for (int i = 0; i < prerequisites.Count; i++)
-        {
-            var prereq = prerequisites[i];
-            if (string.IsNullOrWhiteSpace(prereq.Description))
-                validationErrors.Add($"Prerequisite {i + 1}: Description is required.");
-
-            if (prereq.Type == UnlockConditionType.LandOnCoin && string.IsNullOrEmpty(prereq.RequiredCoinPath))
-                validationErrors.Add($"Prerequisite {i + 1}: Required coin path must be set for LandOnCoin type.");
-
-            if ((prereq.Type == UnlockConditionType.TotalFlips || 
-                 prereq.Type == UnlockConditionType.HeadsFlips || 
-                 prereq.Type == UnlockConditionType.TailsFlips ||
-                 prereq.Type == UnlockConditionType.Streak ||
-                 prereq.Type == UnlockConditionType.LandOnCoin) && prereq.RequiredCount <= 0)
-            {
-                validationErrors.Add($"Prerequisite {i + 1}: Required count must be greater than 0.");
-            }
-        }
-
-        if (!validationErrors.Any())
-        {
-            isValid = true;
-            GenerateCode();
-        }
-    }
-
-    private void GenerateCode()
-    {
-        if (selectedCoin == null) return;
-
-        var coinFileName = System.IO.Path.GetFileName(selectedCoin.Path);
-        var indent = "            ";
-        var code = new System.Text.StringBuilder();
-
-        code.AppendLine($@"{indent}{{");
-        code.AppendLine($@"{indent}    ""{coinFileName}"", new UnlockCondition");
-        code.AppendLine($@"{indent}    {{");
-        code.AppendLine($@"{indent}        Type = UnlockConditionType.{mainCondition.Type},");
-
-        switch (mainCondition.Type)
-        {
-            case UnlockConditionType.TotalFlips:
-            case UnlockConditionType.HeadsFlips:
-            case UnlockConditionType.TailsFlips:
-            case UnlockConditionType.Streak:
-            case UnlockConditionType.LandOnCoin:
-                code.AppendLine($@"{indent}        RequiredCount = {mainCondition.RequiredCount},");
-                break;
-        }
-
-        if (mainCondition.Type == UnlockConditionType.LandOnCoin && !string.IsNullOrEmpty(mainCondition.RequiredCoinPath))
-        {
-            code.AppendLine($@"{indent}        RequiredCoinPath = ""{mainCondition.RequiredCoinPath}"",");
-        }
-
-        if (mainCondition.Type == UnlockConditionType.RandomChance)
-        {
-            code.AppendLine($@"{indent}        UnlockChance = {mainCondition.UnlockChance.ToString("F5")}, // {unlockChancePercent:F3}% chance");
-            if (mainCondition.RequiresActiveCoin)
-            {
-                code.AppendLine($@"{indent}        RequiresActiveCoin = true,");
-                if (!string.IsNullOrEmpty(mainCondition.RequiredCoinPath))
-                    code.AppendLine($@"{indent}        RequiredCoinPath = ""{mainCondition.RequiredCoinPath}"",");
-            }
-        }
-
-        if (mainCondition.Type == UnlockConditionType.LandOnMultipleCoins)
-        {
-            code.AppendLine($@"{indent}        RequiredCount = {mainCondition.RequiredCount},");
-            if (mainCondition.UseDynamicCoinList)
-            {
-                code.AppendLine($@"{indent}        UseDynamicCoinList = true,");
-            }
-            else if (mainCondition.RequiredCoinPaths != null && mainCondition.RequiredCoinPaths.Any())
-            {
-                code.AppendLine($@"{indent}        RequiredCoinPaths = new List<string>");
-                code.AppendLine($@"{indent}        {{");
-                foreach (var path in mainCondition.RequiredCoinPaths)
-                {
-                    code.AppendLine($@"{indent}            ""{path}"",");
-                }
-                code.AppendLine($@"{indent}        }},");
-            }
-        }
-
-        if (mainCondition.Type == UnlockConditionType.Streak && streakSideSelection != "Any")
-        {
-            code.AppendLine($@"{indent}        StreakSide = Models.Unlocks.StreakSide.{streakSideSelection},");
-        }
-
-        code.AppendLine($@"{indent}        Description = ""{mainCondition.Description}"",");
-        code.AppendLine($@"{indent}        Rarity = UnlockRarity.{mainCondition.Rarity}");
-
-        if (prerequisites.Any())
-        {
-            code.AppendLine($@"{indent}        ,");
-            code.AppendLine($@"{indent}        Prerequisites = new List<UnlockCondition>");
-            code.AppendLine($@"{indent}        {{");
-
-            foreach (var prereq in prerequisites)
-            {
-                code.AppendLine($@"{indent}            new UnlockCondition");
-                code.AppendLine($@"{indent}            {{");
-                code.AppendLine($@"{indent}                Type = UnlockConditionType.{prereq.Type},");
-
-                if (prereq.RequiredCount > 0)
-                    code.AppendLine($@"{indent}                RequiredCount = {prereq.RequiredCount},");
-
-                if (!string.IsNullOrEmpty(prereq.RequiredCoinPath))
-                {
-                    code.AppendLine($@"{indent}                RequiredCoinPath = ""{prereq.RequiredCoinPath}"",");
-                }
-
-                code.AppendLine($@"{indent}                Description = ""{prereq.Description}"",");
-                code.AppendLine($@"{indent}                Rarity = UnlockRarity.{prereq.Rarity}");
-                code.AppendLine($@"{indent}            }},");
-            }
-
-            code.AppendLine($@"{indent}        }},");
-        }
-
-        if (coinEffect.Type != CoinEffectType.None)
-        {
-            code.AppendLine($@"{indent}        ,");
-            code.AppendLine($@"{indent}        Effect = new CoinEffect");
-            code.AppendLine($@"{indent}        {{");
-            code.AppendLine($@"{indent}            Type = CoinEffectType.{coinEffect.Type},");
-
-            if (coinEffect.AutoClickInterval > 0)
-                code.AppendLine($@"{indent}            AutoClickInterval = {coinEffect.AutoClickInterval},");
-
-            if (coinEffect.BiasStrength != 0)
-                code.AppendLine($@"{indent}            BiasStrength = {coinEffect.BiasStrength.ToString("F5")}, // {biasStrengthPercent:F2}%");
-
-            if (coinEffect.ComboMultiplier != 0)
-                code.AppendLine($@"{indent}            ComboMultiplier = {coinEffect.ComboMultiplier},");
-
-            if (coinEffect.LuckModifier != 1)
-                code.AppendLine($@"{indent}            LuckModifier = {coinEffect.LuckModifier},");
-
-            code.AppendLine($@"{indent}            Description = ""{coinEffect.Description}""");
-            code.AppendLine($@"{indent}        }},");
-        }
-
-        // Remove last comma and close the object
-        if (code.Length > 0)
-        {
-            code.Length -= 3; // Remove last comma and newline
-            code.AppendLine($@"{indent}    }}");
-        }
-
-        // Log the generated code for debugging
-        Console.WriteLine("Generated Code: ");
-        Console.WriteLine(code.ToString());
-
-        generatedCode = code.ToString();
-    }
-
-    private void CopyToClipboard()
-    {
-        JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", generatedCode);
-    }
-
-    private async Task ClearCacheAndReload()
-    {
-        isClearingCache = true;
-        StateHasChanged();
-        
-        try
-        {
-            await JSRuntime.InvokeVoidAsync("window.clearCachesAndReload");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error clearing cache: {ex.Message}");
-            // Fallback to hard reload
-            try
-            {
-                await JSRuntime.InvokeVoidAsync("location.reload", true);
-            }
-            catch
-            {
-                // If even location.reload fails, do nothing
-            }
-        }
-        finally
-        {
-            isClearingCache = false;
-        }
-    }
-
-    private void HandleDrawerBackgroundClick()
-    {
-        // Close the drawer if the background is clicked and it's currently open
-        if (showCoinDrawer)
-        {
-            showCoinDrawer = false;
-        }
-    }
-
-    private async Task HandleCoinHover(CoinImage coin)
-    {
-        // Play hover sound when mouse enters a coin
-        try
-        {
-            await JSRuntime.InvokeVoidAsync("playDrawerHoverSound");
-        }
-        catch (Exception ex)
-        {
-            // Silently fail if audio system isn't ready
-            Console.WriteLine($"Failed to play hover sound: {ex.Message}");
-        }
-    }
-
-    private string GetDrawerClass()
-    {
-        // Build the class string for the drawer
-        var classes = new List<string>();
-        
-        // Always add the appropriate state class
-        if (showCoinDrawer)
-        {
-            classes.Add("drawer-open");
-        }
-        else
-        {
-            classes.Add("drawer-closed");
-        }
-        
-        // Add peek class only if conditions are met
-        if (hasLoadedOnce && !hasInteractedWithDrawer && !showCoinDrawer)
-        {
-            classes.Add("drawer-peek");
-        }
-        
-        return string.Join(" ", classes);
-    }
-}

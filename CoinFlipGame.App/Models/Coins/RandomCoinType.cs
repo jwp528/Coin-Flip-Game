@@ -153,7 +153,7 @@ public class RandomCoinType : CoinType
                 }
             }
         },
-         {
+        {
             "Dillon.png", new UnlockCondition
             {
                 Type = UnlockConditionType.None,

@@ -16,6 +16,9 @@ public class UnlockProgressService
     private HashSet<string> _randomUnlockedCoins = new();
     private HashSet<string> _notificationShownFor = new();
     private Dictionary<string, DateTime> _coinUnlockTimestamps = new();
+    // Track consecutive characteristic landings for each unlock condition
+    // Key: coin path (the coin to unlock), Value: current consecutive count
+    private Dictionary<string, int> _characteristicConsecutiveCounts = new();
     private int _totalFlips = 0;
     private int _headsFlips = 0;
     private int _tailsFlips = 0;
@@ -48,7 +51,13 @@ public class UnlockProgressService
     /// Track a coin landing and check for newly unlocked coins
     /// Returns list of coins that were newly unlocked as a result of this landing
     /// </summary>
-    public List<CoinImage> TrackCoinLanding(string coinPath, bool isHeads, int currentStreak, List<CoinImage> allCoins)
+    /// <param name="coinPath">Path of the coin that was landed on</param>
+    /// <param name="isHeads">Whether the landed coin was on heads side</param>
+    /// <param name="currentStreak">Current streak count</param>
+    /// <param name="allCoins">All available coins</param>
+    /// <param name="headsCoinPath">The coin selected for heads face (for characteristic tracking)</param>
+    /// <param name="tailsCoinPath">The coin selected for tails face (for characteristic tracking)</param>
+    public List<CoinImage> TrackCoinLanding(string coinPath, bool isHeads, int currentStreak, List<CoinImage> allCoins, string? headsCoinPath = null, string? tailsCoinPath = null)
     {
         try
         {
@@ -80,6 +89,12 @@ public class UnlockProgressService
                 _coinLandCounts[coinPath] = 0;
             
             _coinLandCounts[coinPath]++;
+            
+            // Get the landed coin's data
+            CoinImage? landedCoin = allCoins?.FirstOrDefault(c => c.Path == coinPath);
+            
+            // Update characteristic-based consecutive tracking
+            UpdateCharacteristicConsecutiveTracking(landedCoin, isHeads, headsCoinPath, tailsCoinPath, allCoins);
             
             _ = SaveProgressAsync(); // Fire and forget
             
@@ -172,6 +187,14 @@ public class UnlockProgressService
                                 count == coin.UnlockCondition.RequiredCount);
                         }
                         break;
+                    
+                    case UnlockConditionType.LandOnCoinsWithCharacteristics:
+                        // Check if consecutive count just reached the required amount
+                        if (_characteristicConsecutiveCounts.TryGetValue(coin.Path, out int charCount))
+                        {
+                            justUnlocked = charCount == coin.UnlockCondition.ConsecutiveCount;
+                        }
+                        break;
                 }
                 
                 if (justUnlocked)
@@ -243,6 +266,7 @@ public class UnlockProgressService
             UnlockConditionType.LandOnCoin => CheckLandOnCoinCondition(condition),
             UnlockConditionType.RandomChance => _randomUnlockedCoins.Contains(coinPath),
             UnlockConditionType.LandOnMultipleCoins => CheckLandOnMultipleCoinsCondition(condition, coinPath),
+            UnlockConditionType.LandOnCoinsWithCharacteristics => CheckCharacteristicCondition(condition, coinPath),
             _ => false
         };
     }
@@ -261,6 +285,17 @@ public class UnlockProgressService
             // Legacy: any streak
             return _longestStreak >= condition.RequiredCount;
         }
+    }
+    
+    /// <summary>
+    /// Check if characteristic-based consecutive condition is met
+    /// </summary>
+    private bool CheckCharacteristicCondition(UnlockCondition condition, string coinPath)
+    {
+        if (!_characteristicConsecutiveCounts.TryGetValue(coinPath, out int consecutiveCount))
+            return false;
+        
+        return consecutiveCount >= condition.ConsecutiveCount;
     }
     
     /// <summary>
@@ -431,6 +466,185 @@ public class UnlockProgressService
     }
     
     /// <summary>
+    /// Update consecutive characteristic landing tracking for all pending unlock conditions
+    /// </summary>
+    private void UpdateCharacteristicConsecutiveTracking(CoinImage? landedCoin, bool isHeads, string? headsCoinPath, string? tailsCoinPath, List<CoinImage>? allCoins)
+    {
+        if (allCoins == null || !allCoins.Any())
+            return;
+        
+        // Check all coins with characteristic-based unlock conditions
+        foreach (var unlockableCoin in allCoins)
+        {
+            if (unlockableCoin?.UnlockCondition?.Type == UnlockConditionType.LandOnCoinsWithCharacteristics)
+            {
+                // Check if landed coin matches the characteristic
+                bool matches = DoesCoinMatchCharacteristic(landedCoin, unlockableCoin.UnlockCondition, isHeads, headsCoinPath, tailsCoinPath, allCoins);
+                
+                if (matches)
+                {
+                    // Increment consecutive count for this unlock condition
+                    if (!_characteristicConsecutiveCounts.ContainsKey(unlockableCoin.Path))
+                        _characteristicConsecutiveCounts[unlockableCoin.Path] = 0;
+                    
+                    _characteristicConsecutiveCounts[unlockableCoin.Path]++;
+                }
+                else
+                {
+                    // Reset consecutive count if doesn't match
+                    _characteristicConsecutiveCounts[unlockableCoin.Path] = 0;
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Check if a coin matches the characteristic filter
+    /// </summary>
+    private bool DoesCoinMatchCharacteristic(CoinImage? landedCoin, UnlockCondition condition, bool isHeads, string? headsCoinPath, string? tailsCoinPath, List<CoinImage> allCoins)
+    {
+        if (landedCoin == null)
+            return false;
+        
+        // Check if a specific coin is required to be active (like RandomChance unlock conditions)
+        if (condition.RequiresActiveCoin && !string.IsNullOrEmpty(condition.RequiredCoinPath))
+        {
+            // Verify the required coin is active based on side requirement
+            bool requiredCoinActive = CheckRequiredCoinActive(condition.RequiredCoinPath, condition.SideRequirement, headsCoinPath, tailsCoinPath);
+            if (!requiredCoinActive)
+                return false;
+        }
+        
+        // Check side requirement
+        bool sideMatches = CheckSideRequirement(landedCoin.Path, condition.SideRequirement, isHeads, headsCoinPath, tailsCoinPath);
+        if (!sideMatches)
+            return false;
+        
+        // Check characteristic filter
+        switch (condition.CharacteristicFilter)
+        {
+            case CoinCharacteristicFilter.SpecificCoins:
+                return condition.RequiredCoinPaths != null && condition.RequiredCoinPaths.Contains(landedCoin.Path);
+            
+            case CoinCharacteristicFilter.UnlockConditionType:
+                return condition.FilterUnlockConditionType.HasValue && 
+                       landedCoin.UnlockCondition?.Type == condition.FilterUnlockConditionType.Value;
+            
+            case CoinCharacteristicFilter.EffectType:
+                return condition.FilterEffectType.HasValue && 
+                       landedCoin.Effect?.Type == condition.FilterEffectType.Value;
+            
+            case CoinCharacteristicFilter.HasAnyEffect:
+                return landedCoin.Effect != null && landedCoin.Effect.Type != CoinEffectType.None;
+            
+            case CoinCharacteristicFilter.HasAnyUnlockCondition:
+                return landedCoin.UnlockCondition != null && landedCoin.UnlockCondition.Type != UnlockConditionType.None;
+            
+            case CoinCharacteristicFilter.PrerequisiteCountEquals:
+                int prereqCount = landedCoin.UnlockCondition?.Prerequisites?.Count ?? 0;
+                return prereqCount == condition.FilterPrerequisiteCount;
+            
+            case CoinCharacteristicFilter.PrerequisiteCountGreaterThan:
+                int prereqCountGt = landedCoin.UnlockCondition?.Prerequisites?.Count ?? 0;
+                return prereqCountGt > condition.FilterPrerequisiteCount;
+            
+            case CoinCharacteristicFilter.PrerequisiteCountLessThan:
+                int prereqCountLt = landedCoin.UnlockCondition?.Prerequisites?.Count ?? 0;
+                return prereqCountLt < condition.FilterPrerequisiteCount;
+            
+            default:
+                return false;
+        }
+    }
+    
+    /// <summary>
+    /// Check if the side requirement is met for a coin
+    /// </summary>
+    private bool CheckSideRequirement(string coinPath, SideRequirement requirement, bool isHeads, string? headsCoinPath, string? tailsCoinPath)
+    {
+        // Special handling for Random.png - it acts as a wildcard for any random coin
+        const string randomCoinPath = "/img/coins/Random.png";
+        
+        switch (requirement)
+        {
+            case SideRequirement.Either:
+                // Coin can be on either side
+                // If heads or tails is set to Random.png, any coin from the random pool matches
+                bool matchesHeads = coinPath == headsCoinPath || 
+                                   (headsCoinPath == randomCoinPath && IsRandomCoin(coinPath));
+                bool matchesTails = coinPath == tailsCoinPath || 
+                                   (tailsCoinPath == randomCoinPath && IsRandomCoin(coinPath));
+                return matchesHeads || matchesTails;
+            
+            case SideRequirement.Both:
+                // Coin must be on both sides simultaneously
+                // If both sides are Random.png, any random coin matches
+                bool matchesHeadsBoth = coinPath == headsCoinPath || 
+                                       (headsCoinPath == randomCoinPath && IsRandomCoin(coinPath));
+                bool matchesTailsBoth = coinPath == tailsCoinPath || 
+                                       (tailsCoinPath == randomCoinPath && IsRandomCoin(coinPath));
+                return matchesHeadsBoth && matchesTailsBoth;
+            
+            case SideRequirement.HeadsOnly:
+                // Coin must be on heads side
+                return isHeads && (coinPath == headsCoinPath || 
+                                  (headsCoinPath == randomCoinPath && IsRandomCoin(coinPath)));
+            
+            case SideRequirement.TailsOnly:
+                // Coin must be on tails side
+                return !isHeads && (coinPath == tailsCoinPath || 
+                                   (tailsCoinPath == randomCoinPath && IsRandomCoin(coinPath)));
+            
+            default:
+                return false;
+        }
+    }
+    
+    /// <summary>
+    /// Check if a required coin is currently active based on the side requirement
+    /// Used for RequiresActiveCoin + RequiredCoinPath in characteristic-based unlocks
+    /// </summary>
+    private bool CheckRequiredCoinActive(string requiredCoinPath, SideRequirement sideRequirement, string? headsCoinPath, string? tailsCoinPath)
+    {
+        switch (sideRequirement)
+        {
+            case SideRequirement.Either:
+                // Required coin must be on either heads OR tails
+                return requiredCoinPath == headsCoinPath || requiredCoinPath == tailsCoinPath;
+            
+            case SideRequirement.Both:
+                // Required coin must be on BOTH heads AND tails
+                return requiredCoinPath == headsCoinPath && requiredCoinPath == tailsCoinPath;
+            
+            case SideRequirement.HeadsOnly:
+                // Required coin must be on heads
+                return requiredCoinPath == headsCoinPath;
+            
+            case SideRequirement.TailsOnly:
+                // Required coin must be on tails
+                return requiredCoinPath == tailsCoinPath;
+            
+            default:
+                return false;
+        }
+    }
+    
+    /// <summary>
+    /// Check if a coin path belongs to the random coin pool
+    /// Random coins are any coins with unlock conditions or effects (excluding logo.png and Random.png itself)
+    /// </summary>
+    private bool IsRandomCoin(string coinPath)
+    {
+        // Random.png itself is not a random coin (it's the selector)
+        if (coinPath == "/img/coins/Random.png" || coinPath == "/img/coins/logo.png")
+            return false;
+        
+        // A coin is part of the random pool if it has unlock conditions or effects
+        // This matches the logic in GetRandomCoinByRarity()
+        return true; // If we're tracking it and it's not logo/Random, it's in the pool
+    }
+    
+    /// <summary>
     /// Get number of times a coin has been landed on
     /// </summary>
     public int GetCoinLandCount(string coinPath)
@@ -493,7 +707,31 @@ public class UnlockProgressService
             UnlockConditionType.LandOnCoin => GetLandOnCoinProgress(coin.UnlockCondition),
             UnlockConditionType.RandomChance => $"Random unlock ({coin.UnlockCondition.UnlockChance * 100:F3}% chance)",
             UnlockConditionType.LandOnMultipleCoins => GetLandOnMultipleCoinsProgress(coin.UnlockCondition, coin.Path),
+            UnlockConditionType.LandOnCoinsWithCharacteristics => GetCharacteristicProgress(coin.UnlockCondition, coin.Path),
             _ => "Locked"
+        };
+    }
+    
+    private string GetCharacteristicProgress(UnlockCondition condition, string coinPath)
+    {
+        int current = _characteristicConsecutiveCounts.TryGetValue(coinPath, out int count) ? count : 0;
+        string filterDesc = GetCharacteristicFilterDescription(condition);
+        return $"{current}/{condition.ConsecutiveCount} consecutive ({filterDesc})";
+    }
+    
+    private string GetCharacteristicFilterDescription(UnlockCondition condition)
+    {
+        return condition.CharacteristicFilter switch
+        {
+            CoinCharacteristicFilter.SpecificCoins => $"{condition.RequiredCoinPaths?.Count ?? 0} specific coins",
+            CoinCharacteristicFilter.UnlockConditionType => $"{condition.FilterUnlockConditionType} unlock coins",
+            CoinCharacteristicFilter.EffectType => $"{condition.FilterEffectType} effect coins",
+            CoinCharacteristicFilter.HasAnyEffect => "coins with any effect",
+            CoinCharacteristicFilter.HasAnyUnlockCondition => "coins with unlock conditions",
+            CoinCharacteristicFilter.PrerequisiteCountEquals => $"coins with {condition.FilterPrerequisiteCount} prereqs",
+            CoinCharacteristicFilter.PrerequisiteCountGreaterThan => $"coins with >{condition.FilterPrerequisiteCount} prereqs",
+            CoinCharacteristicFilter.PrerequisiteCountLessThan => $"coins with <{condition.FilterPrerequisiteCount} prereqs",
+            _ => "matching coins"
         };
     }
     
@@ -565,7 +803,8 @@ public class UnlockProgressService
                 CoinLandCounts = _coinLandCounts,
                 RandomUnlockedCoins = _randomUnlockedCoins.ToList(),
                 NotificationShownFor = _notificationShownFor.ToList(),
-                CoinUnlockTimestamps = _coinUnlockTimestamps
+                CoinUnlockTimestamps = _coinUnlockTimestamps,
+                CharacteristicConsecutiveCounts = _characteristicConsecutiveCounts
             };
             
             await _localStorage.SetItemAsync(StorageKey, progress);
@@ -597,6 +836,7 @@ public class UnlockProgressService
                 _randomUnlockedCoins = progress.RandomUnlockedCoins?.ToHashSet() ?? new HashSet<string>();
                 _notificationShownFor = progress.NotificationShownFor?.ToHashSet() ?? new HashSet<string>();
                 _coinUnlockTimestamps = progress.CoinUnlockTimestamps ?? new Dictionary<string, DateTime>();
+                _characteristicConsecutiveCounts = progress.CharacteristicConsecutiveCounts ?? new Dictionary<string, int>();
             }
         }
         catch (Exception ex)
@@ -614,6 +854,7 @@ public class UnlockProgressService
         _randomUnlockedCoins.Clear();
         _notificationShownFor.Clear();
         _coinUnlockTimestamps.Clear();
+        _characteristicConsecutiveCounts.Clear();
         _totalFlips = 0;
         _headsFlips = 0;
         _tailsFlips = 0;
