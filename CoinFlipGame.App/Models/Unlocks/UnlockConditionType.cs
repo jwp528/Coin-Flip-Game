@@ -39,5 +39,7 @@ public enum SideRequirement
     Either,      // Coin can be on heads OR tails (default)
     Both,        // Coin must be on BOTH heads AND tails simultaneously
     HeadsOnly,   // Coin must be on heads only
-    TailsOnly    // Coin must be on tails only
+    TailsOnly,   // Coin must be on tails only
+    HeadsAndTails,  // Two different coins, one on each side (order doesn't matter)
+    AnyFromList  // Both heads AND tails coins must be from the RequiredCoinPaths list
 }

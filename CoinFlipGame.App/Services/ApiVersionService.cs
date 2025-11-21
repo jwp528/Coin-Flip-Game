@@ -10,7 +10,11 @@ namespace CoinFlipGame.App.Services;
 public class ApiVersionService
 {
     private readonly HttpClient _httpClient;
+#if DEBUG
+    private const string VERSION_ENDPOINT = "http://localhost:7071/api/version";
+#else
     private const string VERSION_ENDPOINT = "/api/version";
+#endif
 
     public ApiVersionService(HttpClient httpClient)
     {
@@ -25,7 +29,9 @@ public class ApiVersionService
     {
         try
         {
-            var response = await _httpClient.GetAsync(VERSION_ENDPOINT);
+            // Add cache-busting timestamp to prevent Azure CDN/browser caching
+            var cacheBuster = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var response = await _httpClient.GetAsync($"{VERSION_ENDPOINT}?_={cacheBuster}");
             
             if (!response.IsSuccessStatusCode)
             {
@@ -83,3 +89,4 @@ public class ApiVersionResponse
     [JsonPropertyName("fullVersion")]
     public string FullVersion { get; set; } = string.Empty;
 }
+

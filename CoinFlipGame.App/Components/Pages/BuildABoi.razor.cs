@@ -399,6 +399,24 @@ public partial class BuildABoi
                             validationErrors.Add("Prerequisite count cannot be negative.");
                         break;
                 }
+                
+                // Validate side requirements
+                if (mainCondition.SideRequirement == SideRequirement.HeadsAndTails)
+                {
+                    if (mainCondition.RequiredCoinPaths == null || mainCondition.RequiredCoinPaths.Count != 2)
+                        validationErrors.Add("HeadsAndTails side requirement requires exactly 2 coins in RequiredCoinPaths.");
+                    if (!mainCondition.RequiresActiveCoin)
+                        validationErrors.Add("HeadsAndTails side requirement requires RequiresActiveCoin to be true.");
+                }
+                
+                if (mainCondition.SideRequirement == SideRequirement.AnyFromList)
+                {
+                    if (mainCondition.RequiredCoinPaths == null || mainCondition.RequiredCoinPaths.Count < 2)
+                        validationErrors.Add("AnyFromList side requirement requires at least 2 coins in RequiredCoinPaths.");
+                    if (!mainCondition.RequiresActiveCoin)
+                        validationErrors.Add("AnyFromList side requirement requires RequiresActiveCoin to be true.");
+                }
+                
                 break;
         }
 
@@ -751,9 +769,11 @@ public partial class BuildABoi
         return side switch
         {
             SideRequirement.Either => "Either Side (Heads OR Tails)",
-            SideRequirement.Both => "Both Sides (Heads AND Tails)",
+            SideRequirement.Both => "Both Sides (Same Coin on Heads AND Tails)",
             SideRequirement.HeadsOnly => "Heads Side Only",
             SideRequirement.TailsOnly => "Tails Side Only",
+            SideRequirement.HeadsAndTails => "Heads AND Tails (Two Different Coins)",
+            SideRequirement.AnyFromList => "Any Coins From List (Both Sides)",
             _ => side.ToString()
         };
     }
@@ -763,9 +783,11 @@ public partial class BuildABoi
         return side switch
         {
             SideRequirement.Either => "Matching coin can be on heads OR tails (default)",
-            SideRequirement.Both => "Matching coin must be on BOTH heads AND tails simultaneously",
+            SideRequirement.Both => "Same matching coin must be on BOTH heads AND tails simultaneously",
             SideRequirement.HeadsOnly => "Matching coin must be set as the heads face",
             SideRequirement.TailsOnly => "Matching coin must be set as the tails face",
+            SideRequirement.HeadsAndTails => "Two specific coins must be active, one on each side (order doesn't matter). Requires exactly 2 coins in RequiredCoinPaths.",
+            SideRequirement.AnyFromList => "Both heads AND tails coins must be from the RequiredCoinPaths list (can be same or different)",
             _ => ""
         };
     }

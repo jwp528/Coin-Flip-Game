@@ -527,13 +527,25 @@ public class UnlockProgressService
         if (landedCoin == null)
             return false;
         
-        // Check if a specific coin is required to be active (like RandomChance unlock conditions)
-        if (condition.RequiresActiveCoin && !string.IsNullOrEmpty(condition.RequiredCoinPath))
+        // Check if specific coins are required to be active
+        if (condition.RequiresActiveCoin)
         {
-            // Verify the required coin is active based on side requirement
-            bool requiredCoinActive = CheckRequiredCoinActive(condition.RequiredCoinPath, condition.SideRequirement, headsCoinPath, tailsCoinPath);
-            if (!requiredCoinActive)
-                return false;
+            // Check for multi-coin requirements (HeadsAndTails or AnyFromList)
+            if ((condition.SideRequirement == SideRequirement.HeadsAndTails || 
+                 condition.SideRequirement == SideRequirement.AnyFromList) && 
+                condition.RequiredCoinPaths != null && condition.RequiredCoinPaths.Any())
+            {
+                bool requiredCoinsActive = CheckRequiredCoinsActive(condition.RequiredCoinPaths, condition.SideRequirement, headsCoinPath, tailsCoinPath);
+                if (!requiredCoinsActive)
+                    return false;
+            }
+            // Check for single coin requirement
+            else if (!string.IsNullOrEmpty(condition.RequiredCoinPath))
+            {
+                bool requiredCoinActive = CheckRequiredCoinActive(condition.RequiredCoinPath, condition.SideRequirement, headsCoinPath, tailsCoinPath);
+                if (!requiredCoinActive)
+                    return false;
+            }
         }
         
         // Check side requirement
@@ -644,6 +656,44 @@ public class UnlockProgressService
             case SideRequirement.TailsOnly:
                 // Required coin must be on tails
                 return requiredCoinPath == tailsCoinPath;
+            
+            default:
+                return false;
+        }
+    }
+    
+    /// <summary>
+    /// Check if multiple required coins are currently active based on the side requirement
+    /// Used for RequiresActiveCoin + RequiredCoinPaths with HeadsAndTails or AnyFromList
+    /// </summary>
+    private bool CheckRequiredCoinsActive(List<string>? requiredCoinPaths, SideRequirement sideRequirement, string? headsCoinPath, string? tailsCoinPath)
+    {
+        if (requiredCoinPaths == null || !requiredCoinPaths.Any())
+            return false;
+        
+        if (string.IsNullOrEmpty(headsCoinPath) || string.IsNullOrEmpty(tailsCoinPath))
+            return false;
+        
+        switch (sideRequirement)
+        {
+            case SideRequirement.HeadsAndTails:
+                // Two specific coins must be active, one on each side (order doesn't matter)
+                // Example: Dragon on heads and Panda on tails, OR Panda on heads and Dragon on tails
+                if (requiredCoinPaths.Count < 2)
+                    return false;
+                
+                var coinSet = new HashSet<string> { headsCoinPath, tailsCoinPath };
+                
+                // Check if all required coins are present in the active coin set
+                // AND that heads and tails are different coins
+                return headsCoinPath != tailsCoinPath && 
+                       requiredCoinPaths.All(path => coinSet.Contains(path));
+            
+            case SideRequirement.AnyFromList:
+                // Both heads AND tails coins must be from the RequiredCoinPaths list
+                // Can be any coins from the list, including the same coin on both sides
+                return requiredCoinPaths.Contains(headsCoinPath) && 
+                       requiredCoinPaths.Contains(tailsCoinPath);
             
             default:
                 return false;

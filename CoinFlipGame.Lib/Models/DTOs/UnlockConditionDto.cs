@@ -59,7 +59,9 @@ public enum SideRequirement
     Either = 0,
     Both = 1,
     HeadsOnly = 2,
-    TailsOnly = 3
+    TailsOnly = 3,
+    HeadsAndTails = 4,  // Two different coins, one on each side (order doesn't matter)
+    AnyFromList = 5     // Both heads AND tails coins must be from the RequiredCoinPaths list
 }
 
 /// <summary>

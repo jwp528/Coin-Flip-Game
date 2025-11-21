@@ -353,6 +353,7 @@
     grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
     gap: 20px;
     padding: 20px;
+    padding-bottom:50px; /* To pad it out so android bottom bars don't block it */
     background: 
         linear-gradient(135deg, rgba(139, 0, 0, 0.7) 0%, rgba(85, 0, 0, 0.8) 100%),
         url('/img/bg/CoinDrawer.png');

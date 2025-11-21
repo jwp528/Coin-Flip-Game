@@ -62,13 +62,13 @@
     <Folder Include="CFG\Schemas" />
     <Folder Include="CFG\Tables" />
     <Folder Include="Scripts" />
+    <Folder Include="Scripts\Post-Deployment" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="CFG\Schemas\CFG.sql" />
     <Build Include="CFG\Tables\Coins.sql" />
-    <Build Include="Script.PostDeployment.FULL.sql" />
   </ItemGroup>
   <ItemGroup>
-    <PostDeploy Include="Scripts\Script.PostDeployment.sql" />
+    <PostDeploy Include="Scripts\Post-Deployment\Script.PostDeployment.sql" />
   </ItemGroup>
 </Project>

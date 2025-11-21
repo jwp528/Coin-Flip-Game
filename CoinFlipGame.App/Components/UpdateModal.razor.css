@@ -1,42 +1,115 @@
-/* Update Modal Styles */
-.update-modal-content {
-    border: none !important;
+.update-modal-poker {
+    background: transparent;
+    border: none;
+    overflow: hidden;
+}
+
+/* Minimalist Wood Frame */
+.poker-frame {
+    background: linear-gradient(145deg, #2c1810, #3e2723);
+    padding: 16px;
     border-radius: 16px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
 }
 
+/* Dark Red Velvet Felt Surface with Texture */
+.poker-felt {
+    background: 
+        linear-gradient(135deg, rgba(96, 16, 32, 0.85), rgba(128, 20, 40, 0.85), rgba(96, 16, 32, 0.85)),
+        url('/img/bg/CoinDrawer.png');
+    background-size: cover;
+    background-position: center;
+    background-blend-mode: multiply;
+    border-radius: 8px;
+    padding: 40px 32px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* Subtle Overlay for Depth */
+.poker-felt::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    pointer-events: none;
+}
+
+/* Icon Inset Well - Centered */
 .update-icon {
-    color: #3b82f6;
-    animation: updatePulse 2s ease-in-out infinite;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 50%;
+    box-shadow: 
+        inset 0 2px 6px rgba(0, 0, 0, 0.7),
+        inset 0 1px 3px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.3);
 }
 
-@keyframes updatePulse {
-    0%, 100% {
-        transform: scale(1);
-        opacity: 1;
-    }
-    50% {
-        transform: scale(1.05);
-        opacity: 0.9;
-    }
+.update-icon svg {
+    color: #ffd700;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
 }
 
-.update-modal-content .btn-primary {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-    border: none !important;
-    border-radius: 10px;
-    padding: 12px 24px;
+/* Text Styling */
+.content-inset h4 {
+    color: #ffffff;
+    text-shadow: 
+        0 1px 2px rgba(0, 0, 0, 0.8),
+        0 -1px 1px rgba(0, 0, 0, 0.4);
     font-weight: 600;
-    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
 }
 
-.update-modal-content .btn-primary:not(:disabled):hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+.content-inset .text-muted {
+    color: rgba(255, 255, 255, 0.8) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+    font-weight: 400;
 }
 
-.update-modal-content .btn-primary:disabled {
-    opacity: 0.7;
+/* Button Inset Style - Using wood/border color */
+.poker-felt .btn-primary {
+    background: linear-gradient(135deg, #3e2723, #2c1810);
+    border: 1px solid rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+    box-shadow: 
+        inset 0 2px 6px rgba(0, 0, 0, 0.6),
+        inset 0 1px 3px rgba(0, 0, 0, 0.4),
+        0 1px 0 rgba(255, 255, 255, 0.05);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 14px 24px;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    max-width: 400px;
+}
+
+.poker-felt .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #4e342e, #3e2723);
+    box-shadow: 
+        inset 0 2px 6px rgba(0, 0, 0, 0.5),
+        inset 0 1px 3px rgba(0, 0, 0, 0.3),
+        0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.poker-felt .btn-primary:active:not(:disabled) {
+    box-shadow: 
+        inset 0 3px 8px rgba(0, 0, 0, 0.7),
+        inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.poker-felt .btn-primary:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
 }
