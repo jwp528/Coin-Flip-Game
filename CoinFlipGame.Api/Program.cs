@@ -8,13 +8,16 @@ var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
     .ConfigureServices((context, services) =>
     {
-        // Get connection string from configuration
-        var connectionString = context.Configuration.GetConnectionString("CoinFlipGameDb")
-            ?? throw new InvalidOperationException("Connection string 'CoinFlipGameDb' not found.");
+        // Get connection string from configuration (optional for Azure Static Web Apps)
+        var connectionString = context.Configuration.GetConnectionString("CoinFlipGameDb");
 
-        // Register DbContext
-        services.AddDbContext<CoinFlipGameDbContext>(options =>
-            options.UseSqlServer(connectionString));
+        // Only register DbContext if connection string is available
+        // This allows the API to work in Azure Static Web Apps without a database
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            services.AddDbContext<CoinFlipGameDbContext>(options =>
+                options.UseSqlServer(connectionString));
+        }
     })
     .Build();
 
