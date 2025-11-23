@@ -1,4 +1,5 @@
 using CoinFlipGame.Api.Data;
+using CoinFlipGame.Api.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +19,14 @@ var host = new HostBuilder()
             services.AddDbContext<CoinFlipGameDbContext>(options =>
                 options.UseSqlServer(connectionString));
         }
+
+        // Register memory cache for blob storage caching
+        services.AddMemoryCache();
+
+        // Register Azure Blob Storage service (now with caching)
+        services.AddSingleton<CoinStorageService>();
     })
     .Build();
 
 host.Run();
+

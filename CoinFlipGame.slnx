@@ -10,6 +10,7 @@
     <Build />
     <Deploy />
   </Project>
+  <Project Path="CoinFlipGame.ImageUploader/CoinFlipGame.ImageUploader.csproj" />
   <Project Path="CoinFlipGame.Lib/CoinFlipGame.Lib.csproj" />
   <Project Path="CoinFlipGame.Shared/CoinFlipGame.Shared.csproj" />
 </Solution>
