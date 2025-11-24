@@ -54,32 +54,54 @@ window.initCoinPhysics = function() {
 };
 
 // Haptic Feedback (for mobile devices)
+// -- vibrate
+// Check if device supports haptic feedback
+window.isHapticSupported = function() {
+    return 'vibrate' in navigator;
+};
+
+// Trigger haptic feedback if supported and enabled
 window.triggerHaptic = function(intensity) {
-    if ('vibrate' in navigator) {
-        switch(intensity) {
-            case 'light':
-                navigator.vibrate(10);
-                break;
-            case 'medium':
-                navigator.vibrate(20);
-                break;
-            case 'heavy':
-                navigator.vibrate([30, 10, 30]);
-                break;
-            case 'super-ready':
-                // Powerful pulse for super flip ready
-                navigator.vibrate([50, 30, 50, 30, 80]);
-                break;
-            case 'super-flip':
-                // Sustained vibration during super flip
-                navigator.vibrate([100, 20, 100]);
-                break;
-            case 'landing':
-                // Impact vibration for coin landing
-                navigator.vibrate([40, 15, 20]);
-                break;
-        }
+    // Check if haptics are supported
+    if (!('vibrate' in navigator)) {
+        return false;
     }
+    
+    // Check if haptics are enabled (set by C# via setHapticsEnabled)
+    if (window.hapticsEnabled === false) {
+        return false;
+    }
+    
+    switch(intensity) {
+        case 'light':
+            navigator.vibrate(10);
+            break;
+        case 'medium':
+            navigator.vibrate(20);
+            break;
+        case 'heavy':
+            navigator.vibrate([30, 10, 30]);
+            break;
+        case 'super-ready':
+            // Powerful pulse for super flip ready
+            navigator.vibrate([50, 30, 50, 30, 80]);
+            break;
+        case 'super-flip':
+            // Sustained vibration during super flip
+            navigator.vibrate([100, 20, 100]);
+            break;
+        case 'landing':
+            // Impact vibration for coin landing
+            navigator.vibrate([40, 15, 20]);
+            break;
+    }
+    
+    return true;
+};
+
+// Set haptics enabled state from C#
+window.setHapticsEnabled = function(enabled) {
+    window.hapticsEnabled = enabled;
 };
 
 // Sound Effects Placeholders (ready for audio implementation)

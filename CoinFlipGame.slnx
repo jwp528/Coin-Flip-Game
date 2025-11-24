@@ -1,4 +1,23 @@
 <Solution>
+  <Folder Name="/docs/">
+    <File Path="docs/Coin-Flip-Game.wiki/Architecture.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/ChangeLog.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/coin-effects.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/CoinDictionary.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/CoinEffectsSystem.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/ComboEffectsGuide.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/data-privacy.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/DataPrivacy.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/GameDesign.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/GameDesign_backup.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/gameplay-guide.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/getting-started.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/README.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/Roadmap.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/technical-architecture.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/unlock-system.md" />
+    <File Path="docs/Coin-Flip-Game.wiki/WIKI-SETUP.md" />
+  </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".github/workflows/azure-static-web-apps-zealous-coast-081e41310.yml" />
     <File Path=".gitignore" />

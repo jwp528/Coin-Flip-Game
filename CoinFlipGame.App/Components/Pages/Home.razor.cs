@@ -36,6 +36,7 @@ public partial class Home : ComponentBase, IDisposable
 
     private const string CoinSelectionKey = "coinSelectionPreferences";
     private const string SoundPreferenceKey = "soundEnabled";
+    private const string HapticsEnabledKey = "hapticsEnabled";
     private const string FirstTimeKey = "hasSeenGame";
     private const string ReferrerAppliedKey = "referrerBonusApplied";
     
@@ -55,6 +56,10 @@ public partial class Home : ComponentBase, IDisposable
     // UI state
     private bool showAboutModal = false;
     private bool isSoundEnabled = true;
+    private bool isHapticsEnabled = true;
+    private bool isHapticsSupported = false;
+    private bool showHapticNotSupportedModal = false;
+    private string userAgent = "";
     private bool showFirstTimeHint = false;
     
     // Coin customization state
@@ -114,11 +119,17 @@ public partial class Home : ComponentBase, IDisposable
             // Initialize UnlockProgressService
             await UnlockProgress.InitializeAsync();
             
+            // Check if haptics are supported
+            await CheckHapticSupport();
+            
             // Load coin selection preferences
             await LoadCoinSelectionPreferencesAsync();
             
             // Load sound preference
             await LoadSoundPreferenceAsync();
+            
+            // Load haptics preference
+            await LoadHapticsPreferenceAsync();
             
             // Check if first time user
             await CheckFirstTimeUser();
@@ -187,6 +198,68 @@ public partial class Home : ComponentBase, IDisposable
         await LocalStorage.SetItemAsync(SoundPreferenceKey, isSoundEnabled);
         await JSRuntime.InvokeVoidAsync("setSoundEnabled", isSoundEnabled);
         StateHasChanged();
+    }
+    
+    private async Task CheckHapticSupport()
+    {
+        try
+        {
+            isHapticsSupported = await JSRuntime.InvokeAsync<bool>("isHapticSupported");
+            
+            // Get user agent for reporting
+            userAgent = await JSRuntime.InvokeAsync<string>("eval", "navigator.userAgent");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error checking haptic support");
+            isHapticsSupported = false;
+        }
+    }
+    
+    private async Task LoadHapticsPreferenceAsync()
+    {
+        try
+        {
+            // If haptics are not supported, default to disabled
+            if (!isHapticsSupported)
+            {
+                isHapticsEnabled = false;
+                await JSRuntime.InvokeVoidAsync("setHapticsEnabled", false);
+                return;
+            }
+            
+            var hapticsEnabled = await LocalStorage.GetItemAsync<bool?>(HapticsEnabledKey);
+            isHapticsEnabled = hapticsEnabled ?? true; // Default to enabled if supported
+            
+            // Sync the haptics state with JavaScript
+            await JSRuntime.InvokeVoidAsync("setHapticsEnabled", isHapticsEnabled);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading haptics preference");
+            isHapticsEnabled = isHapticsSupported; // Default to enabled if supported
+        }
+    }
+    
+    private async Task ToggleHaptics()
+    {
+        // If not supported, show modal
+        if (!isHapticsSupported)
+        {
+            showHapticNotSupportedModal = true;
+            StateHasChanged();
+            return;
+        }
+        
+        isHapticsEnabled = !isHapticsEnabled;
+        await LocalStorage.SetItemAsync(HapticsEnabledKey, isHapticsEnabled);
+        await JSRuntime.InvokeVoidAsync("setHapticsEnabled", isHapticsEnabled);
+        StateHasChanged();
+    }
+    
+    private void CloseHapticNotSupportedModal()
+    {
+        showHapticNotSupportedModal = false;
     }
     
     private void OpenAboutModal()
@@ -1151,7 +1224,7 @@ public partial class Home : ComponentBase, IDisposable
     
     /// <summary>
     /// Apply combo enhancement to an effect based on opposite side's combo
-    /// If both sides have combo effects, they cancel each other out
+    /// If both sides have combo, they cancel each other out
     /// </summary>
     private CoinEffect? ApplyComboEnhancement(CoinEffect? effect, CoinEffect? oppositeEffect)
     {
