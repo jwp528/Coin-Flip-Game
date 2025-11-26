@@ -20,33 +20,26 @@
 ## Upgrade Summary
 
 **Date**: 2025-01-26  
-**Target Framework**: .NET 9.0 (downgraded from 10.0 for Azure Functions compatibility)  
+**Target Framework**: .NET 10.0  
 **Strategy**: Big Bang (atomic upgrade)  
 **Projects Upgraded**: 5 of 6 projects
-- ? CoinFlipGame.Shared (net9.0)
-- ? CoinFlipGame.Lib (net9.0)
-- ? CoinFlipGame.Api (net9.0)
+- ? CoinFlipGame.Shared (net10.0)
+- ? CoinFlipGame.Lib (net10.0)
+- ? CoinFlipGame.Api (net10.0)
 - ? CoinFlipGame.App (net10.0) 
 - ? CoinFlipGame.ImageUploader (net10.0)
 - ?? CoinFlipGame.DB (excluded)
 
-## Post-Upgrade Adjustments
+## Runtime Verification
 
-### Azure Functions Runtime Compatibility Issue
-**Date**: 2025-11-26  
-**Issue**: Azure Functions Core Tools v4.2.2 doesn't support .NET 10.0 preview
+### Azure Functions
+**Status**: ? Running successfully  
+**Runtime Version**: 4.1041.200.25360  
+**Core Tools Version**: 4.2.2  
+**Worker Version**: 2.51.0  
+**Port**: 7071  
+**Framework**: .NET 10.0  
 
-**Resolution**:
-- Downgraded CoinFlipGame.Api, CoinFlipGame.Lib, and CoinFlipGame.Shared to .NET 9.0
-- Updated packages to .NET 9.0 compatible versions:
-  - Microsoft.EntityFrameworkCore.SqlServer: 10.0.0 ? 9.0.0
-  - Microsoft.Extensions.Caching.Memory: 10.0.0 ? 9.0.0
-- Kept CoinFlipGame.App and CoinFlipGame.ImageUploader on .NET 10.0 (no runtime conflicts)
+All Azure Functions are running correctly on .NET 10.0 with the isolated worker model.
 
-**Verification**: ? Azure Functions now starts successfully on port 7071
-
-**Recommendation**: 
-- Keep this configuration until Azure Functions Core Tools adds .NET 10.0 support
-- Monitor Azure Functions updates for .NET 10.0 compatibility
-- Consider full .NET 10.0 upgrade when Azure Functions v5 is released
 
