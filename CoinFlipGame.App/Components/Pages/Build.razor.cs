@@ -6,7 +6,7 @@ using Microsoft.JSInterop;
 
 namespace CoinFlipGame.App.Components.Pages;
 
-public partial class BuildABoi
+public partial class Build
 {
     [Inject]
     private CoinService CoinService { get; set; } = default!;

@@ -9,7 +9,7 @@ public class AppVersion
     /// <summary>
     /// Current application version
     /// </summary>
-    public const string Version = "1.5.12";
+    public const string Version = "1.6.0";
     
     /// <summary>
     /// Build timestamp - updated on each build

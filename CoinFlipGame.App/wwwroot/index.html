@@ -345,6 +345,7 @@
     </div>
 
     <!-- Load JavaScript libraries with cache busting -->
+    <script src="js/cachemanager.js?v=1.2.0"></script>
     <script src="js/coinhelpers.js?v=1.2.0"></script>
     <script src="js/coinpreviewmodal.js?v=1.2.0"></script>
     <script src="js/particles.js?v=1.2.0"></script>
@@ -426,20 +427,106 @@
             });
         }
 
-        // Wait for Blazor to start, then hide splash
-        Blazor.start().then(() => {
-            // Give a moment for the first render
-            setTimeout(() => {
-                const splash = document.getElementById('loading-splash');
-                if (splash) {
-                    splash.classList.add('loaded');
-                    // Remove from DOM after transition
-                    setTimeout(() => {
-                        splash.remove();
-                    }, 500);
+        // ERROR BOUNDARY: Handle Blazor startup failures
+        let blazorStartAttempts = 0;
+        const MAX_START_ATTEMPTS = 3;
+        
+        async function startBlazorWithRetry() {
+            try {
+                blazorStartAttempts++;
+                console.log(`[Blazor] Starting Blazor (attempt ${blazorStartAttempts}/${MAX_START_ATTEMPTS})...`);
+                
+                await Blazor.start({
+                    loadBootResource: function (type, name, defaultUri, integrity) {
+                        // Log resource loading for debugging
+                        console.log(`[Blazor] Loading ${type}: ${name}`);
+                        
+                        // Return default URI - let browser handle the request
+                        // The service worker will use network-first for _framework files
+                        return defaultUri;
+                    }
+                });
+                
+                console.log('[Blazor] Started successfully');
+                
+                // Hide splash screen after successful start
+                setTimeout(() => {
+                    const splash = document.getElementById('loading-splash');
+                    if (splash) {
+                        splash.classList.add('loaded');
+                        setTimeout(() => {
+                            splash.remove();
+                        }, 500);
+                    }
+                }, 300);
+                
+            } catch (error) {
+                console.error('[Blazor] Startup error:', error);
+                
+                // Check if it's the specific mono_download_assets error
+                if (error.message && error.message.includes('mono_download_assets')) {
+                    console.error('[Blazor] Detected mono_download_assets error - this is likely a cache corruption issue');
                 }
-            }, 300);
-        });
+                
+                // Retry logic
+                if (blazorStartAttempts < MAX_START_ATTEMPTS) {
+                    console.log(`[Blazor] Retrying in 2 seconds...`);
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    return startBlazorWithRetry();
+                } else {
+                    // All retries failed - show error and offer to clear cache
+                    console.error('[Blazor] All startup attempts failed');
+                    showBootFailureMessage(error);
+                }
+            }
+        }
+        
+        function showBootFailureMessage(error) {
+            const splash = document.getElementById('loading-splash');
+            if (splash) {
+                splash.innerHTML = `
+                    <div class="splash-container" style="max-width: 500px; padding: 20px; text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
+                        <h2 style="color: white; margin-bottom: 20px;">Unable to Start App</h2>
+                        <p style="color: rgba(255,255,255,0.8); margin-bottom: 20px; line-height: 1.6;">
+                            The app failed to load. This is usually caused by cached files from a previous version.
+                        </p>
+                        <button onclick="window.clearCachesAndReload()" 
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                       color: white; 
+                                       border: none; 
+                                       padding: 15px 30px; 
+                                       border-radius: 8px; 
+                                       font-size: 16px; 
+                                       font-weight: 600; 
+                                       cursor: pointer;
+                                       margin: 10px;
+                                       box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                            Clear Cache & Reload
+                        </button>
+                        <button onclick="window.location.reload(true)" 
+                                style="background: rgba(255,255,255,0.1); 
+                                       color: white; 
+                                       border: 2px solid rgba(255,255,255,0.3); 
+                                       padding: 15px 30px; 
+                                       border-radius: 8px; 
+                                       font-size: 16px; 
+                                       font-weight: 600; 
+                                       cursor: pointer;
+                                       margin: 10px;">
+                            Try Again
+                        </button>
+                        <details style="margin-top: 30px; text-align: left; color: rgba(255,255,255,0.6); font-size: 12px;">
+                            <summary style="cursor: pointer; margin-bottom: 10px;">Technical Details</summary>
+                            <pre style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 5px; overflow-x: auto; white-space: pre-wrap;">${error.message || error.toString()}</pre>
+                        </details>
+                    </div>
+                `;
+            }
+        }
+
+        // Start Blazor with error handling
+        startBlazorWithRetry();
 
         // PWA Install Prompt
         let deferredPrompt;
