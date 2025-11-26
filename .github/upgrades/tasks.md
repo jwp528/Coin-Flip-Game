@@ -4,7 +4,7 @@
 
 This tasks list implements the Big Bang Strategy upgrade from .NET 8.0 → .NET 10.0 for the CoinFlipGame solution. Tasks follow the strategy batching rules: prerequisites separated, all project & package updates + compilation fixes combined into a single atomic upgrade task, testing in a separate task, and final commit per plan's commit strategy.
 
-**Progress**: 3/4 tasks complete (75%) ![75%](https://progress-bar.xyz/75)
+**Progress**: 4/4 tasks complete (100%) ![100%](https://progress-bar.xyz/100)
 
 ## Tasks
 
@@ -42,13 +42,13 @@ This tasks list implements the Big Bang Strategy upgrade from .NET 8.0 → .NET 
 
 ---
 
-### [▶] TASK-004: Final commit and tagging of upgrade
+### [✓] TASK-004: Final commit and tagging of upgrade *(Completed: 2025-11-26 15:15)*
 **References**: Plan §Source Control Strategy, Plan §Commit Strategy
 
-- [ ] (1) Commit all upgrade changes per Plan commit strategy with message:  
+- [✓] (1) Commit all upgrade changes per Plan commit strategy with message:  
        `feat(upgrade): atomic .NET 10.0 upgrade for all projects` (**Verify**): commit created and working tree clean.  
-- [ ] (2) Create release tag if applicable per Plan (e.g., `v10.0.0-preview1`) and verify tag presence (**Verify**).  
-- [ ] (3) Document any excluded items or follow-ups (e.g., `CoinFlipGame.DB` conversion deferred) in the upgrade notes referenced from the commit.
+- [✓] (2) Create release tag if applicable per Plan (e.g., `v10.0.0-preview1`) and verify tag presence (**Verify**).  
+- [✓] (3) Document any excluded items or follow-ups (e.g., `CoinFlipGame.DB` conversion deferred) in the upgrade notes referenced from the commit.
 
 ---
 
