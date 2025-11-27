@@ -5,7 +5,7 @@ const urlsToCache = [
   '/index.html',
   '/css/app.css',
   '/css/bootstrap/bootstrap.min.css',
-  '/_framework/blazor.webassembly.js',
+  // Note: Do NOT pre-cache _framework files - let Blazor handle them
   '/js/coinhelpers.js',
   '/js/particles.js',
   '/js/physics.js',
@@ -21,7 +21,12 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME)
       .then(cache => {
         console.log('[ServiceWorker] Caching app shell');
-        return cache.addAll(urlsToCache);
+        // Use addAll with error handling to prevent partial cache
+        return cache.addAll(urlsToCache).catch(err => {
+          console.error('[ServiceWorker] Failed to cache resources:', err);
+          // Continue anyway - don't block installation
+          return Promise.resolve();
+        });
       })
       .catch(err => {
         console.log('[ServiceWorker] Cache failed:', err);
@@ -50,11 +55,55 @@ self.addEventListener('activate', event => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  
   // Skip cross-origin requests
   if (!event.request.url.startsWith(self.location.origin)) {
     return;
   }
 
+  // CRITICAL: Use network-first for _framework files to avoid integrity errors
+  // This prevents mono_download_assets RuntimeError: index out of bounds
+  if (url.pathname.includes('/_framework/') || 
+      url.pathname.includes('blazor.webassembly.js') ||
+      url.pathname.endsWith('.dll') ||
+      url.pathname.endsWith('.wasm') ||
+      url.pathname.endsWith('.pdb') ||
+      url.pathname.endsWith('.dat') ||
+      url.pathname.endsWith('blazor.boot.json')) {
+    // Network-first strategy for Blazor runtime files
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          // Only cache valid responses
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(event.request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(error => {
+          console.error('[ServiceWorker] Network fetch failed for framework file:', url.pathname, error);
+          // Try cache as fallback
+          return caches.match(event.request).then(cachedResponse => {
+            if (cachedResponse) {
+              console.log('[ServiceWorker] Serving cached framework file:', url.pathname);
+              return cachedResponse;
+            }
+            // Return error response
+            return new Response('Network error occurred', {
+              status: 503,
+              statusText: 'Service Unavailable'
+            });
+          });
+        })
+    );
+    return;
+  }
+
+  // Cache-first strategy for app shell resources
   event.respondWith(
     caches.match(event.request)
       .then(response => {
@@ -98,6 +147,16 @@ self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
+  
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
+    event.waitUntil(
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+      })
+    );
+  }
 });
 
 // Background sync for future features
@@ -131,3 +190,4 @@ self.addEventListener('notificationclick', event => {
     clients.openWindow('/')
   );
 });
+
