@@ -66,15 +66,17 @@
                 <div class="coin-thickness" aria-hidden="true">
                     @for (var i = 0; i < CoinEdgeSlices; i++)
                     {
-                        <span class="coin-edge" style="--edge-i: @i; --edge-scale: @GetCoinEdgeScale(i);"></span>
+                        <span class="coin-edge" style="--edge-i: @i; --edge-scale: @GetCoinEdgeScale(i);">
+                            <span class="coin-edge-fill"></span>
+                        </span>
                     }
-                    <span class="coin-rim-highlight coin-rim-front"></span>
-                    <span class="coin-rim-highlight coin-rim-back"></span>
+                    <span class="coin-rim-highlight coin-rim-front"><span class="coin-rim-fill"></span></span>
+                    <span class="coin-rim-highlight coin-rim-back"><span class="coin-rim-fill"></span></span>
                 </div>
                 <div class="coin-back">
                     <div class="coin-art">
                         <div class="coin-inner-ring"></div>
-                        <img src="@backFaceShowing" alt="Tails" draggable="false" />
+                        <img src="@backFaceShowing" alt="" draggable="false" />
                         <div class="landing-flash-sweep"></div>
                     </div>
                     <div class="landing-flash-ring"></div>
@@ -83,7 +85,7 @@
                     <div class="coin-art">
                         <div class="coin-shine" style="@GetShineTransform()"></div>
                         <div class="coin-inner-ring"></div>
-                        <img src="@faceShowing" alt="Heads" draggable="false" />
+                        <img src="@faceShowing" alt="" draggable="false" />
                         <div class="landing-flash-sweep"></div>
                     </div>
                     <div class="landing-flash-ring"></div>
