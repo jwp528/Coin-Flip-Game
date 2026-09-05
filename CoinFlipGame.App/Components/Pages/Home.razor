@@ -78,11 +78,21 @@
              @onclick="HandleClick"
              @onpointerdown="OnPointerDown"
              style="@GetCoinTransform()">
+            <div class="coin-thickness" aria-hidden="true">
+                @for (var i = 0; i < 15; i++)
+                {
+                    <span class="coin-edge" style="--edge-i: @i;"></span>
+                }
+                <span class="coin-rim-highlight"></span>
+            </div>
+            <div class="coin-back" aria-hidden="true"></div>
             <div class="coin-face">
-                <div class="coin-shine" style="@GetShineTransform()"></div>
-                <div class="coin-inner-ring"></div>
-                <img src="@faceShowing" alt="Coin" draggable="false" />
-                <div class="landing-flash-sweep"></div>
+                <div class="coin-art">
+                    <div class="coin-shine" style="@GetShineTransform()"></div>
+                    <div class="coin-inner-ring"></div>
+                    <img src="@faceShowing" alt="Coin" draggable="false" />
+                    <div class="landing-flash-sweep"></div>
+                </div>
                 <div class="landing-flash-ring"></div>
             </div>
         </div>
