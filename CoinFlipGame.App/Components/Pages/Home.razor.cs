@@ -890,13 +890,21 @@ public partial class Home : ComponentBase, IDisposable
             isIosInstallHint = await JSRuntime.InvokeAsync<bool>("pwa.needsIosInstallHint");
             var dismissed = await JSRuntime.InvokeAsync<bool>("pwa.isInstallDismissed");
             showSettingsInstall = !isStandalonePwa;
-            showInstallBanner = false;
-            StateHasChanged();
 
-            if (!isStandalonePwa && !dismissed && (canInstallPwa || isIosInstallHint))
+            if (isStandalonePwa)
+            {
+                showInstallBanner = false;
+            }
+            else if (!dismissed && (canInstallPwa || isIosInstallHint))
             {
                 _ = ShowInstallBannerDelayedAsync();
             }
+            else
+            {
+                showInstallBanner = false;
+            }
+
+            StateHasChanged();
         }
         catch (JSException)
         {
@@ -905,8 +913,8 @@ public partial class Home : ComponentBase, IDisposable
 
     private async Task ShowInstallBannerDelayedAsync()
     {
-        await Task.Delay(8000);
-        if (isStandalonePwa || showInstallBanner)
+        await Task.Delay(1200);
+        if (isStandalonePwa)
             return;
         try
         {
@@ -917,6 +925,10 @@ public partial class Home : ComponentBase, IDisposable
         catch (JSException)
         {
         }
+
+        if (!(canInstallPwa || isIosInstallHint))
+            return;
+
         showInstallBanner = true;
         await InvokeAsync(StateHasChanged);
     }
