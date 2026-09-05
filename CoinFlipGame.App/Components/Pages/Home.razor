@@ -6,7 +6,7 @@
     <title>Coin Flip Game</title>
 </HeadContent>
 
-<div class="coin-flip-game @(showStreakPulse ? $"streak-pulse {streakPulseKind}" : "") @(isStandalonePwa ? "standalone-pwa" : "")" 
+<div class="coin-flip-game @(showStreakPulse ? $"streak-pulse {streakPulseKind}" : "") @(isStandalonePwa ? "standalone-pwa" : "") @(showInstallBanner ? "has-install-sheet" : "")" 
      @onpointermove="OnPointerMove"
      @onpointerup="OnPointerUp"
      @onpointercancel="OnPointerCancel">
@@ -104,17 +104,52 @@
     
     @if (showInstallBanner)
     {
-        <div class="pwa-install-banner" role="dialog" aria-label="Install Coin Flip">
-            <span class="pwa-install-copy">@(isIosInstallHint ? "Add to Home Screen for the full game." : "Install Coin Flip for the full-screen game.")</span>
-            @if (!isIosInstallHint)
-            {
-                <button type="button" class="pwa-install-action" @onclick="PromptPwaInstall">Install</button>
-            }
-            else
-            {
-                <span class="pwa-install-ios">Share → Add to Home Screen</span>
-            }
-            <button type="button" class="pwa-install-dismiss" @onclick="DismissPwaInstall" aria-label="Dismiss">×</button>
+        <div class="pwa-install-sheet" role="dialog" aria-label="Install Coin Flip">
+            <div class="pwa-install-sheet-card">
+                <div class="pwa-install-handle" aria-hidden="true"></div>
+                <button type="button" class="pwa-install-dismiss" @onclick="DismissPwaInstall" aria-label="Dismiss">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="pwa-install-sheet-body">
+                    <img src="/icons/icon-96x96.png" alt="" class="pwa-install-icon" width="56" height="56" />
+                    <div class="pwa-install-text">
+                        @if (isIosInstallHint)
+                        {
+                            <p class="pwa-install-title">Add to Home Screen</p>
+                            <p class="pwa-install-copy">Full-screen play. No Safari chrome.</p>
+                        }
+                        else
+                        {
+                            <p class="pwa-install-title">Install Coin Flip</p>
+                            <p class="pwa-install-copy">Full-screen game on your home screen.</p>
+                        }
+                    </div>
+                </div>
+                @if (isIosInstallHint)
+                {
+                    <ol class="pwa-install-ios-steps">
+                        <li>
+                            Tap
+                            <span class="pwa-ios-share" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 16V4"></path>
+                                    <polyline points="8 8 12 4 16 8"></polyline>
+                                    <path d="M6 12v8h12v-8"></path>
+                                </svg>
+                            </span>
+                            <strong>Share</strong>
+                        </li>
+                        <li>Tap <strong>Add to Home Screen</strong></li>
+                    </ol>
+                }
+                else
+                {
+                    <button type="button" class="pwa-install-action" @onclick="PromptPwaInstall">Install</button>
+                }
+            </div>
         </div>
     }
 </div>

@@ -76,6 +76,11 @@ public partial class Home : ComponentBase, IDisposable
     private bool isStandalonePwa = false;
     private bool isIosInstallHint = false;
     private DotNetObjectReference<Home>? pwaRef;
+    private CancellationTokenSource? _installDelayCts;
+    private bool _installDelayStarted;
+    private bool _installDelayElapsed;
+    private bool _disposed;
+    private const int InstallBannerDelayMs = 2000;
     
     // Coin customization state
     private bool showCoinSelector = false;
@@ -898,13 +903,13 @@ public partial class Home : ComponentBase, IDisposable
             var dismissed = await JSRuntime.InvokeAsync<bool>("pwa.isInstallDismissed");
             showSettingsInstall = !isStandalonePwa;
 
-            if (isStandalonePwa)
+            if (isStandalonePwa || dismissed)
             {
                 showInstallBanner = false;
             }
-            else if (!dismissed && (canInstallPwa || isIosInstallHint))
+            else if (canInstallPwa || isIosInstallHint)
             {
-                _ = ShowInstallBannerDelayedAsync();
+                ScheduleInstallBanner();
             }
             else
             {
@@ -918,16 +923,56 @@ public partial class Home : ComponentBase, IDisposable
         }
     }
 
-    private async Task ShowInstallBannerDelayedAsync()
+    private void ScheduleInstallBanner()
     {
-        await Task.Delay(1200);
-        if (isStandalonePwa)
+        if (_disposed || isStandalonePwa)
             return;
+
+        if (_installDelayElapsed)
+        {
+            _ = TryShowInstallBannerAsync();
+            return;
+        }
+
+        if (_installDelayStarted)
+            return;
+
+        _installDelayStarted = true;
+        _installDelayCts = new CancellationTokenSource();
+        _ = ShowInstallBannerDelayedAsync(_installDelayCts.Token);
+    }
+
+    private async Task ShowInstallBannerDelayedAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(InstallBannerDelayMs, token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        _installDelayElapsed = true;
+        await TryShowInstallBannerAsync();
+    }
+
+    private async Task TryShowInstallBannerAsync()
+    {
+        if (_disposed || isStandalonePwa || !_installDelayElapsed)
+        {
+            return;
+        }
+
         try
         {
             var dismissed = await JSRuntime.InvokeAsync<bool>("pwa.isInstallDismissed");
             if (dismissed)
+            {
+                showInstallBanner = false;
+                await InvokeAsync(StateHasChanged);
                 return;
+            }
         }
         catch (JSException)
         {
@@ -943,22 +988,14 @@ public partial class Home : ComponentBase, IDisposable
     [JSInvokable]
     public Task OnPwaInstallAvailable()
     {
-        canInstallPwa = true;
-        showSettingsInstall = !isStandalonePwa;
-        _ = InvokeAsync(async () =>
+        return InvokeAsync(() =>
         {
-            try
-            {
-                var dismissed = await JSRuntime.InvokeAsync<bool>("pwa.isInstallDismissed");
-                showInstallBanner = !isStandalonePwa && !dismissed;
-            }
-            catch (JSException)
-            {
-                showInstallBanner = !isStandalonePwa;
-            }
+            canInstallPwa = true;
+            showSettingsInstall = !isStandalonePwa;
+            if (!isStandalonePwa)
+                ScheduleInstallBanner();
             StateHasChanged();
         });
-        return Task.CompletedTask;
     }
 
     [JSInvokable]
@@ -978,6 +1015,9 @@ public partial class Home : ComponentBase, IDisposable
         {
             if (isIosInstallHint && !canInstallPwa)
             {
+                showSettingsModal = false;
+                showInstallBanner = true;
+                StateHasChanged();
                 return;
             }
 
@@ -1865,6 +1905,11 @@ public partial class Home : ComponentBase, IDisposable
     {
         try
         {
+            _disposed = true;
+            _installDelayCts?.Cancel();
+            _installDelayCts?.Dispose();
+            _installDelayCts = null;
+
             Account.Changed -= OnAccountChanged;
             UnlockProgress.AchievementsUnlocked -= OnAchievementsUnlocked;
 
