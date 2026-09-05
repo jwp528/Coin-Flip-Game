@@ -35,18 +35,20 @@
                         </div>
                         <div class="preview-coin-back">
                             <div class="preview-coin-art">
+                                <div class="preview-coin-plate" aria-hidden="true"></div>
                                 @if (CoinImage != null)
                                 {
-                                    <img src="@CoinImage.Path" alt="" draggable="false" />
+                                    <img class="preview-coin-face-img" src="@CoinImage.Path" alt="" draggable="false" />
                                 }
                             </div>
                         </div>
                         <div class="preview-coin-face">
                             <div class="preview-coin-art">
+                                <div class="preview-coin-plate" aria-hidden="true"></div>
                                 <div class="preview-coin-shine" style="@GetShineTransform()"></div>
                                 @if (CoinImage != null)
                                 {
-                                    <img src="@CoinImage.Path" alt="" draggable="false" />
+                                    <img class="preview-coin-face-img" src="@CoinImage.Path" alt="" draggable="false" />
                                 }
                             </div>
                         </div>
