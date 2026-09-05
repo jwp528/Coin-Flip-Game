@@ -268,22 +268,33 @@
 }
 
 .coin-art {
+    /* Untransformed clip host. Do not paint gold or mask here — Blink
+       mask-image + isolation on this layer hid .coin-face-img and left a blank disc. */
     position: absolute;
     inset: 0;
     border-radius: 50%;
     overflow: hidden;
     clip-path: circle(50%);
     -webkit-clip-path: circle(50%);
-    -webkit-mask-image: radial-gradient(circle closest-side, #000 99.6%, transparent 100%);
-    mask-image: radial-gradient(circle closest-side, #000 99.6%, transparent 100%);
-    isolation: isolate;
     font-size: 0;
     line-height: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+}
+
+.coin-plate {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    box-sizing: border-box;
+    border-radius: 50%;
     background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
     border: 2px solid #e6c200;
     box-shadow:
         inset 0 2px 4px rgba(255, 255, 255, 0.6),
         inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
 }
 
 .coin-thickness {
@@ -309,8 +320,6 @@
     overflow: hidden;
     clip-path: circle(50%);
     -webkit-clip-path: circle(50%);
-    -webkit-mask-image: radial-gradient(circle closest-side, #000 99.6%, transparent 100%);
-    mask-image: radial-gradient(circle closest-side, #000 99.6%, transparent 100%);
     background:
         radial-gradient(circle at 28% 22%, rgba(255, 250, 230, 0.42) 0%, transparent 36%),
         conic-gradient(from 198deg,
@@ -358,6 +367,7 @@
     position: absolute;
     inset: 0;
     border-radius: 50%;
+    overflow: hidden;
     clip-path: circle(50%);
     -webkit-clip-path: circle(50%);
     background: transparent;
@@ -420,18 +430,17 @@
     animation: shineFlipWeighted 0.6s cubic-bezier(0.33, 0.0, 0.2, 1) forwards;
 }
 
-.coin-face img,
-.coin-back img {
+.coin-face-img {
+    position: relative;
+    z-index: 1;
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: contain;
     border-radius: 50%;
-    display: block;
     user-select: none;
     -webkit-user-drag: none;
     pointer-events: none;
-    position: relative;
-    z-index: 1;
 }
 
 /* Landing flash — ring sits outside the art clip so it can expand */

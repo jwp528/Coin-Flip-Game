@@ -5,8 +5,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(12px);
+    background: transparent;
     z-index: 1000;
     display: flex;
     justify-content: center;
@@ -16,12 +15,26 @@
     transition: opacity 0.3s ease;
 }
 
+.coin-selector-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    pointer-events: none;
+}
+
 .coin-selector-overlay.visible {
     opacity: 1;
     pointer-events: all;
 }
 
 .coin-selector-modal {
+    position: relative;
+    z-index: 1;
+    isolation: isolate;
     background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(51, 65, 85, 0.98) 100%);
     border-radius: 24px;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -35,7 +48,6 @@
     flex-direction: column;
     transform: scale(0.9);
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    position: relative;
 }
 
 /* Plaid background for modal */
@@ -186,6 +198,8 @@
 
 .coin-option-image-wrapper {
     position: relative;
+    z-index: 1;
+    isolation: isolate;
     width: 100%;
     aspect-ratio: 1;
     border-radius: 16px;
@@ -206,10 +220,16 @@
 }
 
 .coin-option-image {
+    position: relative;
+    z-index: 1;
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: contain;
     padding: 12px;
+    opacity: 1;
+    visibility: visible;
+    transform: translateZ(0);
 }
 
 .coin-option-overlay {
