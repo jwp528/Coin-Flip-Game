@@ -2,8 +2,12 @@
     position: fixed;
     top: 0;
     left: 0;
+    width: 100%;
     width: 100vw;
+    height: 100%;
     height: 100vh;
+    height: 100dvh;
+    height: 100svh;
     background: rgba(0, 0, 0, 0.72);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -14,6 +18,8 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    box-sizing: border-box;
 }
 
 .settings-modal-overlay.visible {
@@ -28,7 +34,13 @@
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
     max-width: 420px;
     width: 90%;
+    max-height: 90vh;
+    max-height: 90dvh;
+    max-height: 90svh;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     transform: scale(0.96);
     transition: transform 0.25s ease;
 }
@@ -69,7 +81,13 @@
 }
 
 .settings-modal-body {
-    padding: 28px 24px 24px;
+    padding: 28px 24px calc(24px + env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    min-height: 0;
+    flex: 1 1 auto;
 }
 
 .settings-header {
@@ -309,6 +327,7 @@
 @media (max-width: 768px) {
     .settings-modal-overlay {
         align-items: flex-end;
+        padding: env(safe-area-inset-top, 0px) 0 0 0;
     }
 
     .settings-modal-content {
@@ -316,18 +335,32 @@
         max-width: 100%;
         border-radius: 24px 24px 0 0;
         transform: translateY(24px);
+        max-height: calc(100vh - env(safe-area-inset-top, 0px));
+        max-height: calc(100dvh - env(safe-area-inset-top, 0px));
+        max-height: calc(100svh - env(safe-area-inset-top, 0px));
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        box-sizing: border-box;
     }
 
     .settings-modal-overlay.visible .settings-modal-content {
         transform: translateY(0);
     }
 
+    .settings-modal-close {
+        top: 12px;
+        right: calc(12px + env(safe-area-inset-right, 0px));
+    }
+
     .settings-modal-body {
-        padding: 24px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+        padding: 24px 20px 28px;
     }
 
     .settings-toggle-row {
         min-height: 68px;
+    }
+
+    .settings-about-btn {
+        margin-bottom: 4px;
     }
 }
 

@@ -1476,6 +1476,14 @@
     bottom: calc(18px + env(safe-area-inset-bottom, 0px));
 }
 
+.coin-flip-game:not(.standalone-pwa) .pwa-install-banner {
+    /* Sit above mobile browser chrome / Android nav that is not always in the safe-area. */
+    bottom: max(
+        calc(18px + env(safe-area-inset-bottom, 0px)),
+        calc(18px + env(safe-area-inset-bottom, 0px) + 100vh - 100svh)
+    );
+}
+
 .pwa-install-copy,
 .pwa-install-ios {
     font-size: 0.82rem;
@@ -1517,6 +1525,14 @@
 @media (max-width: 768px) {
     .pwa-install-banner {
         bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+        flex-wrap: nowrap;
+    }
+
+    .coin-flip-game:not(.standalone-pwa) .pwa-install-banner {
+        bottom: max(
+            calc(18px + env(safe-area-inset-bottom, 0px)),
+            calc(18px + env(safe-area-inset-bottom, 0px) + 100vh - 100svh)
+        );
     }
 
     .pwa-install-copy {
