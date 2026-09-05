@@ -414,6 +414,17 @@
 .tails-counter {
     top: calc(16px + env(safe-area-inset-top, 0px));
     right: calc(16px + env(safe-area-inset-right, 0px));
+    padding: 6px 6px 6px 14px;
+}
+
+.tails-counter .counter-content {
+    flex-direction: row-reverse;
+}
+
+.tails-counter .counter-info {
+    align-items: flex-end;
+    padding-right: 0;
+    padding-left: 4px;
 }
 
 .counter-content {
@@ -1145,6 +1156,10 @@
 
     .stat-counter {
         padding: 4px 10px 4px 4px;
+    }
+
+    .tails-counter {
+        padding: 4px 4px 4px 10px;
     }
 
     .counter-content {

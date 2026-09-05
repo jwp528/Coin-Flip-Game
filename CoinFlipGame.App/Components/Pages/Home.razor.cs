@@ -59,6 +59,7 @@ public partial class Home : ComponentBase, IDisposable
     
     // UI state
     private bool showAboutModal = false;
+    private bool showSettingsModal = false;
     private bool isSoundEnabled = true;
     private bool isHapticsEnabled = true;
     private bool isHapticsSupported = false;
@@ -277,6 +278,22 @@ public partial class Home : ComponentBase, IDisposable
     
     private void OpenAboutModal()
     {
+        showAboutModal = true;
+    }
+
+    private void OpenSettingsModal()
+    {
+        showSettingsModal = true;
+    }
+
+    private void CloseSettingsModal()
+    {
+        showSettingsModal = false;
+    }
+
+    private void OpenAboutFromSettings()
+    {
+        showSettingsModal = false;
         showAboutModal = true;
     }
 
