@@ -1,5 +1,5 @@
 // Coin Flip Game - Service Worker (production)
-const CACHE_NAME = 'coin-flip-game-v1.5.19';
+const CACHE_NAME = 'coin-flip-game-v1.5.20';
 const urlsToCache = [
   '/',
   '/index.html',
