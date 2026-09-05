@@ -1,0 +1,87 @@
+@page "/auth/callback"
+@using CoinFlipGame.Shared.Dtos
+@inject ExternalSignInService ExternalAuth
+@inject CoinFlipApiClient Api
+@inject AccountService Account
+@inject UnlockProgressService UnlockProgress
+@inject NavigationManager Nav
+
+<PageTitle>Signing in · Coin Flip Game</PageTitle>
+
+<div class="auth-callback">
+    <section class="auth-callback-card">
+        <h1>@(_mode == "link" ? "Link your account" : "Finish signing in")</h1>
+        @if (_loading)
+        {
+            <p>Checking your account…</p>
+        }
+        else if (_error is not null)
+        {
+            <p class="auth-callback-error" role="alert">@_error</p>
+            <a class="auth-callback-home" href="/">Back to the game</a>
+        }
+        else if (_mode == "link")
+        {
+            <p>Connect this Google or Apple sign-in to your Coin Flip account.</p>
+            <button class="auth-callback-button" disabled="@_busy" @onclick="LinkAsync">Link account</button>
+        }
+    </section>
+</div>
+
+@code {
+    private string? _token;
+    private string? _mode;
+    private string? _error;
+    private bool _loading = true;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UnlockProgress.InitializeAsync();
+        var callback = await ExternalAuth.CompleteAsync();
+        _loading = false;
+        if (!callback.Success || callback.AccessToken is null)
+        {
+            _error = callback.Error;
+            return;
+        }
+
+        _token = callback.AccessToken;
+        _mode = callback.Mode;
+        if (_mode == "link")
+        {
+            await Account.InitializeAsync();
+            if (!Account.IsSignedIn)
+                _error = "Sign in first, then link another identity.";
+            return;
+        }
+
+        var result = await Api.ExchangeExternalLoginAsync(new ExternalLoginRequest(_token));
+        if (result.Success)
+        {
+            await Account.ApplyLoginAsync(result);
+            await UnlockProgress.OnSignedInAsync();
+            Nav.NavigateTo("/");
+            return;
+        }
+
+        _error = result.Error ?? "Sign-in could not be completed.";
+    }
+
+    private async Task LinkAsync()
+    {
+        if (_token is null || _busy)
+            return;
+
+        _busy = true;
+        var result = await Api.LinkExternalIdentityAsync(new LinkExternalIdentityRequest(_token));
+        if (result.Success)
+        {
+            Nav.NavigateTo("/");
+            return;
+        }
+
+        _error = result.Error ?? "This identity could not be linked.";
+        _busy = false;
+    }
+}

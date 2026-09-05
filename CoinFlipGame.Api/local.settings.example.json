@@ -1,0 +1,18 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "TablesStorageConnectionString": "UseDevelopmentStorage=true",
+    "AzureStorage:ConnectionString": "",
+    "AzureStorage:CoinImagesContainer": "coin-images",
+    "ExternalAuth:Enabled": "true",
+    "ExternalAuth:Authority": "https://cribbagetrainer.ciamlogin.com/53eb8900-6f26-44d7-97ea-90d0f5622cbc/v2.0",
+    "ExternalAuth:Audience": "09d7c329-691a-4f7d-8e20-bb3973a948f5"
+  },
+  "Host": {
+    "LocalHttpPort": 7071,
+    "CORS": "*",
+    "CORSCredentials": false
+  }
+}

@@ -124,19 +124,23 @@ Special abilities that change gameplay:
 - **C#** for game logic and unlock system
 - **CSS3** animations (3D coin physics)
 - **JavaScript** for particle effects, audio, and haptics
-- **Blazored.LocalStorage** for progress persistence
+- **Blazored.LocalStorage** for guest/offline progress
+- **Azure Table Storage** for signed-in accounts and cloud progress
+- **Entra External ID (CIAM)** for Google/Apple sign-in (same tenant as Cribbage Trainer)
 
 **Key Features:**
 - Progressive Web App (install to home screen)
 - Offline support via Service Worker
 - Responsive design (desktop + mobile)
 - Haptic feedback on supported devices
+- Optional cloud save after Google/Apple sign-in
 
 **Architecture Highlights:**
-- `UnlockProgressService`: Tracks stats, checks unlock conditions
+- `UnlockProgressService`: Tracks stats, checks unlock conditions, dual-mode cache (guest local-only / signed-in read-through + write-behind)
 - `CoinService`: Manages coin types and metadata
 - Component-based UI with real-time state management
 - Modular coin type system for easy expansion
+- Coin catalog/images: blob storage (`CoinStorageService`). Player progress is **not** SQL.
 
 ---
 
@@ -177,7 +181,95 @@ dotnet restore
 dotnet run
 ```
 
-Open `https://localhost:5001` in your browser.
+Open `https://localhost:5003` in your browser.
+
+For cloud accounts locally, also run Azurite and the Functions API (see below).
+
+---
+
+## Cloud accounts and Azure Tables
+
+Player progress no longer uses SQL Server, EF Core, or `CoinFlipGame.DB`. That project is retired for the Api runtime. Coins remain static files / blob images; only **accounts and progress** live in Tables.
+
+### Shared identity with Cribbage Trainer
+
+Use the **same Entra External ID / CIAM app** Josh already uses for Cribbage so one Google or Apple sign-in maps to a stable provider subject in both games. Coin Flip keeps its **own** storage account and `AccountId` rows; identity is shared via the same JWT `iss` + `sub`, not by sharing Cribbage tables.
+
+Setting names (do not commit secrets or connection strings):
+
+| App | Setting | Purpose |
+|-----|---------|---------|
+| Client | `ExternalAuth:Enabled` | Feature flag |
+| Client | `ExternalAuth:ClientId` | SPA / public client id |
+| Client | `ExternalAuth:AuthorizationEndpoint` | CIAM authorize URL |
+| Client | `ExternalAuth:TokenEndpoint` | CIAM token URL |
+| Client | `ExternalAuth:Scope` | `openid profile api://<audience>/access_as_user` |
+| Client | `ApiSettings:BaseUrl` | Empty in SWA (same origin `/api`); `http://localhost:7071` locally |
+| Api | `ExternalAuth:Enabled` | Feature flag |
+| Api | `ExternalAuth:Authority` | CIAM issuer, e.g. `https://cribbagetrainer.ciamlogin.com/<tenant>/v2.0` |
+| Api | `ExternalAuth:Audience` | API app id / audience |
+| Api | `TablesStorageConnectionString` | Dedicated Coin Flip Tables account (not Cribbage storage) |
+| Api | `AzureStorage:ConnectionString` | Blob images only (keep separate from Tables) |
+
+Register Coin Flip redirect URIs on that existing SPA app, for example `https://localhost:5003/auth/callback` and `https://coin.joshparsons.ca/auth/callback`.
+
+### Tables
+
+Dedicated Hot LRS StorageV2 account (do **not** put Coin Flip player data in the Cribbage Trainer storage account):
+
+| Table | PartitionKey | RowKey |
+|-------|--------------|--------|
+| `PlayerAccounts` | AccountId | `Profile` |
+| `ExternalIdentities` | SHA256(issuer) | SHA256(subject) |
+| `PlayerSessions` | token id | `Session` |
+| `PlayerProgress` | AccountId | `Progress` |
+
+Api routes:
+
+- `POST /api/player/external/login`
+- `POST /api/player/external/link`
+- `GET /api/player/external/identities`
+- `GET /api/player/me`
+- `POST /api/player/logout`
+- `GET /api/player/progress`
+- `PUT /api/player/progress` (server merge: max counters/streaks, union unlocks, earliest unlock timestamps, max consecutive counts)
+
+### Caching / merge
+
+- **Guest:** LocalStorage only. Zero Table operations.
+- **Signed in:** memory + LocalStorage read-through cache. Tables writes are write-behind: unlock events, flip milestones, tab hide, sign-out, and a 45s throttle. Individual flips do not write Tables.
+- **First successful login:** load cloud progress, merge with local (max/union, never wipe harder progress), save merged to LocalStorage and Tables.
+
+### Local (Azurite)
+
+`local.settings.json` is gitignored (`CopyToPublishDirectory` Never). Copy the example:
+
+```bash
+copy CoinFlipGame.Api\local.settings.example.json CoinFlipGame.Api\local.settings.json
+```
+
+`TablesStorageConnectionString` defaults to `UseDevelopmentStorage=true`. Start Azurite, then the Api:
+
+```bash
+npx azurite --silent --location .azurite
+dotnet run --project CoinFlipGame.Api
+dotnet run --project CoinFlipGame.App
+```
+
+### Azure (Josh / Azure Bot)
+
+Do not put player data in the Cribbage storage account. Create a separate account such as `jparsonscoinflip` or `coinflipgame*` in an appropriate resource group:
+
+```bash
+az storage account create --name jparsonscoinflip --resource-group <rg> --location canadacentral --sku Standard_LRS --kind StorageV2 --access-tier Hot
+
+az storage table create --account-name jparsonscoinflip --name PlayerAccounts
+az storage table create --account-name jparsonscoinflip --name ExternalIdentities
+az storage table create --account-name jparsonscoinflip --name PlayerSessions
+az storage table create --account-name jparsonscoinflip --name PlayerProgress
+```
+
+Set the Functions / SWA app setting `TablesStorageConnectionString` to that account's connection string. Keep blob `AzureStorage:ConnectionString` as-is. Also set `ExternalAuth:Enabled`, `ExternalAuth:Authority`, and `ExternalAuth:Audience` to the same public CIAM identifiers used by Cribbage.
 
 ---
 

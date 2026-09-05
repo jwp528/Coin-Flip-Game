@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     
     <!-- Primary Meta Tags -->
     <title>Coin Flip Game - Unlock Rare Coins & Super Flips | Free Online Game</title>
@@ -38,10 +38,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Coin Flip" />
     <meta name="application-name" content="Coin Flip Game" />
+    <meta name="format-detection" content="telephone=no" />
     <meta name="msapplication-TileColor" content="#0f172a" />
     <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
     <meta name="msapplication-config" content="/browserconfig.xml" />
-    <meta name="theme-color" content="#667eea" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a" />
     
     <!-- Apple Touch Icons -->
     <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png" />
@@ -69,10 +71,10 @@
     <base href="/" />
     
     <!-- Stylesheets with cache busting -->
-    <link rel="stylesheet" href="bootstrap/bootstrap.min.css?v=1.2.0" />
+    <link rel="stylesheet" href="bootstrap/bootstrap.min.css?v=1.5.13" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="app.css?v=1.2.0" />
-    <link rel="stylesheet" href="CoinFlipGame.App.styles.css?v=1.2.0" />
+    <link rel="stylesheet" href="app.css?v=1.5.13" />
+    <link rel="stylesheet" href="CoinFlipGame.App.styles.css?v=1.5.13" />
     
     <!-- Structured Data (JSON-LD) for SEO -->
     <script type="application/ld+json">
@@ -330,7 +332,7 @@
             </div>
             <h1 class="splash-title">COIN FLIP</h1>
             <div class="splash-loading">
-                LOADING<span class="splash-dots"></span>
+                <span id="splash-status">LOADING</span><span class="splash-dots"></span>
             </div>
         </div>
     </div>
@@ -345,11 +347,12 @@
     </div>
 
     <!-- Load JavaScript libraries with cache busting -->
-    <script src="js/coinhelpers.js?v=1.2.0"></script>
-    <script src="js/coinpreviewmodal.js?v=1.2.0"></script>
-    <script src="js/particles.js?v=1.2.0"></script>
-    <script src="js/physics.js?v=1.2.0"></script>
-    <script src="js/audio.js?v=1.2.0"></script>
+    <script src="js/coinhelpers.js?v=1.5.13"></script>
+    <script src="js/coinpreviewmodal.js?v=1.5.13"></script>
+    <script src="js/particles.js?v=1.5.13"></script>
+    <script src="js/physics.js?v=1.5.13"></script>
+    <script src="js/audio.js?v=1.5.13"></script>
+    <script src="js/pwa.js?v=1.5.14"></script>
     <script src="_framework/blazor.webassembly.js" autostart="false"></script>
 
     <script>
@@ -380,80 +383,35 @@
             }
         };
         
-        // Check for service worker updates
-        window.checkForServiceWorkerUpdate = async function() {
-            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                try {
-                    const registration = await navigator.serviceWorker.getRegistration();
-                    if (registration) {
-                        await registration.update();
-                    }
-                } catch (err) {
-                    console.error('Error checking for updates:', err);
-                }
-            }
-        };
-        
-        // Register Service Worker for PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js?v=1.2.0')
-                    .then(registration => {
-                        console.log('ServiceWorker registered:', registration.scope);
-                        
-                        // Check for updates periodically
-                        setInterval(() => {
-                            registration.update();
-                        }, 60000); // Check every minute
-                        
-                        // Listen for updates
-                        registration.addEventListener('updatefound', () => {
-                            const newWorker = registration.installing;
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    console.log('New version available! Please refresh.');
-                                    // Notify user of update
-                                    if (window.DotNet) {
-                                        window.DotNet.invokeMethodAsync('CoinFlipGame.App', 'OnUpdateAvailable');
-                                    }
-                                }
-                            });
-                        });
-                    })
-                    .catch(err => {
-                        console.log('ServiceWorker registration failed:', err);
-                    });
-            });
+        function hideSplash() {
+            const splash = document.getElementById('loading-splash');
+            if (!splash) return;
+            splash.classList.add('loaded');
+            setTimeout(() => splash.remove(), 500);
         }
 
-        // Wait for Blazor to start, then hide splash
-        Blazor.start().then(() => {
-            // Give a moment for the first render
-            setTimeout(() => {
-                const splash = document.getElementById('loading-splash');
-                if (splash) {
-                    splash.classList.add('loaded');
-                    // Remove from DOM after transition
-                    setTimeout(() => {
-                        splash.remove();
-                    }, 500);
+        function setSplashStatus(text) {
+            const status = document.getElementById('splash-status');
+            if (status) status.textContent = text;
+        }
+
+        (async function boot() {
+            if (window.pwa && typeof window.pwa.gateOnLaunch === 'function') {
+                const result = await window.pwa.gateOnLaunch({
+                    timeoutMs: 4000,
+                    onUpdating: function () {
+                        setSplashStatus('UPDATING');
+                    }
+                });
+                if (result === 'reloading') {
+                    setSplashStatus('UPDATING');
+                    return;
                 }
-            }, 300);
-        });
+            }
 
-        // PWA Install Prompt
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            // Show install button or prompt
-            console.log('PWA install prompt available');
-        });
-
-        window.addEventListener('appinstalled', () => {
-            console.log('PWA was installed');
-            deferredPrompt = null;
-        });
+            await Blazor.start();
+            setTimeout(hideSplash, 300);
+        })();
     </script>
 </body>
 

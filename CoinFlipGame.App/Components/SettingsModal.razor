@@ -1,0 +1,116 @@
+<div class="settings-modal-overlay @(IsVisible ? "visible" : "")" @onclick="OnClose">
+    <div class="settings-modal-content" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <button class="settings-modal-close" @onclick="OnClose" title="Close" aria-label="Close settings">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+
+        <div class="settings-modal-body">
+            <div class="settings-header">
+                <div class="settings-header-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </div>
+                <h2 id="settings-title" class="settings-title">Settings</h2>
+            </div>
+
+            <div class="settings-toggles">
+                <button type="button"
+                        class="settings-toggle-row @(IsSoundEnabled ? "is-on" : "is-off")"
+                        @onclick="HandleToggleSound"
+                        title="@(IsSoundEnabled ? "Sound On" : "Sound Off")">
+                    <div class="settings-toggle-icon">
+                        @if (IsSoundEnabled)
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                            </svg>
+                        }
+                        else
+                        {
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                <line x1="23" y1="9" x2="17" y2="15"></line>
+                                <line x1="17" y1="9" x2="23" y2="15"></line>
+                            </svg>
+                        }
+                    </div>
+                    <div class="settings-toggle-text">
+                        <span class="settings-toggle-label">Sound</span>
+                        <span class="settings-toggle-hint">@(IsSoundEnabled ? "On" : "Off")</span>
+                    </div>
+                    <div class="settings-switch @(IsSoundEnabled ? "is-on" : "")" aria-hidden="true">
+                        <span class="settings-switch-knob"></span>
+                    </div>
+                </button>
+
+                <button type="button"
+                        class="settings-toggle-row @(IsHapticsSupported && IsHapticsEnabled ? "is-on" : "is-off") @(!IsHapticsSupported ? "is-unavailable" : "")"
+                        @onclick="HandleToggleHaptics"
+                        title="@(IsHapticsSupported ? (IsHapticsEnabled ? "Vibration On" : "Vibration Off") : "Vibration unavailable")"
+                        aria-disabled="@(!IsHapticsSupported)">
+                    <div class="settings-toggle-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M0 15h2V9H0v6zm3 2h2V7H3v10zm19-8v6h2V9h-2zm-3 8h2V7h-2v10zM16.5 3h-9C6.67 3 6 3.67 6 4.5v15c0 .83.67 1.5 1.5 1.5h9c.83 0 1.5-.67 1.5-1.5v-15c0-.83-.67-1.5-1.5-1.5zM16 19H8V5h8v14z"/>
+                        </svg>
+                    </div>
+                    <div class="settings-toggle-text">
+                        <span class="settings-toggle-label">Vibration</span>
+                        <span class="settings-toggle-hint">
+                            @if (!IsHapticsSupported)
+                            {
+                                <text>Unavailable</text>
+                            }
+                            else
+                            {
+                                @(IsHapticsEnabled ? "On" : "Off")
+                            }
+                        </span>
+                    </div>
+                    <div class="settings-switch @(IsHapticsEnabled && IsHapticsSupported ? "is-on" : "")" aria-hidden="true">
+                        <span class="settings-switch-knob"></span>
+                    </div>
+                </button>
+
+                @if (ShowInstallApp)
+                {
+                    <button type="button"
+                            class="settings-toggle-row @(CanInstallApp ? "is-on" : "is-off")"
+                            @onclick="HandleInstallApp"
+                            title="@InstallAppLabel">
+                        <div class="settings-toggle-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 3v12"></path>
+                                <path d="M8 11l4 4 4-4"></path>
+                                <rect x="4" y="17" width="16" height="4" rx="1"></rect>
+                            </svg>
+                        </div>
+                        <div class="settings-toggle-text">
+                            <span class="settings-toggle-label">@InstallAppLabel</span>
+                            <span class="settings-toggle-hint">@InstallAppHint</span>
+                        </div>
+                    </button>
+                }
+            </div>
+
+            @if (showUnsupportedToast)
+            {
+                <div class="settings-snackbar" role="status">Vibration isn't available on this device</div>
+            }
+
+            <button type="button" class="settings-about-btn" @onclick="HandleOpenAbout">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span>About this game</span>
+            </button>
+        </div>
+    </div>
+</div>

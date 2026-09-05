@@ -5,6 +5,7 @@ using CoinFlipGame.App.Services;
 using CoinFlipGame.App.Models;
 using CoinFlipGame.App.Models.Unlocks;
 using Blazored.LocalStorage;
+using System.Globalization;
 
 namespace CoinFlipGame.App.Components.Pages;
 
@@ -24,6 +25,9 @@ public partial class Home : ComponentBase, IDisposable
     
     [Inject]
     private UnlockProgressService UnlockProgress { get; set; } = default!;
+
+    [Inject]
+    private AccountService Account { get; set; } = default!;
     
     [Inject]
     private ILocalStorageService LocalStorage { get; set; } = default!;
@@ -39,6 +43,7 @@ public partial class Home : ComponentBase, IDisposable
     private const string HapticsEnabledKey = "hapticsEnabled";
     private const string FirstTimeKey = "hasSeenGame";
     private const string ReferrerAppliedKey = "referrerBonusApplied";
+    private const int CoinEdgeSlices = 33;
     
     private ElementReference coinElement;
     private bool isFlipping = false;
@@ -49,18 +54,28 @@ public partial class Home : ComponentBase, IDisposable
     private int tailsCount = 0;
     private int currentStreak = 0;
     private int longestStreak = 0;
+    private bool comboBoosted = false;
     private string lastResult = "";
     private bool showAchievement = false;
     private string achievementText = "";
     
     // UI state
     private bool showAboutModal = false;
+    private bool showSettingsModal = false;
     private bool isSoundEnabled = true;
     private bool isHapticsEnabled = true;
     private bool isHapticsSupported = false;
     private bool showHapticNotSupportedModal = false;
     private string userAgent = "";
     private bool showFirstTimeHint = false;
+    private bool showStreakPulse = false;
+    private string streakPulseKind = "";
+    private bool showInstallBanner = false;
+    private bool showSettingsInstall = false;
+    private bool canInstallPwa = false;
+    private bool isStandalonePwa = false;
+    private bool isIosInstallHint = false;
+    private DotNetObjectReference<Home>? pwaRef;
     
     // Coin customization state
     private bool showCoinSelector = false;
@@ -84,6 +99,12 @@ public partial class Home : ComponentBase, IDisposable
     private bool showUnlockAchievement = false;
     private CoinImage? currentlyUnlockedCoin = null;
     private Queue<CoinImage> pendingUnlockAchievements = new Queue<CoinImage>();
+    private bool showGameAchievement = false;
+    private GameAchievement? currentlyUnlockedAchievement = null;
+    private readonly Queue<GameAchievement> pendingGameAchievements = new();
+    private bool _showingUnlockToasts;
+    private bool _showingGameAchievements;
+    private int _toastSlot;
     
     // Coin preview modal state
     private bool showCoinPreview = false;
@@ -118,6 +139,16 @@ public partial class Home : ComponentBase, IDisposable
             
             // Initialize UnlockProgressService
             await UnlockProgress.InitializeAsync();
+            UnlockProgress.AchievementsUnlocked += OnAchievementsUnlocked;
+            await Account.InitializeAsync();
+            if (Account.IsSignedIn)
+            {
+                await UnlockProgress.OnSignedInAsync();
+                headsCount = UnlockProgress.GetHeadsFlips();
+                tailsCount = UnlockProgress.GetTailsFlips();
+                longestStreak = UnlockProgress.GetLongestStreak();
+            }
+            Account.Changed += OnAccountChanged;
             
             // Check if haptics are supported
             await CheckHapticSupport();
@@ -142,6 +173,8 @@ public partial class Home : ComponentBase, IDisposable
             
             // Set initial face to heads
             faceShowing = selectedHeadsImage;
+
+            await InitPwaAsync();
             
             // Load user progress stats into local state
             headsCount = UnlockProgress.GetHeadsFlips();
@@ -265,6 +298,27 @@ public partial class Home : ComponentBase, IDisposable
     private void OpenAboutModal()
     {
         showAboutModal = true;
+    }
+
+    private void OpenSettingsModal()
+    {
+        showSettingsModal = true;
+    }
+
+    private void CloseSettingsModal()
+    {
+        showSettingsModal = false;
+    }
+
+    private void OpenAboutFromSettings()
+    {
+        showSettingsModal = false;
+        showAboutModal = true;
+    }
+
+    private void OnAccountChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
     }
     
     private void CloseAboutModal()
@@ -415,10 +469,7 @@ public partial class Home : ComponentBase, IDisposable
             await JSRuntime.InvokeVoidAsync("coinDragHandler.startDrag");
             await JSRuntime.InvokeVoidAsync("coinPhysics.startDrag", coinCenterX, coinCenterY);
             
-            if (isSoundEnabled)
-            {
-                await JSRuntime.InvokeVoidAsync("triggerHaptic", "light");
-            }
+            await JSRuntime.InvokeVoidAsync("triggerHaptic", "light");
         }
         catch (JSException)
         {
@@ -540,20 +591,19 @@ public partial class Home : ComponentBase, IDisposable
         string result = isHeads ? "heads" : "tails";
         flipResult = isHeads ? (isSuperFlip ? "flip-heads super-flip" : "flip-heads") : (isSuperFlip ? "flip-tails super-flip" : "flip-tails");
         
-        // Trigger particles at coin position (more particles for super flip)
+        // Trigger particles at coin position (more particles for super flip / hot streaks)
         int particleCount = isSuperFlip ? 30 : 15;
+        if (currentStreak >= 10)
+            particleCount += 12;
+        else if (currentStreak >= 5)
+            particleCount += 6;
         await JSRuntime.InvokeVoidAsync("triggerSparkle", coinCenterX, coinCenterY, particleCount);
         await JSRuntime.InvokeVoidAsync("playFlipSound");
         
-        if (isSoundEnabled)
+        await JSRuntime.InvokeVoidAsync("triggerHaptic", "medium");
+        if (isSuperFlip)
         {
-            await JSRuntime.InvokeVoidAsync("triggerHaptic", "medium");
-            
-            // Add special haptic for super flip
-            if (isSuperFlip)
-            {
-                await JSRuntime.InvokeVoidAsync("triggerHaptic", "super-flip");
-            }
+            await JSRuntime.InvokeVoidAsync("triggerHaptic", "super-flip");
         }
         
         StateHasChanged();
@@ -597,6 +647,13 @@ public partial class Home : ComponentBase, IDisposable
         
         // Apply combo streak bonus if applicable (adds to streak counter, not probability)
         ApplyComboStreakBonus(headsEffect, tailsEffect);
+
+        if (currentStreak is 5 or 10 or 20)
+        {
+            streakPulseKind = currentStreak >= 20 ? "pulse-legendary" : currentStreak >= 10 ? "pulse-hot" : "pulse-warm";
+            showStreakPulse = true;
+            _ = ClearStreakPulseAsync();
+        }
         
         // Track coin landing for unlock progress and check for newly unlocked coins
         var allCoins = GetAllCoinsFlat();
@@ -636,6 +693,16 @@ public partial class Home : ComponentBase, IDisposable
         int burstCount = isSuperFlip ? 40 : 20;
         await JSRuntime.InvokeVoidAsync("triggerParticleBurst", coinCenterX, coinCenterY, burstCount, new { });
         await JSRuntime.InvokeVoidAsync("triggerHaptic", "landing");
+        if (isSoundEnabled)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("playLandSound");
+            }
+            catch (JSException)
+            {
+            }
+        }
         
         // Set isFlipping to false BEFORE checking achievements so player can continue flipping
         isFlipping = false;
@@ -653,38 +720,289 @@ public partial class Home : ComponentBase, IDisposable
     
     private async Task ShowPendingUnlockAchievements()
     {
-        // Process achievements one at a time
-        while (pendingUnlockAchievements.Count > 0)
+        if (_showingUnlockToasts)
+            return;
+
+        _showingUnlockToasts = true;
+        try
         {
-            currentlyUnlockedCoin = pendingUnlockAchievements.Dequeue();
-            showUnlockAchievement = true;
-            
-            // Play coin unlock sound
+            while (pendingUnlockAchievements.Count > 0)
+            {
+                await EnterToastSlotAsync();
+                try
+                {
+                    currentlyUnlockedCoin = pendingUnlockAchievements.Dequeue();
+                    showUnlockAchievement = true;
+
+                    try
+                    {
+                        await JSRuntime.InvokeVoidAsync("playCoinUnlockSound");
+                    }
+                    catch (JSException)
+                    {
+                    }
+
+                    StateHasChanged();
+
+                    while (showUnlockAchievement)
+                    {
+                        await Task.Delay(100);
+                    }
+                }
+                finally
+                {
+                    currentlyUnlockedCoin = null;
+                    LeaveToastSlot();
+                }
+
+                if (pendingUnlockAchievements.Count > 0)
+                    await Task.Delay(300);
+            }
+        }
+        finally
+        {
+            _showingUnlockToasts = false;
+        }
+    }
+
+    private void OnAchievementsUnlocked(IReadOnlyList<GameAchievement> achievements)
+    {
+        if (achievements == null || achievements.Count == 0)
+            return;
+
+        _ = InvokeAsync(async () =>
+        {
+            foreach (var achievement in achievements)
+                pendingGameAchievements.Enqueue(achievement);
+
+            await ShowPendingGameAchievements();
+        });
+    }
+
+    private async Task ShowPendingGameAchievements()
+    {
+        if (_showingGameAchievements)
+            return;
+
+        _showingGameAchievements = true;
+        try
+        {
+            while (pendingGameAchievements.Count > 0)
+            {
+                await EnterToastSlotAsync();
+                try
+                {
+                    currentlyUnlockedAchievement = pendingGameAchievements.Dequeue();
+                    showGameAchievement = true;
+
+                    try
+                    {
+                        await JSRuntime.InvokeVoidAsync("playCoinUnlockSound");
+                    }
+                    catch (JSException)
+                    {
+                    }
+
+                    StateHasChanged();
+
+                    var until = DateTime.UtcNow.AddSeconds(4);
+                    while (showGameAchievement && DateTime.UtcNow < until)
+                        await Task.Delay(100);
+                }
+                finally
+                {
+                    showGameAchievement = false;
+                    currentlyUnlockedAchievement = null;
+                    LeaveToastSlot();
+                    StateHasChanged();
+                }
+
+                if (pendingGameAchievements.Count > 0)
+                    await Task.Delay(300);
+            }
+        }
+        finally
+        {
+            _showingGameAchievements = false;
+        }
+    }
+
+    private void DismissGameAchievement()
+    {
+        showGameAchievement = false;
+        StateHasChanged();
+    }
+
+    private async Task EnterToastSlotAsync()
+    {
+        while (Interlocked.CompareExchange(ref _toastSlot, 1, 0) != 0)
+            await Task.Delay(50);
+    }
+
+    private void LeaveToastSlot()
+    {
+        Interlocked.Exchange(ref _toastSlot, 0);
+    }
+
+    private static string GetCoinEdgeScale(int i)
+    {
+        double t = i / (double)(CoinEdgeSlices - 1);
+        double distFromEnd = Math.Min(t, 1 - t);
+        double chamfer = Math.Clamp(distFromEnd / 0.12, 0, 1);
+        return (0.965 + 0.035 * chamfer).ToString("0.###", CultureInfo.InvariantCulture);
+    }
+
+    private string GetStreakHeatClass()
+    {
+        if (currentStreak >= 20) return "streak-legendary";
+        if (currentStreak >= 10) return "streak-hot";
+        if (currentStreak >= 5) return "streak-warm";
+        return string.Empty;
+    }
+
+    private async Task ClearStreakPulseAsync()
+    {
+        await Task.Delay(700);
+        showStreakPulse = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task InitPwaAsync()
+    {
+        try
+        {
+            pwaRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("pwa.register", pwaRef);
+            await RefreshPwaStateAsync();
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "PWA helpers unavailable");
+        }
+    }
+
+    private async Task RefreshPwaStateAsync()
+    {
+        try
+        {
+            isStandalonePwa = await JSRuntime.InvokeAsync<bool>("pwa.isStandalone");
+            canInstallPwa = await JSRuntime.InvokeAsync<bool>("pwa.canInstall");
+            isIosInstallHint = await JSRuntime.InvokeAsync<bool>("pwa.needsIosInstallHint");
+            var dismissed = await JSRuntime.InvokeAsync<bool>("pwa.isInstallDismissed");
+            showSettingsInstall = !isStandalonePwa;
+            showInstallBanner = false;
+            StateHasChanged();
+
+            if (!isStandalonePwa && !dismissed && (canInstallPwa || isIosInstallHint))
+            {
+                _ = ShowInstallBannerDelayedAsync();
+            }
+        }
+        catch (JSException)
+        {
+        }
+    }
+
+    private async Task ShowInstallBannerDelayedAsync()
+    {
+        await Task.Delay(8000);
+        if (isStandalonePwa || showInstallBanner)
+            return;
+        try
+        {
+            var dismissed = await JSRuntime.InvokeAsync<bool>("pwa.isInstallDismissed");
+            if (dismissed)
+                return;
+        }
+        catch (JSException)
+        {
+        }
+        showInstallBanner = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public Task OnPwaInstallAvailable()
+    {
+        canInstallPwa = true;
+        showSettingsInstall = !isStandalonePwa;
+        _ = InvokeAsync(async () =>
+        {
             try
             {
-                await JSRuntime.InvokeVoidAsync("playCoinUnlockSound");
+                var dismissed = await JSRuntime.InvokeAsync<bool>("pwa.isInstallDismissed");
+                showInstallBanner = !isStandalonePwa && !dismissed;
             }
             catch (JSException)
             {
-                // Sound failed to play, continue anyway
+                showInstallBanner = !isStandalonePwa;
             }
-            
             StateHasChanged();
-            
-            // Wait for user to dismiss this achievement
-            while (showUnlockAchievement)
+        });
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task OnPwaInstalled()
+    {
+        canInstallPwa = false;
+        isStandalonePwa = true;
+        showInstallBanner = false;
+        showSettingsInstall = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task PromptPwaInstall()
+    {
+        try
+        {
+            if (isIosInstallHint && !canInstallPwa)
             {
-                await Task.Delay(100);
+                return;
             }
-            
-            // Small delay between multiple achievements
-            if (pendingUnlockAchievements.Count > 0)
+
+            var accepted = await JSRuntime.InvokeAsync<bool>("pwa.promptInstall");
+            if (accepted)
             {
-                await Task.Delay(300);
+                showInstallBanner = false;
+                canInstallPwa = false;
             }
+            StateHasChanged();
         }
-        
-        currentlyUnlockedCoin = null;
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "PWA install prompt failed");
+        }
+    }
+
+    private async Task DismissPwaInstall()
+    {
+        showInstallBanner = false;
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("pwa.dismissInstall");
+        }
+        catch (JSException)
+        {
+        }
+        StateHasChanged();
+    }
+
+    private string GetLandingFlashClass()
+    {
+        if (!showLandingFlash)
+            return string.Empty;
+
+        return lastResult == "tails" ? "landed land-tails" : "landed land-heads";
+    }
+
+    private string GetCoinGlowClass()
+    {
+        if (!showLandingFlash)
+            return string.Empty;
+
+        return lastResult == "tails" ? "land-tails" : "land-heads";
     }
     
     private void DismissUnlockAchievement()
@@ -767,17 +1085,17 @@ public partial class Home : ComponentBase, IDisposable
         string achievement = "";
         
         if (currentStreak == 5)
-            achievement = "?? 5 in a row!";
+            achievement = "5 in a row!";
         else if (currentStreak == 10)
-            achievement = "???? 10 streak! Incredible!";
+            achievement = "10 streak! Incredible!";
         else if (currentStreak == 20)
-            achievement = "?????? 20 STREAK! LEGENDARY!";
+            achievement = "20 STREAK! LEGENDARY!";
         else if (headsCount + tailsCount == 10)
-            achievement = "?? First 10 flips!";
+            achievement = "First 10 flips!";
         else if (headsCount + tailsCount == 50)
-            achievement = "? 50 flips milestone!";
+            achievement = "50 flips milestone!";
         else if (headsCount + tailsCount == 100)
-            achievement = "?? 100 flips! Master flipper!";
+            achievement = "100 flips! Master flipper!";
             
         if (!string.IsNullOrEmpty(achievement))
         {
@@ -1330,6 +1648,7 @@ public partial class Home : ComponentBase, IDisposable
     /// </summary>
     private void ApplyComboStreakBonus(CoinEffect? headsEffect, CoinEffect? tailsEffect)
     {
+        comboBoosted = false;
         try
         {
             // Only apply if one side has combo and other has no effect
@@ -1363,6 +1682,7 @@ public partial class Home : ComponentBase, IDisposable
                     // Convert percentage to whole number: 0.03 * 100 = 3
                     int streakBonus = (int)Math.Round(headsEffect.ComboMultiplier * 100);
                     currentStreak += streakBonus;
+                    comboBoosted = true;
                     
                     Logger.LogInformation($"Combo (Additive) streak bonus: +{streakBonus} (new streak: {currentStreak})");
                 }
@@ -1371,6 +1691,7 @@ public partial class Home : ComponentBase, IDisposable
                     // DragonSamurai (Multiplicative 2x): multiplies current streak
                     int oldStreak = currentStreak;
                     currentStreak = (int)Math.Round(currentStreak * headsEffect.ComboMultiplier);
+                    comboBoosted = true;
                     
                     Logger.LogInformation($"Combo (Multiplicative) streak bonus: {oldStreak} * {headsEffect.ComboMultiplier} = {currentStreak}");
                 }
@@ -1390,6 +1711,7 @@ public partial class Home : ComponentBase, IDisposable
                     // Moai (Additive 0.03): adds 3 to streak
                     int streakBonus = (int)Math.Round(tailsEffect.ComboMultiplier * 100);
                     currentStreak += streakBonus;
+                    comboBoosted = true;
                     
                     Logger.LogInformation($"Combo (Additive) streak bonus: +{streakBonus} (new streak: {currentStreak})");
                 }
@@ -1398,6 +1720,7 @@ public partial class Home : ComponentBase, IDisposable
                     // DragonSamurai (Multiplicative 2x): multiplies current streak
                     int oldStreak = currentStreak;
                     currentStreak = (int)Math.Round(currentStreak * tailsEffect.ComboMultiplier);
+                    comboBoosted = true;
                     
                     Logger.LogInformation($"Combo (Multiplicative) streak bonus: {oldStreak} * {tailsEffect.ComboMultiplier} = {currentStreak}");
                 }
@@ -1521,11 +1844,17 @@ public partial class Home : ComponentBase, IDisposable
     {
         try
         {
+            Account.Changed -= OnAccountChanged;
+            UnlockProgress.AchievementsUnlocked -= OnAchievementsUnlocked;
+
             // Stop auto-click timer
             StopAutoClick();
             
             // Stop super flip charging
             StopSuperFlipCharge();
+
+            pwaRef?.Dispose();
+            pwaRef = null;
             
             Logger.LogInformation("Home component disposed");
         }
