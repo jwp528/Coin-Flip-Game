@@ -151,15 +151,6 @@
         </div>
     }
 
-    @if (showSwUpdateToast)
-    {
-        <div class="pwa-update-toast" role="status">
-            <span>New version ready</span>
-            <button type="button" class="pwa-update-action" @onclick="ApplySwUpdate">Reload</button>
-            <button type="button" class="pwa-install-dismiss" @onclick="DismissSwUpdate" aria-label="Dismiss">×</button>
-        </div>
-    }
-
     <!-- Developer Credit Footer -->
     <div class="developer-credit">
         <span class="credit-text">Developed By:</span>

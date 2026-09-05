@@ -1,5 +1,5 @@
 // Coin Flip Game - Service Worker (production)
-const CACHE_NAME = 'coin-flip-game-v1.5.13';
+const CACHE_NAME = 'coin-flip-game-v1.5.14';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -43,10 +43,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => precache(cache, urlsToCache))
   );
-  // First install should take over immediately; later updates wait for SKIP_WAITING.
-  if (!self.registration.active) {
-    self.skipWaiting();
-  }
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {

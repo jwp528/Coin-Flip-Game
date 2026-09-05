@@ -75,7 +75,6 @@ public partial class Home : ComponentBase, IDisposable
     private bool canInstallPwa = false;
     private bool isStandalonePwa = false;
     private bool isIosInstallHint = false;
-    private bool showSwUpdateToast = false;
     private DotNetObjectReference<Home>? pwaRef;
     
     // Coin customization state
@@ -978,14 +977,6 @@ public partial class Home : ComponentBase, IDisposable
         return Task.CompletedTask;
     }
 
-    [JSInvokable]
-    public Task OnPwaUpdateAvailable()
-    {
-        showSwUpdateToast = true;
-        StateHasChanged();
-        return Task.CompletedTask;
-    }
-
     private async Task PromptPwaInstall()
     {
         try
@@ -1020,24 +1011,6 @@ public partial class Home : ComponentBase, IDisposable
         {
         }
         StateHasChanged();
-    }
-
-    private async Task ApplySwUpdate()
-    {
-        try
-        {
-            await JSRuntime.InvokeVoidAsync("pwa.applyUpdate");
-        }
-        catch (JSException ex)
-        {
-            Logger.LogWarning(ex, "PWA update apply failed");
-            await JSRuntime.InvokeVoidAsync("checkForServiceWorkerUpdate");
-        }
-    }
-
-    private void DismissSwUpdate()
-    {
-        showSwUpdateToast = false;
     }
 
     private string GetLandingFlashClass()
