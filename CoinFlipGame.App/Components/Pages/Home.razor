@@ -13,7 +13,7 @@
     
     <!-- Control Buttons - Header on Desktop -->
     <div class="control-buttons-header">
-        <button class="control-btn" @onclick="ToggleSound" title="@(isSoundEnabled ? "Sound On" : "Sound Off")">
+        <button class="control-btn @(isSoundEnabled ? "is-on" : "is-off")" @onclick="ToggleSound" title="@(isSoundEnabled ? "Sound On" : "Sound Off")">
             @if (isSoundEnabled)
             {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -30,7 +30,7 @@
                 </svg>
             }
         </button>
-        <button class="control-btn @(!isHapticsSupported ? "has-warning" : "")" @onclick="ToggleHaptics" title="@(isHapticsEnabled ? "Haptics On" : "Haptics Off")">
+        <button class="control-btn @(isHapticsEnabled ? "is-on" : "is-off") @(!isHapticsSupported ? "has-warning" : "")" @onclick="ToggleHaptics" title="@(isHapticsEnabled ? "Haptics On" : "Haptics Off")">
             @if (!isHapticsSupported)
             {
                 <span class="warning-badge">!</span>
@@ -99,7 +99,7 @@
         <!-- Streak Counter - Top Center -->
         @if (currentStreak > 2)
         {
-            <div class="streak-counter">
+            <div class="streak-counter @(comboBoosted ? "combo-boost" : "")">
                 <span class="streak-icon">🔥</span>
                 <span class="streak-value">@currentStreak</span>
             </div>
@@ -108,35 +108,37 @@
     
     <!-- Main Coin Container -->
     <div class="coin-container">
+        <div class="coin-stage"></div>
         <div class="coin-glow"></div>
         
-        <!-- First-time user hint -->
+        <div @ref="coinElement" 
+             class="coin @flipResult @(isDragging ? "dragging" : "") @(isSuperFlipReady ? "super-flip-ready shake" : "") @(showLandingFlash ? "landed" : "")" 
+             @onclick="HandleClick"
+             @onpointerdown="OnPointerDown"
+             style="@GetCoinTransform()">
+            <div class="coin-face">
+                <div class="coin-shine" style="@GetShineTransform()"></div>
+                <div class="coin-inner-ring"></div>
+                <img src="@faceShowing" alt="Coin" draggable="false" />
+                <div class="landing-flash-sweep"></div>
+                <div class="landing-flash-ring"></div>
+            </div>
+        </div>
+        
+        <!-- First-time user hint — sits under the coin, not on top of it -->
         @if (showFirstTimeHint)
         {
             <div class="first-time-hint">
                 <div class="hint-content">
-                    <span class="hint-icon">👆</span>
-                    <span class="hint-text">Tap or drag to flip!</span>
+                    <span class="hint-text">Tap or drag to flip</span>
                 </div>
             </div>
         }
-        
-        <div @ref="coinElement" 
-             class="coin @flipResult @(isDragging ? "dragging" : "") @(isSuperFlipReady ? "super-flip-ready shake" : "")" 
-             @onclick="HandleClick"
-             @onpointerdown="OnPointerDown"
-             style="@GetCoinTransform()">
-            <div class="coin-face @(showLandingFlash ? "landing-flash" : "")">
-                <div class="coin-shine" style="@GetShineTransform()"></div>
-                <div class="coin-inner-ring"></div>
-                <img src="@faceShowing" alt="Coin" draggable="false" />
-            </div>
-        </div>
     </div>
     
     <!-- Control Buttons - Mobile (Bottom) - Hidden on desktop -->
     <div class="control-buttons-mobile">
-        <button class="control-btn" @onclick="ToggleSound" title="@(isSoundEnabled ? "Sound On" : "Sound Off")">
+        <button class="control-btn @(isSoundEnabled ? "is-on" : "is-off")" @onclick="ToggleSound" title="@(isSoundEnabled ? "Sound On" : "Sound Off")">
             @if (isSoundEnabled)
             {
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -153,7 +155,7 @@
                 </svg>
             }
         </button>
-        <button class="control-btn @(!isHapticsSupported ? "has-warning" : "")" @onclick="ToggleHaptics" title="@(isHapticsEnabled ? "Haptics On" : "Haptics Off")">
+        <button class="control-btn @(isHapticsEnabled ? "is-on" : "is-off") @(!isHapticsSupported ? "has-warning" : "")" @onclick="ToggleHaptics" title="@(isHapticsEnabled ? "Haptics On" : "Haptics Off")">
             @if (!isHapticsSupported)
             {
                 <span class="warning-badge">!</span>

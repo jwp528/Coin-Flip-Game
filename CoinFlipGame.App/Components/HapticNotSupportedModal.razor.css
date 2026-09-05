@@ -22,17 +22,15 @@
 }
 
 .haptic-modal-content {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(51, 65, 85, 0.98) 100%);
+    background: #121826;
     border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 
-        0 20px 60px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     max-width: 500px;
     width: 90%;
     position: relative;
-    transform: scale(0.9);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform: scale(0.96);
+    transition: transform 0.25s ease;
 }
 
 .haptic-modal-overlay.visible .haptic-modal-content {
@@ -107,11 +105,10 @@
 }
 
 .haptic-device-info {
-    padding: 14px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    margin-bottom: 24px;
+    padding: 8px 0 16px 0;
+    background: none;
+    border: none;
+    margin-bottom: 16px;
     text-align: left;
 }
 
@@ -136,17 +133,18 @@
     align-items: center;
     gap: 10px;
     padding: 12px 24px;
-    background: linear-gradient(135deg, rgba(129, 140, 248, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%);
-    border: 1px solid rgba(129, 140, 248, 0.4);
-    border-radius: 12px;
-    color: #c4b5fd;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    color: #e9d5ff;
     text-decoration: none;
     font-weight: 600;
     font-size: 0.95rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background 0.2s ease, border-color 0.2s ease;
     width: 100%;
     justify-content: center;
+    touch-action: manipulation;
 }
 
 .btn-report-issue:hover {

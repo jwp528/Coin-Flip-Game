@@ -52,6 +52,7 @@ public partial class Home : ComponentBase, IDisposable
     private int tailsCount = 0;
     private int currentStreak = 0;
     private int longestStreak = 0;
+    private bool comboBoosted = false;
     private string lastResult = "";
     private bool showAchievement = false;
     private string achievementText = "";
@@ -1371,6 +1372,7 @@ public partial class Home : ComponentBase, IDisposable
     /// </summary>
     private void ApplyComboStreakBonus(CoinEffect? headsEffect, CoinEffect? tailsEffect)
     {
+        comboBoosted = false;
         try
         {
             // Only apply if one side has combo and other has no effect
@@ -1404,6 +1406,7 @@ public partial class Home : ComponentBase, IDisposable
                     // Convert percentage to whole number: 0.03 * 100 = 3
                     int streakBonus = (int)Math.Round(headsEffect.ComboMultiplier * 100);
                     currentStreak += streakBonus;
+                    comboBoosted = true;
                     
                     Logger.LogInformation($"Combo (Additive) streak bonus: +{streakBonus} (new streak: {currentStreak})");
                 }
@@ -1412,6 +1415,7 @@ public partial class Home : ComponentBase, IDisposable
                     // DragonSamurai (Multiplicative 2x): multiplies current streak
                     int oldStreak = currentStreak;
                     currentStreak = (int)Math.Round(currentStreak * headsEffect.ComboMultiplier);
+                    comboBoosted = true;
                     
                     Logger.LogInformation($"Combo (Multiplicative) streak bonus: {oldStreak} * {headsEffect.ComboMultiplier} = {currentStreak}");
                 }
@@ -1431,6 +1435,7 @@ public partial class Home : ComponentBase, IDisposable
                     // Moai (Additive 0.03): adds 3 to streak
                     int streakBonus = (int)Math.Round(tailsEffect.ComboMultiplier * 100);
                     currentStreak += streakBonus;
+                    comboBoosted = true;
                     
                     Logger.LogInformation($"Combo (Additive) streak bonus: +{streakBonus} (new streak: {currentStreak})");
                 }
@@ -1439,6 +1444,7 @@ public partial class Home : ComponentBase, IDisposable
                     // DragonSamurai (Multiplicative 2x): multiplies current streak
                     int oldStreak = currentStreak;
                     currentStreak = (int)Math.Round(currentStreak * tailsEffect.ComboMultiplier);
+                    comboBoosted = true;
                     
                     Logger.LogInformation($"Combo (Multiplicative) streak bonus: {oldStreak} * {tailsEffect.ComboMultiplier} = {currentStreak}");
                 }
