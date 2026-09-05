@@ -1,197 +1,146 @@
-// Coin Flip Game - Service Worker (Production)
-// This file is used when the app is published
-const CACHE_NAME = 'coin-flip-game-v1.4.1';
+// Coin Flip Game - Service Worker (production)
+const CACHE_NAME = 'coin-flip-game-v1.5.13';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/css/app.css',
-  '/css/bootstrap/bootstrap.min.css',
+  '/app.css',
+  '/bootstrap/bootstrap.min.css',
+  '/CoinFlipGame.App.styles.css',
   '/_framework/blazor.webassembly.js',
   '/js/coinhelpers.js',
   '/js/coinpreviewmodal.js',
   '/js/particles.js',
   '/js/physics.js',
   '/js/audio.js',
+  '/js/pwa.js',
+  '/js/progressSync.js',
+  '/js/externalAuth.js',
   '/img/coins/logo.png',
+  '/img/coins/Random.png',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png',
   '/manifest.json',
   '/favicon.png'
 ];
 
-// Install event - cache resources
+async function precache(cache, urls) {
+  await Promise.all(urls.map(async (url) => {
+    try {
+      const response = await fetch(new Request(url, { cache: 'reload' }));
+      if (response && response.ok) {
+        await cache.put(url, response);
+      } else {
+        console.warn('[ServiceWorker] Skip (not ok):', url, response && response.status);
+      }
+    } catch (err) {
+      console.warn('[ServiceWorker] Skip (failed):', url, err);
+    }
+  }));
+}
+
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Install v' + CACHE_NAME);
+  console.log('[ServiceWorker] Install', CACHE_NAME);
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('[ServiceWorker] Caching app shell');
-        return cache.addAll(urlsToCache.map(url => new Request(url, {cache: 'reload'})));
-      })
-      .catch(err => {
-        console.error('[ServiceWorker] Cache failed:', err);
-      })
+    caches.open(CACHE_NAME).then(cache => precache(cache, urlsToCache))
   );
-  // Force the waiting service worker to become the active service worker
-  self.skipWaiting();
+  // First install should take over immediately; later updates wait for SKIP_WAITING.
+  if (!self.registration.active) {
+    self.skipWaiting();
+  }
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', event => {
-  console.log('[ServiceWorker] Activate v' + CACHE_NAME);
+  console.log('[ServiceWorker] Activate', CACHE_NAME);
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('[ServiceWorker] Removing old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then(cacheNames =>
+      Promise.all(
+        cacheNames
+          .filter(name => name !== CACHE_NAME)
+          .map(name => caches.delete(name))
+      )
+    )
   );
-  // Take control of all pages immediately
   return self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', event => {
-  // Skip cross-origin requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   if (!event.request.url.startsWith(self.location.origin)) {
     return;
   }
 
-  // Skip API calls - always fetch fresh
-  if (event.request.url.includes('/api/')) {
-    event.respondWith(fetch(event.request));
+  const url = new URL(event.request.url);
+
+  // Never intercept API or host auth — always hit the network.
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/.auth/')) {
     return;
   }
 
+  // Navigation: network-first so routing/auth callbacks stay fresh, offline falls back to the app shell.
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => response)
+        .catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  // Boot manifest: network-first so Blazor can detect published updates.
+  if (url.pathname.endsWith('blazor.boot.json')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Static assets: cache-first, then network, then app shell for documents.
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          // For index.html, also check network for updates
-          if (event.request.url.endsWith('/') || event.request.url.endsWith('index.html')) {
-            // Return cached version immediately, but update cache in background
-            fetch(event.request)
-              .then(freshResponse => {
-                if (freshResponse && freshResponse.status === 200) {
-                  caches.open(CACHE_NAME).then(cache => {
-                    cache.put(event.request, freshResponse.clone());
-                  });
-                }
-              })
-              .catch(() => {
-                // Network failed, cached version is being used
-              });
+    caches.match(event.request).then(cached => {
+      const networked = fetch(event.request)
+        .then(response => {
+          if (response && response.status === 200 && response.type === 'basic' && event.request.method === 'GET') {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
           }
           return response;
-        }
-
-        // Not in cache - fetch from network
-        return fetch(event.request).then(response => {
-          // Check if valid response
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
-          }
-
-          // Clone the response
-          const responseToCache = response.clone();
-
-          // Cache the new resource
-          caches.open(CACHE_NAME)
-            .then(cache => {
-              // Only cache GET requests
-              if (event.request.method === 'GET') {
-                cache.put(event.request, responseToCache);
-              }
-            });
-
-          return response;
-        }).catch(error => {
-          console.error('[ServiceWorker] Fetch failed:', error);
-          
-          // Return offline page for navigation requests
-          if (event.request.mode === 'navigate') {
+        })
+        .catch(() => {
+          if (cached) return cached;
+          if (event.request.destination === 'document') {
             return caches.match('/index.html');
           }
-          
-          // Return a generic offline response for other requests
           return new Response('Offline - content not available', {
             status: 503,
             statusText: 'Service Unavailable',
-            headers: new Headers({
-              'Content-Type': 'text/plain'
-            })
+            headers: new Headers({ 'Content-Type': 'text/plain' })
           });
         });
-      })
+
+      return cached || networked;
+    })
   );
 });
 
-// Message event - for manual cache updates
 self.addEventListener('message', event => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  
+
   if (event.data && event.data.type === 'CLEAR_CACHE') {
     event.waitUntil(
-      caches.keys().then(cacheNames => {
-        return Promise.all(
-          cacheNames.map(cacheName => caches.delete(cacheName))
-        );
-      })
+      caches.keys().then(cacheNames => Promise.all(cacheNames.map(name => caches.delete(name))))
     );
   }
-});
-
-// Background sync for future features
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-flips') {
-    console.log('[ServiceWorker] Background sync: sync-flips');
-    // Could sync flip data to cloud here
-  }
-});
-
-// Push notifications (future feature)
-self.addEventListener('push', event => {
-  const options = {
-    body: event.data ? event.data.text() : 'New coins available!',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
-    vibrate: [200, 100, 200],
-    tag: 'coin-flip-notification',
-    requireInteraction: false,
-    data: {
-      dateOfArrival: Date.now(),
-      primaryKey: 1
-    }
-  };
-
-  event.waitUntil(
-    self.registration.showNotification('Coin Flip Game', options)
-  );
-});
-
-// Notification click
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(clientList => {
-        // If app is already open, focus it
-        for (let i = 0; i < clientList.length; i++) {
-          const client = clientList[i];
-          if (client.url === '/' && 'focus' in client) {
-            return client.focus();
-          }
-        }
-        // Otherwise, open a new window
-        if (clients.openWindow) {
-          return clients.openWindow('/');
-        }
-      })
-  );
 });

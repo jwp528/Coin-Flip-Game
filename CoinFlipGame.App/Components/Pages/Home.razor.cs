@@ -5,6 +5,7 @@ using CoinFlipGame.App.Services;
 using CoinFlipGame.App.Models;
 using CoinFlipGame.App.Models.Unlocks;
 using Blazored.LocalStorage;
+using System.Globalization;
 
 namespace CoinFlipGame.App.Components.Pages;
 
@@ -42,6 +43,7 @@ public partial class Home : ComponentBase, IDisposable
     private const string HapticsEnabledKey = "hapticsEnabled";
     private const string FirstTimeKey = "hasSeenGame";
     private const string ReferrerAppliedKey = "referrerBonusApplied";
+    private const int CoinEdgeSlices = 33;
     
     private ElementReference coinElement;
     private bool isFlipping = false;
@@ -66,6 +68,15 @@ public partial class Home : ComponentBase, IDisposable
     private bool showHapticNotSupportedModal = false;
     private string userAgent = "";
     private bool showFirstTimeHint = false;
+    private bool showStreakPulse = false;
+    private string streakPulseKind = "";
+    private bool showInstallBanner = false;
+    private bool showSettingsInstall = false;
+    private bool canInstallPwa = false;
+    private bool isStandalonePwa = false;
+    private bool isIosInstallHint = false;
+    private bool showSwUpdateToast = false;
+    private DotNetObjectReference<Home>? pwaRef;
     
     // Coin customization state
     private bool showCoinSelector = false;
@@ -163,6 +174,8 @@ public partial class Home : ComponentBase, IDisposable
             
             // Set initial face to heads
             faceShowing = selectedHeadsImage;
+
+            await InitPwaAsync();
             
             // Load user progress stats into local state
             headsCount = UnlockProgress.GetHeadsFlips();
@@ -481,10 +494,7 @@ public partial class Home : ComponentBase, IDisposable
             await JSRuntime.InvokeVoidAsync("coinDragHandler.startDrag");
             await JSRuntime.InvokeVoidAsync("coinPhysics.startDrag", coinCenterX, coinCenterY);
             
-            if (isSoundEnabled)
-            {
-                await JSRuntime.InvokeVoidAsync("triggerHaptic", "light");
-            }
+            await JSRuntime.InvokeVoidAsync("triggerHaptic", "light");
         }
         catch (JSException)
         {
@@ -606,20 +616,19 @@ public partial class Home : ComponentBase, IDisposable
         string result = isHeads ? "heads" : "tails";
         flipResult = isHeads ? (isSuperFlip ? "flip-heads super-flip" : "flip-heads") : (isSuperFlip ? "flip-tails super-flip" : "flip-tails");
         
-        // Trigger particles at coin position (more particles for super flip)
+        // Trigger particles at coin position (more particles for super flip / hot streaks)
         int particleCount = isSuperFlip ? 30 : 15;
+        if (currentStreak >= 10)
+            particleCount += 12;
+        else if (currentStreak >= 5)
+            particleCount += 6;
         await JSRuntime.InvokeVoidAsync("triggerSparkle", coinCenterX, coinCenterY, particleCount);
         await JSRuntime.InvokeVoidAsync("playFlipSound");
         
-        if (isSoundEnabled)
+        await JSRuntime.InvokeVoidAsync("triggerHaptic", "medium");
+        if (isSuperFlip)
         {
-            await JSRuntime.InvokeVoidAsync("triggerHaptic", "medium");
-            
-            // Add special haptic for super flip
-            if (isSuperFlip)
-            {
-                await JSRuntime.InvokeVoidAsync("triggerHaptic", "super-flip");
-            }
+            await JSRuntime.InvokeVoidAsync("triggerHaptic", "super-flip");
         }
         
         StateHasChanged();
@@ -663,6 +672,13 @@ public partial class Home : ComponentBase, IDisposable
         
         // Apply combo streak bonus if applicable (adds to streak counter, not probability)
         ApplyComboStreakBonus(headsEffect, tailsEffect);
+
+        if (currentStreak is 5 or 10 or 20)
+        {
+            streakPulseKind = currentStreak >= 20 ? "pulse-legendary" : currentStreak >= 10 ? "pulse-hot" : "pulse-warm";
+            showStreakPulse = true;
+            _ = ClearStreakPulseAsync();
+        }
         
         // Track coin landing for unlock progress and check for newly unlocked coins
         var allCoins = GetAllCoinsFlat();
@@ -702,6 +718,16 @@ public partial class Home : ComponentBase, IDisposable
         int burstCount = isSuperFlip ? 40 : 20;
         await JSRuntime.InvokeVoidAsync("triggerParticleBurst", coinCenterX, coinCenterY, burstCount, new { });
         await JSRuntime.InvokeVoidAsync("triggerHaptic", "landing");
+        if (isSoundEnabled)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("playLandSound");
+            }
+            catch (JSException)
+            {
+            }
+        }
         
         // Set isFlipping to false BEFORE checking achievements so player can continue flipping
         isFlipping = false;
@@ -841,6 +867,177 @@ public partial class Home : ComponentBase, IDisposable
     private void LeaveToastSlot()
     {
         Interlocked.Exchange(ref _toastSlot, 0);
+    }
+
+    private static string GetCoinEdgeScale(int i)
+    {
+        double t = i / (double)(CoinEdgeSlices - 1);
+        double distFromEnd = Math.Min(t, 1 - t);
+        double chamfer = Math.Clamp(distFromEnd / 0.12, 0, 1);
+        return (0.965 + 0.035 * chamfer).ToString("0.###", CultureInfo.InvariantCulture);
+    }
+
+    private string GetStreakHeatClass()
+    {
+        if (currentStreak >= 20) return "streak-legendary";
+        if (currentStreak >= 10) return "streak-hot";
+        if (currentStreak >= 5) return "streak-warm";
+        return string.Empty;
+    }
+
+    private async Task ClearStreakPulseAsync()
+    {
+        await Task.Delay(700);
+        showStreakPulse = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task InitPwaAsync()
+    {
+        try
+        {
+            pwaRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("pwa.register", pwaRef);
+            await RefreshPwaStateAsync();
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "PWA helpers unavailable");
+        }
+    }
+
+    private async Task RefreshPwaStateAsync()
+    {
+        try
+        {
+            isStandalonePwa = await JSRuntime.InvokeAsync<bool>("pwa.isStandalone");
+            canInstallPwa = await JSRuntime.InvokeAsync<bool>("pwa.canInstall");
+            isIosInstallHint = await JSRuntime.InvokeAsync<bool>("pwa.needsIosInstallHint");
+            var dismissed = await JSRuntime.InvokeAsync<bool>("pwa.isInstallDismissed");
+            showSettingsInstall = !isStandalonePwa;
+            showInstallBanner = false;
+            StateHasChanged();
+
+            if (!isStandalonePwa && !dismissed && (canInstallPwa || isIosInstallHint))
+            {
+                _ = ShowInstallBannerDelayedAsync();
+            }
+        }
+        catch (JSException)
+        {
+        }
+    }
+
+    private async Task ShowInstallBannerDelayedAsync()
+    {
+        await Task.Delay(8000);
+        if (isStandalonePwa || showInstallBanner)
+            return;
+        try
+        {
+            var dismissed = await JSRuntime.InvokeAsync<bool>("pwa.isInstallDismissed");
+            if (dismissed)
+                return;
+        }
+        catch (JSException)
+        {
+        }
+        showInstallBanner = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public Task OnPwaInstallAvailable()
+    {
+        canInstallPwa = true;
+        showSettingsInstall = !isStandalonePwa;
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                var dismissed = await JSRuntime.InvokeAsync<bool>("pwa.isInstallDismissed");
+                showInstallBanner = !isStandalonePwa && !dismissed;
+            }
+            catch (JSException)
+            {
+                showInstallBanner = !isStandalonePwa;
+            }
+            StateHasChanged();
+        });
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task OnPwaInstalled()
+    {
+        canInstallPwa = false;
+        isStandalonePwa = true;
+        showInstallBanner = false;
+        showSettingsInstall = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task OnPwaUpdateAvailable()
+    {
+        showSwUpdateToast = true;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task PromptPwaInstall()
+    {
+        try
+        {
+            if (isIosInstallHint && !canInstallPwa)
+            {
+                return;
+            }
+
+            var accepted = await JSRuntime.InvokeAsync<bool>("pwa.promptInstall");
+            if (accepted)
+            {
+                showInstallBanner = false;
+                canInstallPwa = false;
+            }
+            StateHasChanged();
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "PWA install prompt failed");
+        }
+    }
+
+    private async Task DismissPwaInstall()
+    {
+        showInstallBanner = false;
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("pwa.dismissInstall");
+        }
+        catch (JSException)
+        {
+        }
+        StateHasChanged();
+    }
+
+    private async Task ApplySwUpdate()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("pwa.applyUpdate");
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "PWA update apply failed");
+            await JSRuntime.InvokeVoidAsync("checkForServiceWorkerUpdate");
+        }
+    }
+
+    private void DismissSwUpdate()
+    {
+        showSwUpdateToast = false;
     }
 
     private string GetLandingFlashClass()
@@ -1706,6 +1903,9 @@ public partial class Home : ComponentBase, IDisposable
             
             // Stop super flip charging
             StopSuperFlipCharge();
+
+            pwaRef?.Dispose();
+            pwaRef = null;
             
             Logger.LogInformation("Home component disposed");
         }

@@ -9,6 +9,7 @@ html, body {
     background: #0b1220;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    overscroll-behavior: none;
 }
 
 a, .btn-link {

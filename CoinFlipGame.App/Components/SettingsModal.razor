@@ -92,6 +92,26 @@
                         <span class="settings-switch-knob"></span>
                     </div>
                 </button>
+
+                @if (ShowInstallApp)
+                {
+                    <button type="button"
+                            class="settings-toggle-row @(CanInstallApp ? "is-on" : "is-off")"
+                            @onclick="HandleInstallApp"
+                            title="@InstallAppLabel">
+                        <div class="settings-toggle-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 3v12"></path>
+                                <path d="M8 11l4 4 4-4"></path>
+                                <rect x="4" y="17" width="16" height="4" rx="1"></rect>
+                            </svg>
+                        </div>
+                        <div class="settings-toggle-text">
+                            <span class="settings-toggle-label">@InstallAppLabel</span>
+                            <span class="settings-toggle-hint">@InstallAppHint</span>
+                        </div>
+                    </button>
+                }
             </div>
 
             <button type="button" class="settings-about-btn" @onclick="HandleOpenAbout">

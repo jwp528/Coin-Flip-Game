@@ -22,21 +22,24 @@
                      @onpointerup="OnPointerUp"
                      @onpointercancel="OnPointerCancel"
                      style="@GetCoinTransform()">
-                    <div class="preview-coin-thickness" aria-hidden="true">
-                        @for (var i = 0; i < 15; i++)
-                        {
-                            <span class="preview-coin-edge" style="--edge-i: @i;"></span>
-                        }
-                        <span class="preview-coin-rim-highlight"></span>
-                    </div>
-                    <div class="preview-coin-back" aria-hidden="true"></div>
-                    <div class="preview-coin-face">
-                        <div class="preview-coin-art">
-                            <div class="preview-coin-shine" style="@GetShineTransform()"></div>
-                            @if (CoinImage != null)
+                    <div class="preview-coin-inner">
+                        <div class="preview-coin-thickness" aria-hidden="true">
+                            @for (var i = 0; i < CoinEdgeSlices; i++)
                             {
-                                <img src="@CoinImage.Path" alt="@CoinImage.DisplayName" draggable="false" />
+                                <span class="preview-coin-edge" style="--edge-i: @i; --edge-scale: @GetCoinEdgeScale(i);"></span>
                             }
+                            <span class="preview-coin-rim-highlight preview-coin-rim-front"></span>
+                            <span class="preview-coin-rim-highlight preview-coin-rim-back"></span>
+                        </div>
+                        <div class="preview-coin-back" aria-hidden="true"></div>
+                        <div class="preview-coin-face">
+                            <div class="preview-coin-art">
+                                <div class="preview-coin-shine" style="@GetShineTransform()"></div>
+                                @if (CoinImage != null)
+                                {
+                                    <img src="@CoinImage.Path" alt="@CoinImage.DisplayName" draggable="false" />
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>

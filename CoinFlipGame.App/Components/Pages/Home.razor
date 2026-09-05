@@ -6,10 +6,11 @@
     <title>Coin Flip Game</title>
 </HeadContent>
 
-<div class="coin-flip-game" 
+<div class="coin-flip-game @(showStreakPulse ? $"streak-pulse {streakPulseKind}" : "") @(isStandalonePwa ? "standalone-pwa" : "")" 
      @onpointermove="OnPointerMove"
      @onpointerup="OnPointerUp"
      @onpointercancel="OnPointerCancel">
+    <div class="screen-pulse @(showStreakPulse ? streakPulseKind : "")" aria-hidden="true"></div>
     
     <!-- Control Buttons - Header on Desktop -->
     <div class="control-buttons-header">
@@ -61,7 +62,7 @@
         <!-- Streak Counter - Top Center -->
         @if (currentStreak > 2)
         {
-            <div class="streak-counter @(comboBoosted ? "combo-boost" : "")">
+            <div class="streak-counter @(comboBoosted ? "combo-boost" : "") @GetStreakHeatClass()">
                 <span class="streak-icon">🔥</span>
                 <span class="streak-value">@currentStreak</span>
             </div>
@@ -78,22 +79,25 @@
              @onclick="HandleClick"
              @onpointerdown="OnPointerDown"
              style="@GetCoinTransform()">
-            <div class="coin-thickness" aria-hidden="true">
-                @for (var i = 0; i < 15; i++)
-                {
-                    <span class="coin-edge" style="--edge-i: @i;"></span>
-                }
-                <span class="coin-rim-highlight"></span>
-            </div>
-            <div class="coin-back" aria-hidden="true"></div>
-            <div class="coin-face">
-                <div class="coin-art">
-                    <div class="coin-shine" style="@GetShineTransform()"></div>
-                    <div class="coin-inner-ring"></div>
-                    <img src="@faceShowing" alt="Coin" draggable="false" />
-                    <div class="landing-flash-sweep"></div>
+            <div class="coin-inner">
+                <div class="coin-thickness" aria-hidden="true">
+                    @for (var i = 0; i < CoinEdgeSlices; i++)
+                    {
+                        <span class="coin-edge" style="--edge-i: @i; --edge-scale: @GetCoinEdgeScale(i);"></span>
+                    }
+                    <span class="coin-rim-highlight coin-rim-front"></span>
+                    <span class="coin-rim-highlight coin-rim-back"></span>
                 </div>
-                <div class="landing-flash-ring"></div>
+                <div class="coin-back" aria-hidden="true"></div>
+                <div class="coin-face">
+                    <div class="coin-art">
+                        <div class="coin-shine" style="@GetShineTransform()"></div>
+                        <div class="coin-inner-ring"></div>
+                        <img src="@faceShowing" alt="Coin" draggable="false" />
+                        <div class="landing-flash-sweep"></div>
+                    </div>
+                    <div class="landing-flash-ring"></div>
+                </div>
             </div>
         </div>
         
@@ -131,6 +135,31 @@
         </button>
     </div>
     
+    @if (showInstallBanner)
+    {
+        <div class="pwa-install-banner" role="dialog" aria-label="Install Coin Flip">
+            <span class="pwa-install-copy">@(isIosInstallHint ? "Add to Home Screen for the full game." : "Install Coin Flip for the full-screen game.")</span>
+            @if (!isIosInstallHint)
+            {
+                <button type="button" class="pwa-install-action" @onclick="PromptPwaInstall">Install</button>
+            }
+            else
+            {
+                <span class="pwa-install-ios">Share → Add to Home Screen</span>
+            }
+            <button type="button" class="pwa-install-dismiss" @onclick="DismissPwaInstall" aria-label="Dismiss">×</button>
+        </div>
+    }
+
+    @if (showSwUpdateToast)
+    {
+        <div class="pwa-update-toast" role="status">
+            <span>New version ready</span>
+            <button type="button" class="pwa-update-action" @onclick="ApplySwUpdate">Reload</button>
+            <button type="button" class="pwa-install-dismiss" @onclick="DismissSwUpdate" aria-label="Dismiss">×</button>
+        </div>
+    }
+
     <!-- Developer Credit Footer -->
     <div class="developer-credit">
         <span class="credit-text">Developed By:</span>
@@ -168,7 +197,12 @@
     IsHapticsEnabled="@isHapticsEnabled"
     IsHapticsSupported="@isHapticsSupported"
     OnToggleHaptics="@ToggleHaptics"
-    OnOpenAbout="@OpenAboutFromSettings" />
+    OnOpenAbout="@OpenAboutFromSettings"
+    ShowInstallApp="@showSettingsInstall"
+    InstallAppLabel="@(isIosInstallHint ? "Add to Home Screen" : "Install app")"
+    InstallAppHint="@(isStandalonePwa ? "Installed" : isIosInstallHint ? "Safari → Share → Add to Home Screen" : "Play full-screen on your home screen")"
+    CanInstallApp="@canInstallPwa"
+    OnInstallApp="@PromptPwaInstall" />
 
 <!-- About Modal -->
 <AboutModal 
