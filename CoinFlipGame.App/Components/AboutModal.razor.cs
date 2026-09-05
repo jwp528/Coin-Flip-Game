@@ -44,12 +44,14 @@ public partial class AboutModal : IDisposable
     private async Task HandleClearCache()
     {
         isClearingCache = true;
+        updateCheckMessage = "";
         StateHasChanged();
 
         try
         {
-            // Always clear cache and reload when user clicks the button
-            // Users may want to clear cache for performance/troubleshooting regardless of version
+            // User-initiated: silent SW check, then cache-clear + reload.
+            // Never raise a game-wide blocking update modal.
+            await UpdateService.CheckForServiceWorkerUpdate();
             await UpdateService.ClearCacheAndReload();
         }
         catch (Exception ex)
