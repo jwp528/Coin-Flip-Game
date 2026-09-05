@@ -349,7 +349,7 @@
         inset 0 -2px 4px rgba(0, 0, 0, 0.2);
     border: 2px solid #e6c200;
     overflow: visible;
-    transform: translateZ(var(--coin-half));
+    transform: translateZ(calc(var(--coin-half) + 0.5px));
     transform-style: preserve-3d;
     -webkit-transform-style: preserve-3d;
     backface-visibility: hidden;
@@ -361,6 +361,8 @@
     inset: 0;
     border-radius: 50%;
     overflow: hidden;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 .preview-coin-thickness {
@@ -440,14 +442,20 @@
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    background:
-        radial-gradient(circle at 35% 30%, rgba(255, 248, 220, 0.28) 0%, transparent 46%),
-        linear-gradient(135deg, #8b6914 0%, #ffd700 42%, #c9a227 72%, #6b5208 100%);
-    border: 2px solid #a67c00;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
     box-shadow:
-        inset 0 2px 8px rgba(255, 255, 255, 0.22),
-        inset 0 -4px 12px rgba(0, 0, 0, 0.38);
-    transform: translateZ(calc(var(--coin-half) * -1)) rotateX(180deg);
+        0 8px 32px rgba(255, 215, 0, 0.4),
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        inset 0 2px 4px rgba(255, 255, 255, 0.6),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+    border: 2px solid #e6c200;
+    overflow: visible;
+    transform: translateZ(calc(var(--coin-half) * -1 - 0.5px)) rotateX(180deg);
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
     pointer-events: none;
@@ -471,7 +479,8 @@
     will-change: transform;
 }
 
-.preview-coin-face img {
+.preview-coin-face img,
+.preview-coin-back img {
     width: 100%;
     height: 100%;
     object-fit: contain;
