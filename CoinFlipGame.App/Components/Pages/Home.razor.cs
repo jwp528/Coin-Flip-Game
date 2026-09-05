@@ -316,30 +316,6 @@ public partial class Home : ComponentBase, IDisposable
         showAboutModal = true;
     }
 
-    private async Task HandleAccountClick()
-    {
-        if (!Account.Enabled)
-        {
-            OpenAboutModal();
-            return;
-        }
-
-        if (Account.IsSignedIn)
-        {
-            OpenAboutModal();
-            return;
-        }
-
-        try
-        {
-            await Account.StartSignInAsync();
-        }
-        catch
-        {
-            OpenAboutModal();
-        }
-    }
-
     private void OnAccountChanged()
     {
         _ = InvokeAsync(StateHasChanged);
