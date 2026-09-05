@@ -84,7 +84,8 @@ public partial class Home : ComponentBase, IDisposable
     private string selectedTailsImage = "/img/coins/Random.png";
     private bool isHeadsRandom = true; // Default to random
     private bool isTailsRandom = true; // Default to random
-    private string faceShowing = "/img/coins/logo.png"; // The current face displayed
+    private string faceShowing = "/img/coins/logo.png"; // Front (heads) face displayed
+    private string backFaceShowing = "/img/coins/Random.png"; // Back (tails) face — must not be a blank plate
     private Dictionary<CoinType, List<CoinImage>>? availableCoins;
 
     private bool showCustomizeTip = true;
@@ -171,8 +172,9 @@ public partial class Home : ComponentBase, IDisposable
             // Apply referrer bonus if applicable (after coins are loaded)
             await ApplyReferrerBonusAsync();
             
-            // Set initial face to heads
+            // Set initial faces from the selected coins
             faceShowing = selectedHeadsImage;
+            backFaceShowing = selectedTailsImage;
 
             await InitPwaAsync();
             
@@ -365,6 +367,7 @@ public partial class Home : ComponentBase, IDisposable
         {
             selectedTailsImage = coin.Path;
             isTailsRandom = false; // Disable random when specific coin selected
+            backFaceShowing = selectedTailsImage;
             // Update face if currently showing tails
             if (faceShowing == selectedTailsImage)
             {
@@ -674,6 +677,10 @@ public partial class Home : ComponentBase, IDisposable
         
         // Update the face showing based on result (or unlocked coin)
         faceShowing = landedCoinPath;
+        if (!isHeads)
+        {
+            backFaceShowing = landedCoinPath;
+        }
         
         // Queue up any newly unlocked coins for achievement display
         foreach (var unlockedCoin in newlyUnlocked)
@@ -1145,6 +1152,7 @@ public partial class Home : ComponentBase, IDisposable
             isTailsRandom = true;
             // Set to Random.png to enable characteristic tracking for random coins
             selectedTailsImage = "/img/coins/Random.png";
+            backFaceShowing = selectedTailsImage;
         }
         
         await SaveCoinSelectionPreferencesAsync();
@@ -1357,6 +1365,7 @@ public partial class Home : ComponentBase, IDisposable
                 selectedTailsImage = preferences.SelectedTailsImage;
                 isHeadsRandom = preferences.IsHeadsRandom;
                 isTailsRandom = preferences.IsTailsRandom;
+                backFaceShowing = selectedTailsImage;
             }
         }
         catch (Exception ex)
