@@ -43,9 +43,46 @@ public partial class SettingsModal
     [Parameter]
     public EventCallback OnInstallApp { get; set; }
 
+    private bool showUnsupportedToast;
+    private CancellationTokenSource? toastCts;
+
+    protected override void OnParametersSet()
+    {
+        if (!IsVisible)
+            showUnsupportedToast = false;
+    }
+
     private Task HandleToggleSound() => OnToggleSound.InvokeAsync();
 
-    private Task HandleToggleHaptics() => OnToggleHaptics.InvokeAsync();
+    private async Task HandleToggleHaptics()
+    {
+        if (!IsHapticsSupported)
+        {
+            await ShowHapticsUnavailableToast();
+            return;
+        }
+
+        await OnToggleHaptics.InvokeAsync();
+    }
+
+    private async Task ShowHapticsUnavailableToast()
+    {
+        toastCts?.Cancel();
+        toastCts?.Dispose();
+        toastCts = new CancellationTokenSource();
+        var token = toastCts.Token;
+
+        showUnsupportedToast = true;
+        try
+        {
+            await Task.Delay(2500, token);
+            if (!token.IsCancellationRequested)
+                showUnsupportedToast = false;
+        }
+        catch (TaskCanceledException)
+        {
+        }
+    }
 
     private Task HandleOpenAbout() => OnOpenAbout.InvokeAsync();
 

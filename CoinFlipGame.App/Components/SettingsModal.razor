@@ -50,37 +50,25 @@
                 </button>
 
                 <button type="button"
-                        class="settings-toggle-row @(IsHapticsEnabled ? "is-on" : "is-off") @(!IsHapticsSupported ? "has-warning" : "")"
+                        class="settings-toggle-row @(IsHapticsSupported && IsHapticsEnabled ? "is-on" : "is-off") @(!IsHapticsSupported ? "is-unavailable" : "")"
                         @onclick="HandleToggleHaptics"
-                        title="@(IsHapticsEnabled ? "Haptics On" : "Haptics Off")">
+                        title="@(IsHapticsSupported ? (IsHapticsEnabled ? "Vibration On" : "Vibration Off") : "Vibration unavailable")"
+                        aria-disabled="@(!IsHapticsSupported)">
                     <div class="settings-toggle-icon">
-                        @if (!IsHapticsSupported)
-                        {
-                            <span class="warning-badge">!</span>
-                        }
-                        @if (IsHapticsEnabled)
-                        {
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 3v18h6l6-6V9L9 3H3z"></path>
-                                <path d="M21 12c0-2.5-1-4.5-3-6"></path>
-                                <path d="M18 12c0-1.5-.5-2.5-1.5-3.5"></path>
-                            </svg>
-                        }
-                        else
-                        {
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M3 3v18h6l6-6V9L9 3H3z"></path>
-                                <line x1="23" y1="9" x2="17" y2="15"></line>
-                                <line x1="17" y1="9" x2="23" y2="15"></line>
-                            </svg>
-                        }
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="8" y="4" width="8" height="16" rx="2"></rect>
+                            <path d="M5 8c-1.2 1.5-1.2 6.5 0 8"></path>
+                            <path d="M19 8c1.2 1.5 1.2 6.5 0 8"></path>
+                            <path d="M2.5 6.5c-2 2.4-2 8.6 0 11"></path>
+                            <path d="M21.5 6.5c2 2.4 2 8.6 0 11"></path>
+                        </svg>
                     </div>
                     <div class="settings-toggle-text">
                         <span class="settings-toggle-label">Vibration</span>
                         <span class="settings-toggle-hint">
                             @if (!IsHapticsSupported)
                             {
-                                <text>Not supported</text>
+                                <text>Unavailable</text>
                             }
                             else
                             {
@@ -113,6 +101,11 @@
                     </button>
                 }
             </div>
+
+            @if (showUnsupportedToast)
+            {
+                <div class="settings-snackbar" role="status">Vibration isn't available on this device</div>
+            }
 
             <button type="button" class="settings-about-btn" @onclick="HandleOpenAbout">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
