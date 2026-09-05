@@ -1,3 +1,5 @@
+using CoinFlipGame.Shared.Dtos;
+
 namespace CoinFlipGame.App.Models;
 
 /// <summary>
@@ -62,6 +64,36 @@ public class UserProgress
     /// Key: coin path (the coin to unlock), Value: current consecutive count
     /// </summary>
     public Dictionary<string, int> CharacteristicConsecutiveCounts { get; set; } = new();
+
+    public PlayerProgressDto ToDto() => new()
+    {
+        TotalFlips = TotalFlips,
+        HeadsFlips = HeadsFlips,
+        TailsFlips = TailsFlips,
+        LongestStreak = LongestStreak,
+        LongestHeadsStreak = LongestHeadsStreak,
+        LongestTailsStreak = LongestTailsStreak,
+        CoinLandCounts = new Dictionary<string, int>(CoinLandCounts),
+        RandomUnlockedCoins = RandomUnlockedCoins.ToList(),
+        NotificationShownFor = NotificationShownFor.ToList(),
+        CoinUnlockTimestamps = new Dictionary<string, DateTime>(CoinUnlockTimestamps),
+        CharacteristicConsecutiveCounts = new Dictionary<string, int>(CharacteristicConsecutiveCounts)
+    };
+
+    public static UserProgress FromDto(PlayerProgressDto dto) => new()
+    {
+        TotalFlips = dto.TotalFlips,
+        HeadsFlips = dto.HeadsFlips,
+        TailsFlips = dto.TailsFlips,
+        LongestStreak = dto.LongestStreak,
+        LongestHeadsStreak = dto.LongestHeadsStreak,
+        LongestTailsStreak = dto.LongestTailsStreak,
+        CoinLandCounts = dto.CoinLandCounts ?? new Dictionary<string, int>(),
+        RandomUnlockedCoins = dto.RandomUnlockedCoins ?? new List<string>(),
+        NotificationShownFor = dto.NotificationShownFor ?? new List<string>(),
+        CoinUnlockTimestamps = dto.CoinUnlockTimestamps ?? new Dictionary<string, DateTime>(),
+        CharacteristicConsecutiveCounts = dto.CharacteristicConsecutiveCounts ?? new Dictionary<string, int>()
+    };
 }
 
 /// <summary>

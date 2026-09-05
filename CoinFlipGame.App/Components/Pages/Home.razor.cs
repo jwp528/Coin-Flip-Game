@@ -24,6 +24,9 @@ public partial class Home : ComponentBase, IDisposable
     
     [Inject]
     private UnlockProgressService UnlockProgress { get; set; } = default!;
+
+    [Inject]
+    private AccountService Account { get; set; } = default!;
     
     [Inject]
     private ILocalStorageService LocalStorage { get; set; } = default!;
@@ -118,6 +121,15 @@ public partial class Home : ComponentBase, IDisposable
             
             // Initialize UnlockProgressService
             await UnlockProgress.InitializeAsync();
+            await Account.InitializeAsync();
+            if (Account.IsSignedIn)
+            {
+                await UnlockProgress.OnSignedInAsync();
+                headsCount = UnlockProgress.GetHeadsFlips();
+                tailsCount = UnlockProgress.GetTailsFlips();
+                longestStreak = UnlockProgress.GetLongestStreak();
+            }
+            Account.Changed += OnAccountChanged;
             
             // Check if haptics are supported
             await CheckHapticSupport();
@@ -265,6 +277,35 @@ public partial class Home : ComponentBase, IDisposable
     private void OpenAboutModal()
     {
         showAboutModal = true;
+    }
+
+    private async Task HandleAccountClick()
+    {
+        if (!Account.Enabled)
+        {
+            OpenAboutModal();
+            return;
+        }
+
+        if (Account.IsSignedIn)
+        {
+            OpenAboutModal();
+            return;
+        }
+
+        try
+        {
+            await Account.StartSignInAsync();
+        }
+        catch
+        {
+            OpenAboutModal();
+        }
+    }
+
+    private void OnAccountChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
     }
     
     private void CloseAboutModal()
@@ -1521,6 +1562,8 @@ public partial class Home : ComponentBase, IDisposable
     {
         try
         {
+            Account.Changed -= OnAccountChanged;
+
             // Stop auto-click timer
             StopAutoClick();
             

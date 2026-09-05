@@ -19,6 +19,12 @@ public partial class AboutModal : IDisposable
     [Inject]
     private ApiVersionService ApiVersionService { get; set; } = default!;
 
+    [Inject]
+    private AccountService Account { get; set; } = default!;
+
+    [Inject]
+    private UnlockProgressService UnlockProgress { get; set; } = default!;
+
     [Parameter]
     public bool IsVisible { get; set; }
 
@@ -32,6 +38,8 @@ public partial class AboutModal : IDisposable
     private bool isClearing = false;
     private bool isClearingCache = false;
     private string updateCheckMessage = "";
+    private bool accountBusy = false;
+    private string accountMessage = "";
 
     private async Task HandleClearCache()
     {
@@ -70,6 +78,55 @@ public partial class AboutModal : IDisposable
         StateHasChanged();
     }
 
+    private async Task HandleSignIn()
+    {
+        accountBusy = true;
+        accountMessage = "";
+        try
+        {
+            await Account.StartSignInAsync();
+        }
+        catch (Exception ex)
+        {
+            accountMessage = ex.Message;
+            accountBusy = false;
+        }
+    }
+
+    private async Task HandleLink()
+    {
+        accountBusy = true;
+        accountMessage = "";
+        try
+        {
+            await Account.StartLinkAsync();
+        }
+        catch (Exception ex)
+        {
+            accountMessage = ex.Message;
+            accountBusy = false;
+        }
+    }
+
+    private async Task HandleSignOut()
+    {
+        accountBusy = true;
+        try
+        {
+            await Account.SignOutAsync();
+            accountMessage = "Signed out. Progress stays on this device.";
+        }
+        catch (Exception ex)
+        {
+            accountMessage = ex.Message;
+        }
+        finally
+        {
+            accountBusy = false;
+            StateHasChanged();
+        }
+    }
+
     private async Task ConfirmReset()
     {
         isClearing = true;
@@ -77,6 +134,7 @@ public partial class AboutModal : IDisposable
 
         try
         {
+            await UnlockProgress.ResetProgressAsync();
             await LocalStorage.ClearAsync();
             await JSRuntime.InvokeVoidAsync("location.reload");
         }
