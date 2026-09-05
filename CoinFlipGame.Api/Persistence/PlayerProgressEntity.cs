@@ -21,5 +21,7 @@ public sealed class PlayerProgressEntity : ITableEntity
     public string NotificationShownForJson { get; set; } = "[]";
     public string CoinUnlockTimestampsJson { get; set; } = "{}";
     public string CharacteristicConsecutiveCountsJson { get; set; } = "{}";
+    public int TotalPlayTimeSeconds { get; set; }
+    public string UnlockedAchievementsJson { get; set; } = "[]";
     public DateTimeOffset UpdatedUtc { get; set; }
 }

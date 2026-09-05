@@ -89,6 +89,12 @@ public partial class Home : ComponentBase, IDisposable
     private bool showUnlockAchievement = false;
     private CoinImage? currentlyUnlockedCoin = null;
     private Queue<CoinImage> pendingUnlockAchievements = new Queue<CoinImage>();
+    private bool showGameAchievement = false;
+    private GameAchievement? currentlyUnlockedAchievement = null;
+    private readonly Queue<GameAchievement> pendingGameAchievements = new();
+    private bool _showingUnlockToasts;
+    private bool _showingGameAchievements;
+    private int _toastSlot;
     
     // Coin preview modal state
     private bool showCoinPreview = false;
@@ -123,6 +129,7 @@ public partial class Home : ComponentBase, IDisposable
             
             // Initialize UnlockProgressService
             await UnlockProgress.InitializeAsync();
+            UnlockProgress.AchievementsUnlocked += OnAchievementsUnlocked;
             await Account.InitializeAsync();
             if (Account.IsSignedIn)
             {
@@ -712,38 +719,144 @@ public partial class Home : ComponentBase, IDisposable
     
     private async Task ShowPendingUnlockAchievements()
     {
-        // Process achievements one at a time
-        while (pendingUnlockAchievements.Count > 0)
+        if (_showingUnlockToasts)
+            return;
+
+        _showingUnlockToasts = true;
+        try
         {
-            currentlyUnlockedCoin = pendingUnlockAchievements.Dequeue();
-            showUnlockAchievement = true;
-            
-            // Play coin unlock sound
-            try
+            while (pendingUnlockAchievements.Count > 0)
             {
-                await JSRuntime.InvokeVoidAsync("playCoinUnlockSound");
-            }
-            catch (JSException)
-            {
-                // Sound failed to play, continue anyway
-            }
-            
-            StateHasChanged();
-            
-            // Wait for user to dismiss this achievement
-            while (showUnlockAchievement)
-            {
-                await Task.Delay(100);
-            }
-            
-            // Small delay between multiple achievements
-            if (pendingUnlockAchievements.Count > 0)
-            {
-                await Task.Delay(300);
+                await EnterToastSlotAsync();
+                try
+                {
+                    currentlyUnlockedCoin = pendingUnlockAchievements.Dequeue();
+                    showUnlockAchievement = true;
+
+                    try
+                    {
+                        await JSRuntime.InvokeVoidAsync("playCoinUnlockSound");
+                    }
+                    catch (JSException)
+                    {
+                    }
+
+                    StateHasChanged();
+
+                    while (showUnlockAchievement)
+                    {
+                        await Task.Delay(100);
+                    }
+                }
+                finally
+                {
+                    currentlyUnlockedCoin = null;
+                    LeaveToastSlot();
+                }
+
+                if (pendingUnlockAchievements.Count > 0)
+                    await Task.Delay(300);
             }
         }
-        
-        currentlyUnlockedCoin = null;
+        finally
+        {
+            _showingUnlockToasts = false;
+        }
+    }
+
+    private void OnAchievementsUnlocked(IReadOnlyList<GameAchievement> achievements)
+    {
+        if (achievements == null || achievements.Count == 0)
+            return;
+
+        _ = InvokeAsync(async () =>
+        {
+            foreach (var achievement in achievements)
+                pendingGameAchievements.Enqueue(achievement);
+
+            await ShowPendingGameAchievements();
+        });
+    }
+
+    private async Task ShowPendingGameAchievements()
+    {
+        if (_showingGameAchievements)
+            return;
+
+        _showingGameAchievements = true;
+        try
+        {
+            while (pendingGameAchievements.Count > 0)
+            {
+                await EnterToastSlotAsync();
+                try
+                {
+                    currentlyUnlockedAchievement = pendingGameAchievements.Dequeue();
+                    showGameAchievement = true;
+
+                    try
+                    {
+                        await JSRuntime.InvokeVoidAsync("playCoinUnlockSound");
+                    }
+                    catch (JSException)
+                    {
+                    }
+
+                    StateHasChanged();
+
+                    var until = DateTime.UtcNow.AddSeconds(4);
+                    while (showGameAchievement && DateTime.UtcNow < until)
+                        await Task.Delay(100);
+                }
+                finally
+                {
+                    showGameAchievement = false;
+                    currentlyUnlockedAchievement = null;
+                    LeaveToastSlot();
+                    StateHasChanged();
+                }
+
+                if (pendingGameAchievements.Count > 0)
+                    await Task.Delay(300);
+            }
+        }
+        finally
+        {
+            _showingGameAchievements = false;
+        }
+    }
+
+    private void DismissGameAchievement()
+    {
+        showGameAchievement = false;
+        StateHasChanged();
+    }
+
+    private async Task EnterToastSlotAsync()
+    {
+        while (Interlocked.CompareExchange(ref _toastSlot, 1, 0) != 0)
+            await Task.Delay(50);
+    }
+
+    private void LeaveToastSlot()
+    {
+        Interlocked.Exchange(ref _toastSlot, 0);
+    }
+
+    private string GetLandingFlashClass()
+    {
+        if (!showLandingFlash)
+            return string.Empty;
+
+        return lastResult == "tails" ? "landed land-tails" : "landed land-heads";
+    }
+
+    private string GetCoinGlowClass()
+    {
+        if (!showLandingFlash)
+            return string.Empty;
+
+        return lastResult == "tails" ? "land-tails" : "land-heads";
     }
     
     private void DismissUnlockAchievement()
@@ -826,17 +939,17 @@ public partial class Home : ComponentBase, IDisposable
         string achievement = "";
         
         if (currentStreak == 5)
-            achievement = "?? 5 in a row!";
+            achievement = "5 in a row!";
         else if (currentStreak == 10)
-            achievement = "???? 10 streak! Incredible!";
+            achievement = "10 streak! Incredible!";
         else if (currentStreak == 20)
-            achievement = "?????? 20 STREAK! LEGENDARY!";
+            achievement = "20 STREAK! LEGENDARY!";
         else if (headsCount + tailsCount == 10)
-            achievement = "?? First 10 flips!";
+            achievement = "First 10 flips!";
         else if (headsCount + tailsCount == 50)
-            achievement = "? 50 flips milestone!";
+            achievement = "50 flips milestone!";
         else if (headsCount + tailsCount == 100)
-            achievement = "?? 100 flips! Master flipper!";
+            achievement = "100 flips! Master flipper!";
             
         if (!string.IsNullOrEmpty(achievement))
         {
@@ -1586,6 +1699,7 @@ public partial class Home : ComponentBase, IDisposable
         try
         {
             Account.Changed -= OnAccountChanged;
+            UnlockProgress.AchievementsUnlocked -= OnAchievementsUnlocked;
 
             // Stop auto-click timer
             StopAutoClick();

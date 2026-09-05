@@ -16,4 +16,6 @@ public sealed class PlayerProgressDto
     public List<string> NotificationShownFor { get; set; } = new();
     public Dictionary<string, DateTime> CoinUnlockTimestamps { get; set; } = new();
     public Dictionary<string, int> CharacteristicConsecutiveCounts { get; set; } = new();
+    public int TotalPlayTimeSeconds { get; set; }
+    public List<string> UnlockedAchievements { get; set; } = new();
 }

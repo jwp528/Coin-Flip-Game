@@ -25,7 +25,9 @@ public static class PlayerProgressMerger
             RandomUnlockedCoins = UnionList(a.RandomUnlockedCoins, b.RandomUnlockedCoins),
             NotificationShownFor = UnionList(a.NotificationShownFor, b.NotificationShownFor),
             CoinUnlockTimestamps = EarliestMap(a.CoinUnlockTimestamps, b.CoinUnlockTimestamps),
-            CharacteristicConsecutiveCounts = MaxMap(a.CharacteristicConsecutiveCounts, b.CharacteristicConsecutiveCounts)
+            CharacteristicConsecutiveCounts = MaxMap(a.CharacteristicConsecutiveCounts, b.CharacteristicConsecutiveCounts),
+            TotalPlayTimeSeconds = Math.Max(a.TotalPlayTimeSeconds, b.TotalPlayTimeSeconds),
+            UnlockedAchievements = UnionList(a.UnlockedAchievements, b.UnlockedAchievements)
         };
     }
 

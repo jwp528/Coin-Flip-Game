@@ -69,7 +69,9 @@ public sealed class PlayerProgressService
         RandomUnlockedCoins = DeserializeList(entity.RandomUnlockedCoinsJson),
         NotificationShownFor = DeserializeList(entity.NotificationShownForJson),
         CoinUnlockTimestamps = DeserializeTimestamps(entity.CoinUnlockTimestampsJson),
-        CharacteristicConsecutiveCounts = DeserializeMap(entity.CharacteristicConsecutiveCountsJson)
+        CharacteristicConsecutiveCounts = DeserializeMap(entity.CharacteristicConsecutiveCountsJson),
+        TotalPlayTimeSeconds = entity.TotalPlayTimeSeconds,
+        UnlockedAchievements = DeserializeList(entity.UnlockedAchievementsJson)
     };
 
     private static PlayerProgressEntity FromDto(string accountId, PlayerProgressDto dto) => new()
@@ -85,7 +87,9 @@ public sealed class PlayerProgressService
         RandomUnlockedCoinsJson = JsonSerializer.Serialize(dto.RandomUnlockedCoins ?? new List<string>(), JsonDefaults.Options),
         NotificationShownForJson = JsonSerializer.Serialize(dto.NotificationShownFor ?? new List<string>(), JsonDefaults.Options),
         CoinUnlockTimestampsJson = JsonSerializer.Serialize(dto.CoinUnlockTimestamps ?? new Dictionary<string, DateTime>(), JsonDefaults.Options),
-        CharacteristicConsecutiveCountsJson = JsonSerializer.Serialize(dto.CharacteristicConsecutiveCounts ?? new Dictionary<string, int>(), JsonDefaults.Options)
+        CharacteristicConsecutiveCountsJson = JsonSerializer.Serialize(dto.CharacteristicConsecutiveCounts ?? new Dictionary<string, int>(), JsonDefaults.Options),
+        TotalPlayTimeSeconds = dto.TotalPlayTimeSeconds,
+        UnlockedAchievementsJson = JsonSerializer.Serialize(dto.UnlockedAchievements ?? new List<string>(), JsonDefaults.Options)
     };
 
     private static Dictionary<string, int> DeserializeMap(string json)
@@ -101,8 +105,11 @@ public sealed class PlayerProgressService
         }
     }
 
-    private static List<string> DeserializeList(string json)
+    private static List<string> DeserializeList(string? json)
     {
+        if (string.IsNullOrWhiteSpace(json))
+            return new List<string>();
+
         try
         {
             return JsonSerializer.Deserialize<List<string>>(json, JsonDefaults.Options) ?? new List<string>();

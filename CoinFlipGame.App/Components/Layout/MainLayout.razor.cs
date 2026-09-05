@@ -43,7 +43,18 @@ public partial class MainLayout : IDisposable
     }
 
     [JSInvokable]
-    public Task OnVisibilityHidden() => UnlockProgress.FlushCloudAsync();
+    public Task OnVisibilityHidden()
+    {
+        UnlockProgress.PausePlayTime();
+        return UnlockProgress.FlushCloudAsync();
+    }
+
+    [JSInvokable]
+    public Task OnVisibilityShown()
+    {
+        UnlockProgress.ResumePlayTime();
+        return Task.CompletedTask;
+    }
 
     private void StartUpdateCheckTimer()
     {

@@ -65,6 +65,16 @@ public class UserProgress
     /// </summary>
     public Dictionary<string, int> CharacteristicConsecutiveCounts { get; set; } = new();
 
+    /// <summary>
+    /// Cumulative play time in seconds (session time is added on top while the game is open).
+    /// </summary>
+    public int TotalPlayTimeSeconds { get; set; }
+
+    /// <summary>
+    /// Persisted game achievement ids. Once present, that achievement never re-fires.
+    /// </summary>
+    public List<string> UnlockedAchievements { get; set; } = new();
+
     public PlayerProgressDto ToDto() => new()
     {
         TotalFlips = TotalFlips,
@@ -77,7 +87,9 @@ public class UserProgress
         RandomUnlockedCoins = RandomUnlockedCoins.ToList(),
         NotificationShownFor = NotificationShownFor.ToList(),
         CoinUnlockTimestamps = new Dictionary<string, DateTime>(CoinUnlockTimestamps),
-        CharacteristicConsecutiveCounts = new Dictionary<string, int>(CharacteristicConsecutiveCounts)
+        CharacteristicConsecutiveCounts = new Dictionary<string, int>(CharacteristicConsecutiveCounts),
+        TotalPlayTimeSeconds = TotalPlayTimeSeconds,
+        UnlockedAchievements = UnlockedAchievements.ToList()
     };
 
     public static UserProgress FromDto(PlayerProgressDto dto) => new()
@@ -92,7 +104,9 @@ public class UserProgress
         RandomUnlockedCoins = dto.RandomUnlockedCoins ?? new List<string>(),
         NotificationShownFor = dto.NotificationShownFor ?? new List<string>(),
         CoinUnlockTimestamps = dto.CoinUnlockTimestamps ?? new Dictionary<string, DateTime>(),
-        CharacteristicConsecutiveCounts = dto.CharacteristicConsecutiveCounts ?? new Dictionary<string, int>()
+        CharacteristicConsecutiveCounts = dto.CharacteristicConsecutiveCounts ?? new Dictionary<string, int>(),
+        TotalPlayTimeSeconds = dto.TotalPlayTimeSeconds,
+        UnlockedAchievements = dto.UnlockedAchievements ?? new List<string>()
     };
 }
 

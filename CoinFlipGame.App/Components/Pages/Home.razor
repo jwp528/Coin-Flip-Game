@@ -13,19 +13,19 @@
     
     <!-- Control Buttons - Header on Desktop -->
     <div class="control-buttons-header">
-        <button class="control-btn" @onclick="OpenSettingsModal" title="Settings">
+        <button class="control-btn settings-btn" @onclick="OpenSettingsModal" title="Settings">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="3"></circle>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
         </button>
-        <button class="control-btn @(Account.IsSignedIn ? "signed-in" : "")" @onclick="HandleAccountClick" title="@(Account.IsSignedIn ? "Account" : "Sign in")">
+        <button class="control-btn account-btn @(Account.IsSignedIn ? "signed-in" : "")" @onclick="HandleAccountClick" title="@(Account.IsSignedIn ? "Account" : "Sign in")">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
             </svg>
         </button>
-        <button class="control-btn" @onclick="OpenAboutModal" title="About">
+        <button class="control-btn about-btn" @onclick="OpenAboutModal" title="About">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
@@ -71,10 +71,10 @@
     <!-- Main Coin Container -->
     <div class="coin-container">
         <div class="coin-stage"></div>
-        <div class="coin-glow"></div>
+        <div class="coin-glow @GetCoinGlowClass()"></div>
         
         <div @ref="coinElement" 
-             class="coin @flipResult @(isDragging ? "dragging" : "") @(isSuperFlipReady ? "super-flip-ready shake" : "") @(showLandingFlash ? "landed" : "")" 
+             class="coin @flipResult @(isDragging ? "dragging" : "") @(isSuperFlipReady ? "super-flip-ready shake" : "") @GetLandingFlashClass()" 
              @onclick="HandleClick"
              @onpointerdown="OnPointerDown"
              style="@GetCoinTransform()">
@@ -100,19 +100,19 @@
     
     <!-- Control Buttons - Mobile (Bottom) - Hidden on desktop -->
     <div class="control-buttons-mobile">
-        <button class="control-btn" @onclick="OpenSettingsModal" title="Settings">
+        <button class="control-btn settings-btn" @onclick="OpenSettingsModal" title="Settings">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="3"></circle>
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
         </button>
-        <button class="control-btn @(Account.IsSignedIn ? "signed-in" : "")" @onclick="HandleAccountClick" title="@(Account.IsSignedIn ? "Account" : "Sign in")">
+        <button class="control-btn account-btn @(Account.IsSignedIn ? "signed-in" : "")" @onclick="HandleAccountClick" title="@(Account.IsSignedIn ? "Account" : "Sign in")">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
             </svg>
         </button>
-        <button class="control-btn" @onclick="OpenAboutModal" title="About">
+        <button class="control-btn about-btn" @onclick="OpenAboutModal" title="About">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
@@ -172,7 +172,7 @@
     OnClose="@CloseHapticNotSupportedModal"
     UserAgent="@userAgent" />
 
-<!-- Passive Coin Unlock Notification - Bottom of Screen -->
+<!-- Passive Coin Unlock / Game Achievement Notification - Bottom of Screen -->
 @if (showUnlockAchievement && currentlyUnlockedCoin != null)
 {
     <div class="coin-unlock-notification @GetRarityClass(currentlyUnlockedCoin.UnlockCondition?.Rarity ?? UnlockRarity.Common)" 
@@ -186,6 +186,22 @@
             <div class="coin-unlock-name">@currentlyUnlockedCoin.DisplayName</div>
         </div>
         <span class="coin-unlock-sparkle">✨</span>
+    </div>
+}
+else if (showGameAchievement && currentlyUnlockedAchievement != null)
+{
+    <div class="coin-unlock-notification game-achievement-toast @GetRarityClass(currentlyUnlockedAchievement.Rarity)"
+         @onclick="DismissGameAchievement">
+        <span class="coin-unlock-sparkle">@currentlyUnlockedAchievement.Icon</span>
+        <div class="coin-unlock-icon-wrapper achievement-icon-wrap">
+            <span class="achievement-icon">@currentlyUnlockedAchievement.Icon</span>
+        </div>
+        <div class="coin-unlock-content">
+            <div class="coin-unlock-label">Achievement Unlocked!</div>
+            <div class="coin-unlock-name">@currentlyUnlockedAchievement.Title</div>
+            <div class="coin-unlock-desc">@currentlyUnlockedAchievement.Description</div>
+        </div>
+        <span class="coin-unlock-sparkle">@currentlyUnlockedAchievement.Icon</span>
     </div>
 }
 
