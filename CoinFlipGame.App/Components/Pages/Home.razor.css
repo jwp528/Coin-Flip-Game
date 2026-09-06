@@ -1427,12 +1427,18 @@
     }
 
     .coin {
-        --coin-thickness: 0px;
-        --coin-half: 0px;
+        /* Visible rim, slightly thinner than desktop 32px so Blink is
+           less likely to composite the stacked edge discs over tails. */
+        --coin-thickness: 24px;
+        --coin-half: 12px;
     }
 
-    .coin-thickness {
-        display: none;
+    .coin-face {
+        transform: translateZ(calc(var(--coin-half) + 2px));
+    }
+
+    .coin-back {
+        transform: translateZ(calc(var(--coin-half) * -1 - 2px)) rotateX(180deg);
     }
 
     .counter-icon {
