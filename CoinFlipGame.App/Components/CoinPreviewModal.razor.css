@@ -5,7 +5,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: transparent;
+    background: rgba(0, 0, 0, 0.92);
     z-index: 3000;
     display: flex;
     justify-content: center;
@@ -13,17 +13,6 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
-}
-
-.coin-preview-overlay::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background: rgba(0, 0, 0, 0.92);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    pointer-events: none;
 }
 
 .coin-preview-overlay.visible {
@@ -372,8 +361,8 @@
 }
 
 .preview-coin-art {
-    /* Untransformed clip host. Gold lives on .preview-coin-plate so the
-       face img cannot be covered or dropped by mask-image compositing. */
+    /* Untransformed clip host. No mask-image. Face art is a CSS
+       background on .preview-coin-face-art; gold lives on .preview-coin-plate. */
     position: absolute;
     inset: 0;
     border-radius: 50%;
@@ -385,6 +374,7 @@
     background: none;
     border: 0;
     box-shadow: none;
+    transform: none;
 }
 
 .preview-coin-plate {
@@ -518,16 +508,16 @@
     will-change: transform;
 }
 
-.preview-coin-face-img {
-    position: relative;
+.preview-coin-face-art {
+    position: absolute;
+    inset: 0;
     z-index: 1;
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
     border-radius: 50%;
-    user-select: none;
-    -webkit-user-drag: none;
+    overflow: hidden;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    transform: none;
     pointer-events: none;
 }
 

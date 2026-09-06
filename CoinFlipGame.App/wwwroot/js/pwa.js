@@ -2,7 +2,7 @@
 (function () {
     const DISMISS_KEY = 'pwaInstallDismissed';
     const UPDATED_KEY = 'pwaUpdated';
-    const SW_URL = '/service-worker.js?v=1.5.19';
+    const SW_URL = '/service-worker.js?v=1.5.21';
     const listeners = [];
     let reloading = false;
     let watchingController = false;

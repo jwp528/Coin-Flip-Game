@@ -47,6 +47,17 @@ public partial class CoinPreviewModal : IDisposable
         return (0.965 + 0.035 * chamfer).ToString("0.###", CultureInfo.InvariantCulture);
     }
 
+    private static string FaceArtStyle(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+
+        var escaped = path.Replace('\\', '/').Replace("\"", "%22");
+        return $"background-image: url(\"{escaped}\")";
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         // Reset rotation when modal is opened

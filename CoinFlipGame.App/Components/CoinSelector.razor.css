@@ -5,7 +5,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: transparent;
+    background: rgba(0, 0, 0, 0.85);
     z-index: 1000;
     display: flex;
     justify-content: center;
@@ -13,17 +13,6 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
-}
-
-.coin-selector-overlay::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    pointer-events: none;
 }
 
 .coin-selector-overlay.visible {
@@ -229,7 +218,6 @@
     padding: 12px;
     opacity: 1;
     visibility: visible;
-    transform: translateZ(0);
 }
 
 .coin-option-overlay {
@@ -315,11 +303,10 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(30, 41, 59, 0.9);
+    background: rgba(30, 41, 59, 0.92);
     display: flex;
     justify-content: center;
     align-items: center;
-    backdrop-filter: blur(2px);
 }
 
 .coin-locked-overlay svg {

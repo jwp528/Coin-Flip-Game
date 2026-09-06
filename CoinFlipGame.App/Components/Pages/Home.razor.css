@@ -268,8 +268,9 @@
 }
 
 .coin-art {
-    /* Untransformed clip host. Do not paint gold or mask here — Blink
-       mask-image + isolation on this layer hid .coin-face-img and left a blank disc. */
+    /* Untransformed clip host. No mask-image — Blink hid replaced <img>
+       content under 3D / backface-visibility ancestors. Face art is a
+       CSS background on .coin-face-art, gold lives on .coin-plate. */
     position: absolute;
     inset: 0;
     border-radius: 50%;
@@ -281,6 +282,7 @@
     background: none;
     border: 0;
     box-shadow: none;
+    transform: none;
 }
 
 .coin-plate {
@@ -430,16 +432,17 @@
     animation: shineFlipWeighted 0.6s cubic-bezier(0.33, 0.0, 0.2, 1) forwards;
 }
 
-.coin-face-img {
-    position: relative;
+.coin-face-art {
+    /* CSS background, not <img>: Blink drops replaced content under 3D. */
+    position: absolute;
+    inset: 0;
     z-index: 1;
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
     border-radius: 50%;
-    user-select: none;
-    -webkit-user-drag: none;
+    overflow: hidden;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    transform: none;
     pointer-events: none;
 }
 

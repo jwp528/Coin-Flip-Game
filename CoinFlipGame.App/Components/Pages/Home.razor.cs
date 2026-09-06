@@ -864,6 +864,17 @@ public partial class Home : ComponentBase, IDisposable
         return (0.965 + 0.035 * chamfer).ToString("0.###", CultureInfo.InvariantCulture);
     }
 
+    private static string FaceArtStyle(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return string.Empty;
+        }
+
+        var escaped = path.Replace('\\', '/').Replace("\"", "%22");
+        return $"background-image: url(\"{escaped}\")";
+    }
+
     private string GetStreakHeatClass()
     {
         if (currentStreak >= 20) return "streak-legendary";
