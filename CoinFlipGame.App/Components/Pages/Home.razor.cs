@@ -89,6 +89,8 @@ public partial class Home : ComponentBase, IDisposable
     private string selectedTailsImage = "/img/coins/Random.png";
     private bool isHeadsRandom = true; // Default to random
     private bool isTailsRandom = true; // Default to random
+    private const string FallbackFaceArt = "/img/coins/logo.png";
+    private static readonly int[] StreakFxTiers = [10, 25, 50, 100, 500, 1000];
     private string faceShowing = "/img/coins/logo.png"; // Front (heads) face displayed
     private string backFaceShowing = "/img/coins/Random.png"; // Back (tails) face — must not be a blank plate
     private Dictionary<CoinType, List<CoinImage>>? availableCoins;
@@ -177,9 +179,9 @@ public partial class Home : ComponentBase, IDisposable
             // Apply referrer bonus if applicable (after coins are loaded)
             await ApplyReferrerBonusAsync();
             
-            // Set initial faces from the selected coins
-            faceShowing = selectedHeadsImage;
-            backFaceShowing = selectedTailsImage;
+            // Set initial faces from the selected coins — never an empty url
+            faceShowing = ResolveFacePath(selectedHeadsImage, FallbackFaceArt);
+            backFaceShowing = ResolveFacePath(selectedTailsImage, FallbackFaceArt);
 
             await InitPwaAsync();
             
@@ -367,12 +369,14 @@ public partial class Home : ComponentBase, IDisposable
             {
                 faceShowing = selectedHeadsImage;
             }
+            EnsureFaceArtPopulated();
         }
         else if (selectingFor == "tails")
         {
             selectedTailsImage = coin.Path;
             isTailsRandom = false; // Disable random when specific coin selected
-            backFaceShowing = selectedTailsImage;
+            backFaceShowing = ResolveFacePath(selectedTailsImage, FallbackFaceArt);
+            EnsureFaceArtPopulated();
             // Update face if currently showing tails
             if (faceShowing == selectedTailsImage)
             {
@@ -404,6 +408,12 @@ public partial class Home : ComponentBase, IDisposable
         }
         
         return "";
+    }
+
+    private string GetCoinStyle()
+    {
+        var transform = GetCoinTransform();
+        return $"{transform}--heads-art:{FaceArtUrl(faceShowing)};--tails-art:{FaceArtUrl(backFaceShowing)};";
     }
     
     private string GetShineTransform()
@@ -598,13 +608,12 @@ public partial class Home : ComponentBase, IDisposable
         bool isHeads = ApplyCoinEffectBias(flipValue, headsEffect, tailsEffect);
         string result = isHeads ? "heads" : "tails";
         flipResult = isHeads ? (isSuperFlip ? "flip-heads super-flip" : "flip-heads") : (isSuperFlip ? "flip-tails super-flip" : "flip-tails");
+        int streakAtStart = currentStreak;
+
+        EnsureFaceArtPopulated();
         
-        // Trigger particles at coin position (more particles for super flip / hot streaks)
+        // Modest sparkle on every flip. Extra streak FX fires after land (no low-streak spam).
         int particleCount = isSuperFlip ? 30 : 15;
-        if (currentStreak >= 10)
-            particleCount += 12;
-        else if (currentStreak >= 5)
-            particleCount += 6;
         await JSRuntime.InvokeVoidAsync("triggerSparkle", coinCenterX, coinCenterY, particleCount);
         await JSRuntime.InvokeVoidAsync("playFlipSound");
         
@@ -656,13 +665,6 @@ public partial class Home : ComponentBase, IDisposable
         // Apply combo streak bonus if applicable (adds to streak counter, not probability)
         ApplyComboStreakBonus(headsEffect, tailsEffect);
 
-        if (currentStreak is 5 or 10 or 20)
-        {
-            streakPulseKind = currentStreak >= 20 ? "pulse-legendary" : currentStreak >= 10 ? "pulse-hot" : "pulse-warm";
-            showStreakPulse = true;
-            _ = ClearStreakPulseAsync();
-        }
-        
         // Track coin landing for unlock progress and check for newly unlocked coins
         var allCoins = GetAllCoinsFlat();
         var newlyUnlocked = UnlockProgress.TrackCoinLanding(landedCoinPath, isHeads, currentStreak, allCoins, selectedHeadsImage, selectedTailsImage);
@@ -680,11 +682,15 @@ public partial class Home : ComponentBase, IDisposable
             landedCoinPath = newlyUnlocked.First().Path;
         }
         
-        // Update the face showing based on result (or unlocked coin)
-        faceShowing = landedCoinPath;
-        if (!isHeads)
+        ApplyLandedFaces(isHeads, landedCoinPath);
+
+        if (currentStreak == 5
+            || StreakFxTiers.Any(t => streakAtStart < t && currentStreak >= t)
+            || (currentStreak >= 1000 && currentStreak % 1000 == 0 && streakAtStart < currentStreak))
         {
-            backFaceShowing = landedCoinPath;
+            streakPulseKind = currentStreak >= 1000 ? "pulse-legendary" : currentStreak >= 100 ? "pulse-hot" : "pulse-warm";
+            showStreakPulse = true;
+            _ = ClearStreakPulseAsync();
         }
         
         // Queue up any newly unlocked coins for achievement display
@@ -701,9 +707,13 @@ public partial class Home : ComponentBase, IDisposable
         showLandingFlash = true;
         StateHasChanged();
         
-        // Trigger landing effects (bigger burst for super flip)
+        // Trigger landing effects (bigger burst for super flip / hot streaks)
         int burstCount = isSuperFlip ? 40 : 20;
         await JSRuntime.InvokeVoidAsync("triggerParticleBurst", coinCenterX, coinCenterY, burstCount, new { });
+        if (currentStreak >= 10)
+        {
+            await JSRuntime.InvokeVoidAsync("triggerStreakFx", coinCenterX, coinCenterY, currentStreak);
+        }
         await JSRuntime.InvokeVoidAsync("triggerHaptic", "landing");
         if (isSoundEnabled)
         {
@@ -864,20 +874,63 @@ public partial class Home : ComponentBase, IDisposable
         return (0.965 + 0.035 * chamfer).ToString("0.###", CultureInfo.InvariantCulture);
     }
 
-    private static string FaceArtStyle(string? path)
+    private static string FaceArtUrl(string? path)
     {
-        if (string.IsNullOrWhiteSpace(path))
+        var p = string.IsNullOrWhiteSpace(path) ? FallbackFaceArt : path.Trim().Replace('\\', '/').Replace("\"", "%22");
+        if (string.IsNullOrWhiteSpace(p) || p == "url(\"\")" || p == "none")
+            p = FallbackFaceArt;
+        return $"url(\"{p}\")";
+    }
+
+    private static string FaceArtStyle(string? path) => $"background-image: {FaceArtUrl(path)};";
+
+    private static string ResolveFacePath(string? path, string? fallback = null)
+    {
+        if (!string.IsNullOrWhiteSpace(path))
+            return path;
+        if (!string.IsNullOrWhiteSpace(fallback))
+            return fallback;
+        return FallbackFaceArt;
+    }
+
+    private void EnsureFaceArtPopulated()
+    {
+        faceShowing = ResolveFacePath(faceShowing, selectedHeadsImage);
+        backFaceShowing = ResolveFacePath(backFaceShowing, selectedTailsImage);
+    }
+
+    private void ApplyLandedFaces(bool isHeads, string landedCoinPath)
+    {
+        var landed = ResolveFacePath(landedCoinPath, isHeads ? selectedHeadsImage : selectedTailsImage);
+        faceShowing = landed;
+        backFaceShowing = isHeads
+            ? ResolveFacePath(backFaceShowing, selectedTailsImage)
+            : landed;
+    }
+
+    private static string FormatHudCount(int value)
+    {
+        if (value >= 1_000_000)
         {
-            return string.Empty;
+            var millions = value / 1_000_000d;
+            return millions >= 10
+                ? $"{millions:0.#}M"
+                : $"{millions.ToString("0.##", CultureInfo.InvariantCulture)}M";
         }
 
-        var escaped = path.Replace('\\', '/').Replace("\"", "%22");
-        return $"background-image: url(\"{escaped}\")";
+        if (value >= 100_000)
+            return $"{(value / 1_000d).ToString("0.#", CultureInfo.InvariantCulture)}K";
+
+        return value.ToString("N0", CultureInfo.InvariantCulture);
     }
 
     private string GetStreakHeatClass()
     {
-        if (currentStreak >= 20) return "streak-legendary";
+        if (currentStreak >= 1000) return "streak-absurd";
+        if (currentStreak >= 500) return "streak-mythic";
+        if (currentStreak >= 100) return "streak-legendary";
+        if (currentStreak >= 50) return "streak-inferno";
+        if (currentStreak >= 25) return "streak-blaze";
         if (currentStreak >= 10) return "streak-hot";
         if (currentStreak >= 5) return "streak-warm";
         return string.Empty;
@@ -1416,8 +1469,9 @@ public partial class Home : ComponentBase, IDisposable
                 selectedTailsImage = preferences.SelectedTailsImage;
                 isHeadsRandom = preferences.IsHeadsRandom;
                 isTailsRandom = preferences.IsTailsRandom;
-                backFaceShowing = selectedTailsImage;
+                backFaceShowing = ResolveFacePath(selectedTailsImage, FallbackFaceArt);
             }
+            EnsureFaceArtPopulated();
         }
         catch (Exception ex)
         {

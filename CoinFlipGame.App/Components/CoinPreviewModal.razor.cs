@@ -47,15 +47,23 @@ public partial class CoinPreviewModal : IDisposable
         return (0.965 + 0.035 * chamfer).ToString("0.###", CultureInfo.InvariantCulture);
     }
 
-    private static string FaceArtStyle(string? path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return string.Empty;
-        }
+    private const string FallbackFaceArt = "/img/coins/logo.png";
 
-        var escaped = path.Replace('\\', '/').Replace("\"", "%22");
-        return $"background-image: url(\"{escaped}\")";
+    private static string FaceArtUrl(string? path)
+    {
+        var p = string.IsNullOrWhiteSpace(path) ? FallbackFaceArt : path.Trim().Replace('\\', '/').Replace("\"", "%22");
+        if (string.IsNullOrWhiteSpace(p))
+            p = FallbackFaceArt;
+        return $"url(\"{p}\")";
+    }
+
+    private static string FaceArtStyle(string? path) => $"background-image: {FaceArtUrl(path)};";
+
+    private string GetPreviewCoinStyle()
+    {
+        var transform = GetCoinTransform();
+        var art = FaceArtUrl(CoinImage?.Path);
+        return $"{transform}--heads-art:{art};--tails-art:{art};";
     }
 
     protected override async Task OnParametersSetAsync()
