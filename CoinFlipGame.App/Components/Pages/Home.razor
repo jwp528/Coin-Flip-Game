@@ -19,7 +19,7 @@
                 <img src="@selectedHeadsImage" alt="Heads" class="counter-icon" />
                 <div class="counter-info">
                     <div class="counter-label">Heads</div>
-                    <span class="counter-value">@headsCount</span>
+                    <span class="counter-value">@FormatHudCount(headsCount)</span>
                 </div>
             </div>
         </div>
@@ -30,7 +30,7 @@
                 <img src="@selectedTailsImage" alt="Tails" class="counter-icon" />
                 <div class="counter-info">
                     <div class="counter-label">Tails</div>
-                    <span class="counter-value">@tailsCount</span>
+                    <span class="counter-value">@FormatHudCount(tailsCount)</span>
                 </div>
             </div>
         </div>
@@ -47,7 +47,7 @@
         {
             <div class="streak-counter @(comboBoosted ? "combo-boost" : "") @GetStreakHeatClass()">
                 <span class="streak-icon">🔥</span>
-                <span class="streak-value">@currentStreak</span>
+                <span class="streak-value">@FormatHudCount(currentStreak)</span>
             </div>
         }
     </div>
@@ -61,7 +61,7 @@
              class="coin @flipResult @(isDragging ? "dragging" : "") @(isSuperFlipReady ? "super-flip-ready shake" : "") @GetLandingFlashClass()" 
              @onclick="HandleClick"
              @onpointerdown="OnPointerDown"
-             style="@GetCoinTransform()">
+             style="@GetCoinStyle()">
             <div class="coin-inner">
                 <div class="coin-thickness" aria-hidden="true">
                     @for (var i = 0; i < CoinEdgeSlices; i++)
@@ -76,8 +76,8 @@
                 <div class="coin-back">
                     <div class="coin-art">
                         <div class="coin-plate" aria-hidden="true"></div>
+                        <div class="coin-face-art" style="@FaceArtStyle(backFaceShowing)" aria-hidden="true"></div>
                         <div class="coin-inner-ring"></div>
-                        <img class="coin-face-img" src="@backFaceShowing" alt="" draggable="false" />
                         <div class="landing-flash-sweep"></div>
                     </div>
                     <div class="landing-flash-ring"></div>
@@ -85,9 +85,9 @@
                 <div class="coin-face">
                     <div class="coin-art">
                         <div class="coin-plate" aria-hidden="true"></div>
+                        <div class="coin-face-art" style="@FaceArtStyle(faceShowing)" aria-hidden="true"></div>
                         <div class="coin-shine" style="@GetShineTransform()"></div>
                         <div class="coin-inner-ring"></div>
-                        <img class="coin-face-img" src="@faceShowing" alt="" draggable="false" />
                         <div class="landing-flash-sweep"></div>
                     </div>
                     <div class="landing-flash-ring"></div>

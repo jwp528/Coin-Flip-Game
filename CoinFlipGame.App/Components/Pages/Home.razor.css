@@ -166,6 +166,8 @@
     --coin-thickness: 32px;
     --coin-half: 16px;
     --coin-edge-last: 32;
+    --heads-art: url("/img/coins/logo.png");
+    --tails-art: url("/img/coins/Random.png");
     width: 200px;
     height: 200px;
     position: relative;
@@ -268,8 +270,9 @@
 }
 
 .coin-art {
-    /* Untransformed clip host. Do not paint gold or mask here — Blink
-       mask-image + isolation on this layer hid .coin-face-img and left a blank disc. */
+    /* Untransformed clip host. No mask-image — Blink hid replaced <img>
+       content under 3D / backface-visibility ancestors. Face art is a
+       CSS background on .coin-face-art, gold lives on .coin-plate. */
     position: absolute;
     inset: 0;
     border-radius: 50%;
@@ -281,6 +284,7 @@
     background: none;
     border: 0;
     box-shadow: none;
+    transform: none;
 }
 
 .coin-plate {
@@ -430,17 +434,29 @@
     animation: shineFlipWeighted 0.6s cubic-bezier(0.33, 0.0, 0.2, 1) forwards;
 }
 
-.coin-face-img {
-    position: relative;
+.coin-face-art {
+    /* CSS background, not <img>: Blink drops replaced content under 3D. */
+    position: absolute;
+    inset: 0;
     z-index: 1;
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
     border-radius: 50%;
-    user-select: none;
-    -webkit-user-drag: none;
+    overflow: hidden;
+    background-color: transparent;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    transform: none;
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
     pointer-events: none;
+}
+
+.coin-face .coin-face-art {
+    background-image: var(--heads-art);
+}
+
+.coin-back .coin-face-art {
+    background-image: var(--tails-art);
 }
 
 /* Landing flash — ring sits outside the art clip so it can expand */
@@ -795,6 +811,10 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.5px;
     line-height: 1;
+    white-space: nowrap;
+    max-width: 46vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .streak-counter.streak-warm {
@@ -812,6 +832,19 @@
     animation: streakFlicker 0.7s ease-in-out infinite;
 }
 
+.streak-counter.streak-blaze {
+    background: linear-gradient(90deg, rgba(249, 115, 22, 0.62), rgba(239, 68, 68, 0.5));
+    border-color: rgba(251, 146, 60, 0.95);
+    box-shadow: 0 0 36px rgba(249, 115, 22, 0.9), 0 0 18px rgba(239, 68, 68, 0.45);
+}
+
+.streak-counter.streak-inferno {
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.58), rgba(249, 115, 22, 0.5), rgba(250, 204, 21, 0.38));
+    border-color: rgba(252, 165, 165, 0.95);
+    box-shadow: 0 0 38px rgba(239, 68, 68, 0.85), 0 0 16px rgba(250, 204, 21, 0.45);
+    animation: streakPulse 1s ease-in-out infinite;
+}
+
 .streak-counter.streak-legendary {
     background: linear-gradient(90deg, rgba(251, 191, 36, 0.55), rgba(239, 68, 68, 0.45), rgba(168, 85, 247, 0.42));
     border-color: rgba(253, 224, 71, 0.95);
@@ -819,6 +852,24 @@
         0 0 36px rgba(251, 191, 36, 0.85),
         0 0 22px rgba(168, 85, 247, 0.55);
     animation: streakPulse 0.85s ease-in-out infinite;
+}
+
+.streak-counter.streak-mythic {
+    background: linear-gradient(90deg, rgba(168, 85, 247, 0.55), rgba(236, 72, 153, 0.42), rgba(251, 191, 36, 0.5));
+    border-color: rgba(216, 180, 254, 0.95);
+    box-shadow:
+        0 0 40px rgba(168, 85, 247, 0.85),
+        0 0 18px rgba(251, 191, 36, 0.5);
+    animation: streakPulse 0.75s ease-in-out infinite;
+}
+
+.streak-counter.streak-absurd {
+    background: linear-gradient(90deg, rgba(251, 191, 36, 0.7), rgba(239, 68, 68, 0.55), rgba(56, 189, 248, 0.5), rgba(168, 85, 247, 0.55));
+    border-color: #fff;
+    box-shadow:
+        0 0 44px rgba(251, 191, 36, 0.95),
+        0 0 22px rgba(56, 189, 248, 0.55);
+    animation: streakPulse 0.65s ease-in-out infinite;
 }
 
 .streak-counter.combo-boost {
@@ -1372,6 +1423,16 @@
     .streak-counter {
         top: calc(68px + env(safe-area-inset-top, 0px));
         padding: 4px 10px;
+        max-width: calc(100vw - 132px);
+    }
+
+    .coin {
+        --coin-thickness: 0px;
+        --coin-half: 0px;
+    }
+
+    .coin-thickness {
+        display: none;
     }
 
     .counter-icon {
@@ -1433,7 +1494,9 @@
     }
 
     .streak-value {
-        font-size: 18px;
+        font-size: 16px;
+        max-width: 42vw;
+        letter-spacing: -0.8px;
     }
 
     .coin {

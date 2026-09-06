@@ -199,6 +199,52 @@ window.triggerSparkle = function(x, y, count) {
     ps.sparkle(x, y, count);
 };
 
+// Flat streak FX — no DOM boxes. Intensity by streak tier; callers skip below 10.
+window.triggerStreakFx = function(x, y, streak) {
+    const n = Number(streak) || 0;
+    if (n < 10) return;
+    const ps = window.initParticleSystem();
+    let count = 12;
+    let colors = ['hsl(38, 100%, 58%)', 'hsl(45, 100%, 70%)'];
+    let size = 3;
+    if (n >= 1000) {
+        count = 64;
+        colors = ['hsl(45, 100%, 62%)', 'hsl(12, 95%, 58%)', 'hsl(271, 81%, 66%)', 'hsl(199, 89%, 62%)', '#fff'];
+        size = 5;
+    } else if (n >= 500) {
+        count = 48;
+        colors = ['hsl(271, 81%, 66%)', 'hsl(328, 86%, 64%)', 'hsl(45, 100%, 62%)'];
+        size = 4.5;
+    } else if (n >= 100) {
+        count = 36;
+        colors = ['hsl(45, 100%, 58%)', 'hsl(12, 90%, 55%)', 'hsl(271, 70%, 62%)'];
+        size = 4;
+    } else if (n >= 50) {
+        count = 26;
+        colors = ['hsl(12, 90%, 55%)', 'hsl(32, 95%, 55%)', 'hsl(45, 100%, 60%)'];
+        size = 3.5;
+    } else if (n >= 25) {
+        count = 18;
+        colors = ['hsl(24, 95%, 55%)', 'hsl(38, 100%, 58%)'];
+        size = 3.2;
+    }
+    for (let i = 0; i < count; i++) {
+        ps.createParticle(x, y, {
+            velocityX: n >= 100 ? 7 : 4.5,
+            velocityY: n >= 100 ? 7 : 4.5,
+            decay: n >= 500 ? 0.012 : 0.018,
+            size: Math.random() * size + 1.5,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            gravity: 0.06,
+            shape: n >= 1000 && Math.random() > 0.65 ? 'square' : 'circle'
+        });
+    }
+    if (!ps.isAnimating) {
+        ps.isAnimating = true;
+        ps.animate();
+    }
+};
+
 // Clear all particles (e.g., when drawer closes)
 window.clearParticles = function() {
     const ps = window.particleSystem;

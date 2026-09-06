@@ -21,7 +21,7 @@
                      @onpointermove="OnPointerMove"
                      @onpointerup="OnPointerUp"
                      @onpointercancel="OnPointerCancel"
-                     style="@GetCoinTransform()">
+                     style="@GetPreviewCoinStyle()">
                     <div class="preview-coin-inner">
                         <div class="preview-coin-thickness" aria-hidden="true">
                             @for (var i = 0; i < CoinEdgeSlices; i++)
@@ -36,20 +36,14 @@
                         <div class="preview-coin-back">
                             <div class="preview-coin-art">
                                 <div class="preview-coin-plate" aria-hidden="true"></div>
-                                @if (CoinImage != null)
-                                {
-                                    <img class="preview-coin-face-img" src="@CoinImage.Path" alt="" draggable="false" />
-                                }
+                                <div class="preview-coin-face-art" style="@FaceArtStyle(CoinImage?.Path)" aria-hidden="true"></div>
                             </div>
                         </div>
                         <div class="preview-coin-face">
                             <div class="preview-coin-art">
                                 <div class="preview-coin-plate" aria-hidden="true"></div>
+                                <div class="preview-coin-face-art" style="@FaceArtStyle(CoinImage?.Path)" aria-hidden="true"></div>
                                 <div class="preview-coin-shine" style="@GetShineTransform()"></div>
-                                @if (CoinImage != null)
-                                {
-                                    <img class="preview-coin-face-img" src="@CoinImage.Path" alt="" draggable="false" />
-                                }
                             </div>
                         </div>
                     </div>

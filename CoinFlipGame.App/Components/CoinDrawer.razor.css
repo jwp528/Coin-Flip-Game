@@ -11,30 +11,14 @@
     justify-content: center;
     align-items: flex-end;
     pointer-events: none;
+    transition: background 0.3s ease;
 }
 
-/* Blur lives on a sibling layer so backdrop-filter cannot drop descendant <img>s
-   (Blink + a masked/3D play coin behind the overlay). */
-.coin-drawer-overlay::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background: rgba(0, 0, 0, 0);
-    backdrop-filter: blur(0px);
-    -webkit-backdrop-filter: blur(0px);
-    pointer-events: none;
-    transition: background 0.3s ease, backdrop-filter 0.3s ease, -webkit-backdrop-filter 0.3s ease;
-}
-
+/* Solid scrim only. Blink drops descendant <img>s when any overlay
+   ancestor (or sibling ::before) uses backdrop-filter. */
 .coin-drawer-overlay.visible {
     pointer-events: all;
-}
-
-.coin-drawer-overlay.visible::before {
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.72);
 }
 
 .coin-drawer {
@@ -350,7 +334,6 @@
     opacity: 1;
     visibility: visible;
     pointer-events: none;
-    transform: translateZ(0);
     transition: transform 0.3s ease, filter 0.3s ease;
 }
 
@@ -374,8 +357,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(2px);
+    background: rgba(0, 0, 0, 0.55);
     border-radius: 50%;
 }
 

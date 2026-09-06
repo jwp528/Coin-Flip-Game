@@ -35,6 +35,17 @@ public class AchievementCoinType : CoinType
         "10TailStreak.png",
         "50TailStreak.png",
         "TailMaster.png",
+        "Streak100.png",
+        "Streak250.png",
+        "Streak500.png",
+        "Streak1K.png",
+        "Streak5K.png",
+        "Streak10K.png",
+        "Streak50K.png",
+        "Streak100K.png",
+        "Streak250K.png",
+        "Streak500K.png",
+        "Streak1M.png",
         "Completionist.png"
     };
     
@@ -269,6 +280,116 @@ public class AchievementCoinType : CoinType
                 StreakSide = StreakSide.Tails,
                 Description = "Achieve a 100-tails streak",
                 FlavorText = "One hundred tails. Master of shadows, keeper of the eternal flip's darker truth.",
+                Rarity = UnlockRarity.Legendary
+            }
+        },
+        {
+            "Streak100.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.Streak,
+                RequiredCount = 100,
+                Description = "Achieve a 100-flip streak (any side)",
+                FlavorText = "A hundred without breaking. Combo or raw luck — the coin still counts them.",
+                Rarity = UnlockRarity.Rare
+            }
+        },
+        {
+            "Streak250.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.Streak,
+                RequiredCount = 250,
+                Description = "Achieve a 250-flip streak (any side)",
+                FlavorText = "Two hundred fifty deep. The HUD is starting to sweat.",
+                Rarity = UnlockRarity.Rare
+            }
+        },
+        {
+            "Streak500.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.Streak,
+                RequiredCount = 500,
+                Description = "Achieve a 500-flip streak (any side)",
+                FlavorText = "Five hundred in a row. Probability has left the building.",
+                Rarity = UnlockRarity.Legendary
+            }
+        },
+        {
+            "Streak1K.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.Streak,
+                RequiredCount = 1000,
+                Description = "Achieve a 1,000-flip streak (any side)",
+                FlavorText = "A thousand consecutive calls. The streak counter needs more digits.",
+                Rarity = UnlockRarity.Legendary
+            }
+        },
+        {
+            "Streak5K.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.Streak,
+                RequiredCount = 5000,
+                Description = "Achieve a 5,000-flip streak (any side)",
+                FlavorText = "Five thousand. Combo coins were a mistake, and you are the mistake's champion.",
+                Rarity = UnlockRarity.Legendary
+            }
+        },
+        {
+            "Streak10K.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.Streak,
+                RequiredCount = 10000,
+                Description = "Achieve a 10,000-flip streak (any side)",
+                FlavorText = "Ten thousand unbroken. The fire on the HUD has become a second sun.",
+                Rarity = UnlockRarity.Legendary
+            }
+        },
+        {
+            "Streak50K.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.Streak,
+                RequiredCount = 50000,
+                Description = "Achieve a 50,000-flip streak (any side)",
+                FlavorText = "Fifty thousand. Civilizations have risen and fallen in fewer coin flips.",
+                Rarity = UnlockRarity.Legendary
+            }
+        },
+        {
+            "Streak100K.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.Streak,
+                RequiredCount = 100000,
+                Description = "Achieve a 100,000-flip streak (any side)",
+                FlavorText = "One hundred thousand. The streak is no longer a number; it is a lifestyle.",
+                Rarity = UnlockRarity.Legendary
+            }
+        },
+        {
+            "Streak250K.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.Streak,
+                RequiredCount = 250000,
+                Description = "Achieve a 250,000-flip streak (any side)",
+                FlavorText = "A quarter million. Even the combo multiplier is impressed.",
+                Rarity = UnlockRarity.Legendary
+            }
+        },
+        {
+            "Streak500K.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.Streak,
+                RequiredCount = 500000,
+                Description = "Achieve a 500,000-flip streak (any side)",
+                FlavorText = "Half a million. The HUD ran out of polite numbers.",
+                Rarity = UnlockRarity.Legendary
+            }
+        },
+        {
+            "Streak1M.png", new UnlockCondition
+            {
+                Type = UnlockConditionType.Streak,
+                RequiredCount = 1000000,
+                Description = "Achieve a 1,000,000-flip streak (any side)",
+                FlavorText = "One million. The coin has accepted you as its god.",
                 Rarity = UnlockRarity.Legendary
             }
         },
