@@ -42,14 +42,12 @@
             </svg>
         </button>
         
-        <!-- Streak Counter - Top Center -->
-        @if (currentStreak > 2)
-        {
-            <div class="streak-counter @(comboBoosted ? "combo-boost" : "") @GetStreakHeatClass()">
-                <span class="streak-icon">🔥</span>
-                <span class="streak-value">@FormatHudCount(currentStreak)</span>
-            </div>
-        }
+        <!-- Streak Counter - Top Center (stay in DOM; CSS hides when streak is low) -->
+        <div class="streak-counter @(currentStreak > 2 ? "" : "streak-idle") @(comboBoosted ? "combo-boost" : "") @GetStreakHeatClass()"
+             aria-hidden="@(currentStreak > 2 ? "false" : "true")">
+            <span class="streak-icon" aria-hidden="true">🔥</span>
+            <span class="streak-value">@FormatHudCount(currentStreak)</span>
+        </div>
     </div>
     
     <!-- Main Coin Container -->
