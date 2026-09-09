@@ -161,6 +161,18 @@ public partial class CoinDrawer : IDisposable
         await OnRandomSelected.InvokeAsync();
     }
 
+    private async Task HandleCoinHover()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("playDrawerHoverSound");
+        }
+        catch (Exception)
+        {
+            // Ignore JS interop errors (e.g., during prerendering)
+        }
+    }
+
     private bool IsSelectedCoin(string coinPath)
     {
         return !string.IsNullOrEmpty(SelectedCoinPath) && SelectedCoinPath == coinPath && !IsRandomSelected;

@@ -144,43 +144,60 @@ public partial class Build
         StateHasChanged();
     }
 
-    private void ToggleDrawer()
+    private async Task ToggleDrawer()
     {
         hasInteractedWithDrawer = true; // Track user interaction
 
         if (selectingForMain || selectingForPrereqIndex.HasValue)
         {
-            CloseCoinDrawer();
+            await CloseCoinDrawer();
         }
         else
         {
-            showCoinDrawer = !showCoinDrawer;
+            await SetCoinDrawerVisible(!showCoinDrawer);
         }
     }
 
-    private void OpenRequiredCoinSelector(int? prereqIndex)
+    private async Task OpenRequiredCoinSelector(int? prereqIndex)
     {
         hasInteractedWithDrawer = true; // Track user interaction
         selectingForMain = prereqIndex == null;
         selectingForPrereqIndex = prereqIndex;
-        showCoinDrawer = true;
+        await SetCoinDrawerVisible(true);
     }
 
-    private void CloseCoinDrawer()
+    private async Task CloseCoinDrawer()
     {
-        showCoinDrawer = false;
         selectingForMain = false;
         selectingForPrereqIndex = null;
+        await SetCoinDrawerVisible(false);
     }
 
-    private void HandleCoinSelected(CoinImage coin)
+    private async Task SetCoinDrawerVisible(bool visible)
+    {
+        if (showCoinDrawer == visible)
+            return;
+
+        showCoinDrawer = visible;
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync(visible ? "playDrawerOpenSound" : "playDrawerCloseSound");
+        }
+        catch (Exception)
+        {
+            // Ignore JS interop errors (e.g., audio not ready)
+        }
+    }
+
+    private async Task HandleCoinSelected(CoinImage coin)
     {
         hasInteractedWithDrawer = true; // Track user interaction
 
         if (selectingForPrereqIndex.HasValue)
         {
             prerequisites[selectingForPrereqIndex.Value].RequiredCoinPath = coin.Path;
-            CloseCoinDrawer();
+            await CloseCoinDrawer();
         }
         else if (selectingForMain)
         {
@@ -196,13 +213,13 @@ public partial class Build
             {
                 mainCondition.RequiredCoinPath = coin.Path;
             }
-            CloseCoinDrawer();
+            await CloseCoinDrawer();
         }
         else
         {
             selectedCoin = coin;
             LoadExistingConfiguration();
-            showCoinDrawer = false;
+            await SetCoinDrawerVisible(false);
         }
     }
 
@@ -306,13 +323,13 @@ public partial class Build
         prerequisites.RemoveAt(index);
     }
 
-    private void AddRequiredCoin()
+    private async Task AddRequiredCoin()
     {
         if (mainCondition.RequiredCoinPaths == null)
             mainCondition.RequiredCoinPaths = new List<string>();
 
         selectingForMain = true;
-        showCoinDrawer = true;
+        await SetCoinDrawerVisible(true);
     }
 
     private void RemoveRequiredCoin(int index)
@@ -674,12 +691,12 @@ public partial class Build
         }
     }
 
-    private void HandleDrawerBackgroundClick()
+    private async Task HandleDrawerBackgroundClick()
     {
         // Close the drawer if the background is clicked and it's currently open
         if (showCoinDrawer)
         {
-            showCoinDrawer = false;
+            await SetCoinDrawerVisible(false);
         }
     }
 

@@ -104,22 +104,6 @@ window.setHapticsEnabled = function(enabled) {
     window.hapticsEnabled = enabled;
 };
 
-// Sound Effects Placeholders (ready for audio implementation)
-window.playFlipSound = function() {
-    // TODO: Add actual audio implementation
-    console.log('?? Flip sound');
-};
-
-window.playLandSound = function() {
-    // TODO: Add actual audio implementation
-    console.log('?? Land sound');
-};
-
-window.playAchievementSound = function() {
-    // TODO: Add actual audio implementation
-    console.log('?? Achievement sound');
-};
-
 // Window inner dimensions helper
 window.getWindowDimensions = function() {
     return {
