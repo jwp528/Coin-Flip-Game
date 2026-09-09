@@ -93,6 +93,7 @@ public partial class Home : ComponentBase, IDisposable
     private static readonly int[] StreakFxTiers = [10, 25, 50, 100, 500, 1000];
     private string faceShowing = "/img/coins/logo.png"; // Front (heads) face displayed
     private string backFaceShowing = "/img/coins/Random.png"; // Back (tails) face — must not be a blank plate
+    private bool facesArtReady;
     private Dictionary<CoinType, List<CoinImage>>? availableCoins;
 
     private bool showCustomizeTip = true;
@@ -182,6 +183,7 @@ public partial class Home : ComponentBase, IDisposable
             // Set initial faces from the selected coins — never an empty url
             faceShowing = ResolveFacePath(selectedHeadsImage, FallbackFaceArt);
             backFaceShowing = ResolveFacePath(selectedTailsImage, FallbackFaceArt);
+            await RefreshFacesArtAsync();
 
             await InitPwaAsync();
             
@@ -388,6 +390,7 @@ public partial class Home : ComponentBase, IDisposable
         // This ensures the new coin selection is fully applied
         await SaveCoinSelectionPreferencesAsync();
         StateHasChanged();
+        await RefreshFacesArtAsync();
         
         // Update auto-click state AFTER state has been saved
         // This ensures effects are read from the newly selected coins
@@ -682,7 +685,7 @@ public partial class Home : ComponentBase, IDisposable
             landedCoinPath = newlyUnlocked.First().Path;
         }
         
-        ApplyLandedFaces(isHeads, landedCoinPath);
+        await ApplyLandedFacesAsync(isHeads, landedCoinPath);
 
         if (currentStreak == 5
             || StreakFxTiers.Any(t => streakAtStart < t && currentStreak >= t)
@@ -899,13 +902,31 @@ public partial class Home : ComponentBase, IDisposable
         backFaceShowing = ResolveFacePath(backFaceShowing, selectedTailsImage);
     }
 
-    private void ApplyLandedFaces(bool isHeads, string landedCoinPath)
+    private async Task RefreshFacesArtAsync()
+    {
+        facesArtReady = false;
+        EnsureFaceArtPopulated();
+        StateHasChanged();
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("preloadCoinArt", new[] { faceShowing, backFaceShowing });
+        }
+        catch
+        {
+            // best-effort; still show faces
+        }
+        facesArtReady = true;
+        StateHasChanged();
+    }
+
+    private async Task ApplyLandedFacesAsync(bool isHeads, string landedCoinPath)
     {
         var landed = ResolveFacePath(landedCoinPath, isHeads ? selectedHeadsImage : selectedTailsImage);
         faceShowing = landed;
         backFaceShowing = isHeads
             ? ResolveFacePath(backFaceShowing, selectedTailsImage)
             : landed;
+        await RefreshFacesArtAsync();
     }
 
     private static string FormatHudCount(int value)
@@ -1260,6 +1281,8 @@ public partial class Home : ComponentBase, IDisposable
         }
         
         await SaveCoinSelectionPreferencesAsync();
+        if (selectingFor == "tails")
+            await RefreshFacesArtAsync();
         // Don't auto-close drawer - let user close it manually
         StateHasChanged();
     }

@@ -449,6 +449,11 @@
     backface-visibility: visible;
     -webkit-backface-visibility: visible;
     pointer-events: none;
+    opacity: 0;
+    transition: opacity 200ms ease;
+}
+.coin-face-art.is-ready {
+    opacity: 1;
 }
 
 .coin-face .coin-face-art {
