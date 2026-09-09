@@ -49,7 +49,7 @@
                 <!-- Felt-lined coin case -->
                 <div class="coin-case">
                     <!-- Random Option First -->
-                    <div class="coin-case-slot @(IsRandomSelected ? "selected" : "")" @onclick="HandleRandomSelection">
+                    <div class="coin-case-slot @(IsRandomSelected ? "selected" : "")" @onclick="HandleRandomSelection" @onmouseenter="HandleCoinHover">
                         <div class="coin-slot-inner">
                             <div class="coin-display random-coin">
                                 <img src="@RANDOM_COIN_IMAGE" alt="Random" class="coin-image" />
@@ -85,7 +85,8 @@
                             <div class="coin-case-slot @(isUnlocked ? "" : "locked") @(isSelected ? "selected" : "")" 
                                  @onpointerdown="@(() => HandleCoinPointerDown(coin, isUnlocked))"
                                  @onpointerup="HandleCoinPointerUp"
-                                 @onpointercancel="HandleCoinPointerCancel">
+                                 @onpointercancel="HandleCoinPointerCancel"
+                                 @onmouseenter="HandleCoinHover">
                                 <div class="coin-slot-inner">
                                     <div class="coin-display">
                                         @if (isUnlocked)
