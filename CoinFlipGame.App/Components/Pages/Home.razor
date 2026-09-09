@@ -1,4 +1,4 @@
-﻿@page "/{referrer?}"
+@page "/{referrer?}"
 @using CoinFlipGame.App.Models
 @using CoinFlipGame.App.Models.Unlocks
 
@@ -74,7 +74,7 @@
                 <div class="coin-back">
                     <div class="coin-art">
                         <div class="coin-plate" aria-hidden="true"></div>
-                        <div class="coin-face-art" style="@FaceArtStyle(backFaceShowing)" aria-hidden="true"></div>
+                        <div class="coin-face-art @(facesArtReady ? "is-ready" : null)" style="@FaceArtStyle(backFaceShowing)" aria-hidden="true"></div>
                         <div class="coin-inner-ring"></div>
                         <div class="landing-flash-sweep"></div>
                     </div>
@@ -83,7 +83,7 @@
                 <div class="coin-face">
                     <div class="coin-art">
                         <div class="coin-plate" aria-hidden="true"></div>
-                        <div class="coin-face-art" style="@FaceArtStyle(faceShowing)" aria-hidden="true"></div>
+                        <div class="coin-face-art @(facesArtReady ? "is-ready" : null)" style="@FaceArtStyle(faceShowing)" aria-hidden="true"></div>
                         <div class="coin-shine" style="@GetShineTransform()"></div>
                         <div class="coin-inner-ring"></div>
                         <div class="landing-flash-sweep"></div>
