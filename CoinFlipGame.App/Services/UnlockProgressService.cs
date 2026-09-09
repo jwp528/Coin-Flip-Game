@@ -1,5 +1,7 @@
 using CoinFlipGame.App.Models;
 using CoinFlipGame.App.Models.Unlocks;
+using CoinFlipGame.Shared;
+using CoinFlipGame.Shared.Dtos;
 using Blazored.LocalStorage;
 
 namespace CoinFlipGame.App.Services;
@@ -32,13 +34,30 @@ public class UnlockProgressService
     private int _longestStreak = 0;
     private int _longestHeadsStreak = 0;
     private int _longestTailsStreak = 0;
+    private int _totalPlayTimeSeconds = 0;
+    private HashSet<string> _unlockedAchievements = new(StringComparer.Ordinal);
+    private DateTime _playTimeAnchor = DateTime.UtcNow;
+    private double _playTimeRemainder;
+    private bool _playTimePaused;
+    private CancellationTokenSource? _playTimeCts;
     private Random _random = new();
     private bool _isInitialized = false;
-    
-    public UnlockProgressService(ILocalStorageService localStorage, CoinService coinService)
+    private readonly CoinFlipApiClient _api;
+    private bool _cloudMode;
+    private bool _cloudDirty;
+    private CancellationTokenSource? _flushCts;
+    private static readonly HashSet<int> MilestoneFlips = new() { 10, 25, 50, 100, 250, 500, 1000, 1500, 2000, 5000, 10000 };
+
+    public event Action<IReadOnlyList<GameAchievement>>? AchievementsUnlocked;
+
+    public UnlockProgressService(
+        ILocalStorageService localStorage,
+        CoinService coinService,
+        CoinFlipApiClient api)
     {
         _localStorage = localStorage;
         _coinService = coinService;
+        _api = api;
     }
     
     /// <summary>
@@ -52,6 +71,67 @@ public class UnlockProgressService
             
         await LoadProgressAsync();
         _isInitialized = true;
+        StartPlayTimeTracking();
+    }
+
+    public async Task OnSignedInAsync()
+    {
+        if (_cloudMode)
+            return;
+
+        var local = Snapshot();
+        PlayerProgressDto? cloud = null;
+        try
+        {
+            cloud = await _api.GetProgressAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading cloud progress: {ex.Message}");
+        }
+
+        var merged = PlayerProgressMerger.Merge(local.ToDto(), cloud);
+        ApplyProgress(UserProgress.FromDto(merged));
+        await SaveLocalAsync();
+        _cloudMode = true;
+        _cloudDirty = true;
+        await FlushCloudAsync();
+        StartCloudFlushLoop();
+    }
+
+    public void DetachCloud()
+    {
+        _flushCts?.Cancel();
+        _flushCts = null;
+        _cloudMode = false;
+        _cloudDirty = false;
+    }
+
+    public async Task FlushCloudAsync()
+    {
+        if (!_playTimePaused)
+            FlushPlayTimeElapsed();
+
+        if (!_cloudMode || !_cloudDirty)
+            return;
+
+        _cloudDirty = false;
+        try
+        {
+            var sent = Snapshot().ToDto();
+            var merged = await _api.PutProgressAsync(sent);
+            if (merged is not null)
+            {
+                var current = Snapshot().ToDto();
+                ApplyProgress(UserProgress.FromDto(PlayerProgressMerger.Merge(current, merged)));
+                await SaveLocalAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            _cloudDirty = true;
+            Console.WriteLine($"Error saving cloud progress: {ex.Message}");
+        }
     }
     
     /// <summary>
@@ -77,6 +157,7 @@ public class UnlockProgressService
             
             // Track total flips
             _totalFlips++;
+            RaiseIfNewlyUnlocked(CheckAndUnlockAchievements(checkFirstFlip: true));
             
             // Track heads/tails
             if (isHeads)
@@ -110,7 +191,7 @@ public class UnlockProgressService
             // Update characteristic-based consecutive tracking
             UpdateCharacteristicConsecutiveTracking(landedCoin, isHeads, headsCoinPath, tailsCoinPath, allCoins);
             
-            _ = SaveProgressAsync(); // Fire and forget
+            _ = PersistAsync(flushCloud: IsFlipMilestone());
             
             // Check for newly unlocked coins
             return CheckNewlyUnlockedCoins(allCoins ?? new List<CoinImage>());
@@ -236,7 +317,7 @@ public class UnlockProgressService
             
             if (newlyUnlocked.Any())
             {
-                _ = SaveProgressAsync(); // Fire and forget
+                _ = PersistAsync(flushCloud: true);
             }
         }
         catch (Exception ex)
@@ -423,7 +504,7 @@ public class UnlockProgressService
             
             if (newlyUnlocked.Any())
             {
-                _ = SaveProgressAsync(); // Fire and forget
+                _ = PersistAsync(flushCloud: true);
             }
             
             return newlyUnlocked;
@@ -445,7 +526,7 @@ public class UnlockProgressService
             _randomUnlockedCoins.Add(coinPath);
             // Don't mark notification as shown for manual unlocks
             // This allows notifications to show if triggered later
-            await SaveProgressAsync();
+            await PersistAsync(flushCloud: true);
         }
     }
     
@@ -752,6 +833,127 @@ public class UnlockProgressService
     /// Get longest tails streak
     /// </summary>
     public int GetLongestTailsStreak() => _longestTailsStreak;
+
+    public int GetTotalPlayTimeSeconds() => _totalPlayTimeSeconds;
+
+    public IReadOnlyCollection<string> GetUnlockedAchievements() => _unlockedAchievements;
+
+    /// <summary>
+    /// Add elapsed session time to the persisted cumulative total.
+    /// </summary>
+    public void AddPlayTime(TimeSpan delta)
+    {
+        if (delta <= TimeSpan.Zero)
+            return;
+
+        var total = delta.TotalSeconds + _playTimeRemainder;
+        var whole = (int)Math.Floor(total);
+        _playTimeRemainder = total - whole;
+        if (whole <= 0)
+            return;
+
+        _totalPlayTimeSeconds += whole;
+        _ = PersistAsync(flushCloud: false);
+    }
+
+    public void FlushPlayTimeElapsed()
+    {
+        var now = DateTime.UtcNow;
+        var delta = now - _playTimeAnchor;
+        _playTimeAnchor = now;
+        if (delta.TotalSeconds <= 0 || delta.TotalMinutes > 5)
+            return;
+
+        AddPlayTime(delta);
+    }
+
+    public void PausePlayTime()
+    {
+        if (_playTimePaused)
+            return;
+
+        FlushPlayTimeElapsed();
+        _playTimePaused = true;
+        RaiseIfNewlyUnlocked(CheckAndUnlockAchievements(checkFirstFlip: false));
+    }
+
+    public void ResumePlayTime()
+    {
+        _playTimePaused = false;
+        _playTimeAnchor = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Unlock any newly earned persisted achievements. Already-unlocked ids never re-fire.
+    /// </summary>
+    public List<GameAchievement> CheckAndUnlockAchievements(bool checkFirstFlip = false)
+    {
+        var newly = new List<GameAchievement>();
+
+        if (checkFirstFlip && _totalFlips >= 1)
+            TryUnlockAchievement(GameAchievements.FirstFlipId, newly);
+
+        if (_totalPlayTimeSeconds >= 60)
+            TryUnlockAchievement(GameAchievements.Play1mId, newly);
+        if (_totalPlayTimeSeconds >= 5 * 60)
+            TryUnlockAchievement(GameAchievements.Play5mId, newly);
+        if (_totalPlayTimeSeconds >= 15 * 60)
+            TryUnlockAchievement(GameAchievements.Play15mId, newly);
+        if (_totalPlayTimeSeconds >= 60 * 60)
+            TryUnlockAchievement(GameAchievements.Play1hId, newly);
+
+        if (newly.Count > 0)
+            _ = PersistAsync(flushCloud: true);
+
+        return newly;
+    }
+
+    private void TryUnlockAchievement(string id, List<GameAchievement> newly)
+    {
+        if (_unlockedAchievements.Contains(id))
+            return;
+
+        var achievement = GameAchievements.Find(id);
+        if (achievement is null)
+            return;
+
+        _unlockedAchievements.Add(id);
+        newly.Add(achievement);
+    }
+
+    private void RaiseIfNewlyUnlocked(List<GameAchievement> newly)
+    {
+        if (newly.Count > 0)
+            AchievementsUnlocked?.Invoke(newly);
+    }
+
+    private void StartPlayTimeTracking()
+    {
+        _playTimePaused = false;
+        _playTimeAnchor = DateTime.UtcNow;
+        _playTimeCts?.Cancel();
+        _playTimeCts = new CancellationTokenSource();
+        _ = RunPlayTimeLoopAsync(_playTimeCts.Token);
+    }
+
+    private async Task RunPlayTimeLoopAsync(CancellationToken ct)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(20));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(ct))
+            {
+                if (_playTimePaused)
+                    continue;
+
+                FlushPlayTimeElapsed();
+                RaiseIfNewlyUnlocked(CheckAndUnlockAchievements(checkFirstFlip: false));
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
     
     /// <summary>
     /// Get unlock timestamp for a coin
@@ -856,29 +1058,87 @@ public class UnlockProgressService
         return $"{completedCoins}/{requiredPaths.Count} coins completed ({condition.RequiredCount} each)";
     }
     
-    private async Task SaveProgressAsync()
+    private async Task PersistAsync(bool flushCloud)
+    {
+        await SaveLocalAsync();
+        if (!_cloudMode)
+            return;
+
+        _cloudDirty = true;
+        if (flushCloud)
+            await FlushCloudAsync();
+    }
+
+    private bool IsFlipMilestone()
+    {
+        return MilestoneFlips.Contains(_totalFlips) ||
+               MilestoneFlips.Contains(_headsFlips) ||
+               MilestoneFlips.Contains(_tailsFlips) ||
+               (_totalFlips >= 50 && _totalFlips % 50 == 0);
+    }
+
+    private UserProgress Snapshot() => new()
+    {
+        TotalFlips = _totalFlips,
+        HeadsFlips = _headsFlips,
+        TailsFlips = _tailsFlips,
+        LongestStreak = _longestStreak,
+        LongestHeadsStreak = _longestHeadsStreak,
+        LongestTailsStreak = _longestTailsStreak,
+        CoinLandCounts = new Dictionary<string, int>(_coinLandCounts),
+        RandomUnlockedCoins = _randomUnlockedCoins.ToList(),
+        NotificationShownFor = _notificationShownFor.ToList(),
+        CoinUnlockTimestamps = new Dictionary<string, DateTime>(_coinUnlockTimestamps),
+        CharacteristicConsecutiveCounts = new Dictionary<string, int>(_characteristicConsecutiveCounts),
+        TotalPlayTimeSeconds = _totalPlayTimeSeconds,
+        UnlockedAchievements = _unlockedAchievements.ToList()
+    };
+
+    private void ApplyProgress(UserProgress progress)
+    {
+        _totalFlips = progress.TotalFlips;
+        _headsFlips = progress.HeadsFlips;
+        _tailsFlips = progress.TailsFlips;
+        _longestStreak = progress.LongestStreak;
+        _longestHeadsStreak = progress.LongestHeadsStreak;
+        _longestTailsStreak = progress.LongestTailsStreak;
+        _coinLandCounts = progress.CoinLandCounts ?? new Dictionary<string, int>();
+        _randomUnlockedCoins = progress.RandomUnlockedCoins?.ToHashSet() ?? new HashSet<string>();
+        _notificationShownFor = progress.NotificationShownFor?.ToHashSet() ?? new HashSet<string>();
+        _coinUnlockTimestamps = progress.CoinUnlockTimestamps ?? new Dictionary<string, DateTime>();
+        _characteristicConsecutiveCounts = progress.CharacteristicConsecutiveCounts ?? new Dictionary<string, int>();
+        _totalPlayTimeSeconds = progress.TotalPlayTimeSeconds;
+        _unlockedAchievements = progress.UnlockedAchievements?.ToHashSet(StringComparer.Ordinal) ?? new HashSet<string>(StringComparer.Ordinal);
+    }
+
+    private void StartCloudFlushLoop()
+    {
+        _flushCts?.Cancel();
+        _flushCts = new CancellationTokenSource();
+        _ = RunCloudFlushLoopAsync(_flushCts.Token);
+    }
+
+    private async Task RunCloudFlushLoopAsync(CancellationToken ct)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(45));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(ct))
+                await FlushCloudAsync();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private async Task SaveLocalAsync()
     {
         try
         {
             if (_localStorage == null)
                 return;
-                
-            var progress = new UserProgress
-            {
-                TotalFlips = _totalFlips,
-                HeadsFlips = _headsFlips,
-                TailsFlips = _tailsFlips,
-                LongestStreak = _longestStreak,
-                LongestHeadsStreak = _longestHeadsStreak,
-                LongestTailsStreak = _longestTailsStreak,
-                CoinLandCounts = _coinLandCounts,
-                RandomUnlockedCoins = _randomUnlockedCoins.ToList(),
-                NotificationShownFor = _notificationShownFor.ToList(),
-                CoinUnlockTimestamps = _coinUnlockTimestamps,
-                CharacteristicConsecutiveCounts = _characteristicConsecutiveCounts
-            };
-            
-            await _localStorage.SetItemAsync(StorageKey, progress);
+
+            await _localStorage.SetItemAsync(StorageKey, Snapshot());
         }
         catch (Exception ex)
         {
@@ -896,19 +1156,7 @@ public class UnlockProgressService
             var progress = await _localStorage.GetItemAsync<UserProgress>(StorageKey);
             
             if (progress != null)
-            {
-                _totalFlips = progress.TotalFlips;
-                _headsFlips = progress.HeadsFlips;
-                _tailsFlips = progress.TailsFlips;
-                _longestStreak = progress.LongestStreak;
-                _longestHeadsStreak = progress.LongestHeadsStreak;
-                _longestTailsStreak = progress.LongestTailsStreak;
-                _coinLandCounts = progress.CoinLandCounts ?? new Dictionary<string, int>();
-                _randomUnlockedCoins = progress.RandomUnlockedCoins?.ToHashSet() ?? new HashSet<string>();
-                _notificationShownFor = progress.NotificationShownFor?.ToHashSet() ?? new HashSet<string>();
-                _coinUnlockTimestamps = progress.CoinUnlockTimestamps ?? new Dictionary<string, DateTime>();
-                _characteristicConsecutiveCounts = progress.CharacteristicConsecutiveCounts ?? new Dictionary<string, int>();
-            }
+                ApplyProgress(progress);
         }
         catch (Exception ex)
         {
@@ -926,12 +1174,16 @@ public class UnlockProgressService
         _notificationShownFor.Clear();
         _coinUnlockTimestamps.Clear();
         _characteristicConsecutiveCounts.Clear();
+        _unlockedAchievements.Clear();
         _totalFlips = 0;
         _headsFlips = 0;
         _tailsFlips = 0;
         _longestStreak = 0;
         _longestHeadsStreak = 0;
         _longestTailsStreak = 0;
-        await SaveProgressAsync();
+        _totalPlayTimeSeconds = 0;
+        _playTimeRemainder = 0;
+        _playTimeAnchor = DateTime.UtcNow;
+        await PersistAsync(flushCloud: true);
     }
 }

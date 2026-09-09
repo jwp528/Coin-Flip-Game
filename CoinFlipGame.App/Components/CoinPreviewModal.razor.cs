@@ -3,6 +3,7 @@ using CoinFlipGame.App.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using System.Globalization;
 using System.Runtime.InteropServices;
 
 namespace CoinFlipGame.App.Components;
@@ -34,8 +35,36 @@ public partial class CoinPreviewModal : IDisposable
     private double rotationY = -15; // Default starting rotation
     private const double MAX_ROTATION_X = 75.0;  // Limit vertical rotation to prevent full inversion
     private const double MAX_ROTATION_Y = 75.0;  // Limit horizontal rotation
+    private const int CoinEdgeSlices = 33;
     private DotNetObjectReference<CoinPreviewModal>? dotNetRef;
     private bool hasBeenVisible = false;
+
+    private static string GetCoinEdgeScale(int i)
+    {
+        double t = i / (double)(CoinEdgeSlices - 1);
+        double distFromEnd = Math.Min(t, 1 - t);
+        double chamfer = Math.Clamp(distFromEnd / 0.12, 0, 1);
+        return (0.965 + 0.035 * chamfer).ToString("0.###", CultureInfo.InvariantCulture);
+    }
+
+    private const string FallbackFaceArt = "/img/coins/logo.png";
+
+    private static string FaceArtUrl(string? path)
+    {
+        var p = string.IsNullOrWhiteSpace(path) ? FallbackFaceArt : path.Trim().Replace('\\', '/').Replace("\"", "%22");
+        if (string.IsNullOrWhiteSpace(p))
+            p = FallbackFaceArt;
+        return $"url(\"{p}\")";
+    }
+
+    private static string FaceArtStyle(string? path) => $"background-image: {FaceArtUrl(path)};";
+
+    private string GetPreviewCoinStyle()
+    {
+        var transform = GetCoinTransform();
+        var art = FaceArtUrl(CoinImage?.Path);
+        return $"{transform}--heads-art:{art};--tails-art:{art};";
+    }
 
     protected override async Task OnParametersSetAsync()
     {

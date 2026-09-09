@@ -5,6 +5,7 @@ using CoinFlipGame.App.Services;
 using CoinFlipGame.App.Models;
 using CoinFlipGame.App.Models.Unlocks;
 using Blazored.LocalStorage;
+using System.Globalization;
 
 namespace CoinFlipGame.App.Components.Pages;
 
@@ -24,6 +25,9 @@ public partial class Home : ComponentBase, IDisposable
     
     [Inject]
     private UnlockProgressService UnlockProgress { get; set; } = default!;
+
+    [Inject]
+    private AccountService Account { get; set; } = default!;
     
     [Inject]
     private ILocalStorageService LocalStorage { get; set; } = default!;
@@ -39,6 +43,7 @@ public partial class Home : ComponentBase, IDisposable
     private const string HapticsEnabledKey = "hapticsEnabled";
     private const string FirstTimeKey = "hasSeenGame";
     private const string ReferrerAppliedKey = "referrerBonusApplied";
+    private const int CoinEdgeSlices = 33;
     
     private ElementReference coinElement;
     private bool isFlipping = false;
@@ -49,18 +54,33 @@ public partial class Home : ComponentBase, IDisposable
     private int tailsCount = 0;
     private int currentStreak = 0;
     private int longestStreak = 0;
+    private bool comboBoosted = false;
     private string lastResult = "";
     private bool showAchievement = false;
     private string achievementText = "";
     
     // UI state
     private bool showAboutModal = false;
+    private bool showSettingsModal = false;
     private bool isSoundEnabled = true;
     private bool isHapticsEnabled = true;
     private bool isHapticsSupported = false;
     private bool showHapticNotSupportedModal = false;
     private string userAgent = "";
     private bool showFirstTimeHint = false;
+    private bool showStreakPulse = false;
+    private string streakPulseKind = "";
+    private bool showInstallBanner = false;
+    private bool showSettingsInstall = false;
+    private bool canInstallPwa = false;
+    private bool isStandalonePwa = false;
+    private bool isIosInstallHint = false;
+    private DotNetObjectReference<Home>? pwaRef;
+    private CancellationTokenSource? _installDelayCts;
+    private bool _installDelayStarted;
+    private bool _installDelayElapsed;
+    private bool _disposed;
+    private const int InstallBannerDelayMs = 2000;
     
     // Coin customization state
     private bool showCoinSelector = false;
@@ -69,7 +89,10 @@ public partial class Home : ComponentBase, IDisposable
     private string selectedTailsImage = "/img/coins/Random.png";
     private bool isHeadsRandom = true; // Default to random
     private bool isTailsRandom = true; // Default to random
-    private string faceShowing = "/img/coins/logo.png"; // The current face displayed
+    private const string FallbackFaceArt = "/img/coins/logo.png";
+    private static readonly int[] StreakFxTiers = [10, 25, 50, 100, 500, 1000];
+    private string faceShowing = "/img/coins/logo.png"; // Front (heads) face displayed
+    private string backFaceShowing = "/img/coins/Random.png"; // Back (tails) face — must not be a blank plate
     private Dictionary<CoinType, List<CoinImage>>? availableCoins;
 
     private bool showCustomizeTip = true;
@@ -84,6 +107,12 @@ public partial class Home : ComponentBase, IDisposable
     private bool showUnlockAchievement = false;
     private CoinImage? currentlyUnlockedCoin = null;
     private Queue<CoinImage> pendingUnlockAchievements = new Queue<CoinImage>();
+    private bool showGameAchievement = false;
+    private GameAchievement? currentlyUnlockedAchievement = null;
+    private readonly Queue<GameAchievement> pendingGameAchievements = new();
+    private bool _showingUnlockToasts;
+    private bool _showingGameAchievements;
+    private int _toastSlot;
     
     // Coin preview modal state
     private bool showCoinPreview = false;
@@ -118,6 +147,16 @@ public partial class Home : ComponentBase, IDisposable
             
             // Initialize UnlockProgressService
             await UnlockProgress.InitializeAsync();
+            UnlockProgress.AchievementsUnlocked += OnAchievementsUnlocked;
+            await Account.InitializeAsync();
+            if (Account.IsSignedIn)
+            {
+                await UnlockProgress.OnSignedInAsync();
+                headsCount = UnlockProgress.GetHeadsFlips();
+                tailsCount = UnlockProgress.GetTailsFlips();
+                longestStreak = UnlockProgress.GetLongestStreak();
+            }
+            Account.Changed += OnAccountChanged;
             
             // Check if haptics are supported
             await CheckHapticSupport();
@@ -140,8 +179,11 @@ public partial class Home : ComponentBase, IDisposable
             // Apply referrer bonus if applicable (after coins are loaded)
             await ApplyReferrerBonusAsync();
             
-            // Set initial face to heads
-            faceShowing = selectedHeadsImage;
+            // Set initial faces from the selected coins — never an empty url
+            faceShowing = ResolveFacePath(selectedHeadsImage, FallbackFaceArt);
+            backFaceShowing = ResolveFacePath(selectedTailsImage, FallbackFaceArt);
+
+            await InitPwaAsync();
             
             // Load user progress stats into local state
             headsCount = UnlockProgress.GetHeadsFlips();
@@ -266,6 +308,27 @@ public partial class Home : ComponentBase, IDisposable
     {
         showAboutModal = true;
     }
+
+    private void OpenSettingsModal()
+    {
+        showSettingsModal = true;
+    }
+
+    private void CloseSettingsModal()
+    {
+        showSettingsModal = false;
+    }
+
+    private void OpenAboutFromSettings()
+    {
+        showSettingsModal = false;
+        showAboutModal = true;
+    }
+
+    private void OnAccountChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
     
     private void CloseAboutModal()
     {
@@ -306,11 +369,14 @@ public partial class Home : ComponentBase, IDisposable
             {
                 faceShowing = selectedHeadsImage;
             }
+            EnsureFaceArtPopulated();
         }
         else if (selectingFor == "tails")
         {
             selectedTailsImage = coin.Path;
             isTailsRandom = false; // Disable random when specific coin selected
+            backFaceShowing = ResolveFacePath(selectedTailsImage, FallbackFaceArt);
+            EnsureFaceArtPopulated();
             // Update face if currently showing tails
             if (faceShowing == selectedTailsImage)
             {
@@ -342,6 +408,12 @@ public partial class Home : ComponentBase, IDisposable
         }
         
         return "";
+    }
+
+    private string GetCoinStyle()
+    {
+        var transform = GetCoinTransform();
+        return $"{transform}--heads-art:{FaceArtUrl(faceShowing)};--tails-art:{FaceArtUrl(backFaceShowing)};";
     }
     
     private string GetShineTransform()
@@ -415,10 +487,7 @@ public partial class Home : ComponentBase, IDisposable
             await JSRuntime.InvokeVoidAsync("coinDragHandler.startDrag");
             await JSRuntime.InvokeVoidAsync("coinPhysics.startDrag", coinCenterX, coinCenterY);
             
-            if (isSoundEnabled)
-            {
-                await JSRuntime.InvokeVoidAsync("triggerHaptic", "light");
-            }
+            await JSRuntime.InvokeVoidAsync("triggerHaptic", "light");
         }
         catch (JSException)
         {
@@ -539,21 +608,19 @@ public partial class Home : ComponentBase, IDisposable
         bool isHeads = ApplyCoinEffectBias(flipValue, headsEffect, tailsEffect);
         string result = isHeads ? "heads" : "tails";
         flipResult = isHeads ? (isSuperFlip ? "flip-heads super-flip" : "flip-heads") : (isSuperFlip ? "flip-tails super-flip" : "flip-tails");
+        int streakAtStart = currentStreak;
+
+        EnsureFaceArtPopulated();
         
-        // Trigger particles at coin position (more particles for super flip)
+        // Modest sparkle on every flip. Extra streak FX fires after land (no low-streak spam).
         int particleCount = isSuperFlip ? 30 : 15;
         await JSRuntime.InvokeVoidAsync("triggerSparkle", coinCenterX, coinCenterY, particleCount);
         await JSRuntime.InvokeVoidAsync("playFlipSound");
         
-        if (isSoundEnabled)
+        await JSRuntime.InvokeVoidAsync("triggerHaptic", "medium");
+        if (isSuperFlip)
         {
-            await JSRuntime.InvokeVoidAsync("triggerHaptic", "medium");
-            
-            // Add special haptic for super flip
-            if (isSuperFlip)
-            {
-                await JSRuntime.InvokeVoidAsync("triggerHaptic", "super-flip");
-            }
+            await JSRuntime.InvokeVoidAsync("triggerHaptic", "super-flip");
         }
         
         StateHasChanged();
@@ -597,7 +664,7 @@ public partial class Home : ComponentBase, IDisposable
         
         // Apply combo streak bonus if applicable (adds to streak counter, not probability)
         ApplyComboStreakBonus(headsEffect, tailsEffect);
-        
+
         // Track coin landing for unlock progress and check for newly unlocked coins
         var allCoins = GetAllCoinsFlat();
         var newlyUnlocked = UnlockProgress.TrackCoinLanding(landedCoinPath, isHeads, currentStreak, allCoins, selectedHeadsImage, selectedTailsImage);
@@ -615,8 +682,16 @@ public partial class Home : ComponentBase, IDisposable
             landedCoinPath = newlyUnlocked.First().Path;
         }
         
-        // Update the face showing based on result (or unlocked coin)
-        faceShowing = landedCoinPath;
+        ApplyLandedFaces(isHeads, landedCoinPath);
+
+        if (currentStreak == 5
+            || StreakFxTiers.Any(t => streakAtStart < t && currentStreak >= t)
+            || (currentStreak >= 1000 && currentStreak % 1000 == 0 && streakAtStart < currentStreak))
+        {
+            streakPulseKind = currentStreak >= 1000 ? "pulse-legendary" : currentStreak >= 100 ? "pulse-hot" : "pulse-warm";
+            showStreakPulse = true;
+            _ = ClearStreakPulseAsync();
+        }
         
         // Queue up any newly unlocked coins for achievement display
         foreach (var unlockedCoin in newlyUnlocked)
@@ -632,10 +707,24 @@ public partial class Home : ComponentBase, IDisposable
         showLandingFlash = true;
         StateHasChanged();
         
-        // Trigger landing effects (bigger burst for super flip)
+        // Trigger landing effects (bigger burst for super flip / hot streaks)
         int burstCount = isSuperFlip ? 40 : 20;
         await JSRuntime.InvokeVoidAsync("triggerParticleBurst", coinCenterX, coinCenterY, burstCount, new { });
+        if (currentStreak >= 10)
+        {
+            await JSRuntime.InvokeVoidAsync("triggerStreakFx", coinCenterX, coinCenterY, currentStreak);
+        }
         await JSRuntime.InvokeVoidAsync("triggerHaptic", "landing");
+        if (isSoundEnabled)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("playLandSound");
+            }
+            catch (JSException)
+            {
+            }
+        }
         
         // Set isFlipping to false BEFORE checking achievements so player can continue flipping
         isFlipping = false;
@@ -653,38 +742,390 @@ public partial class Home : ComponentBase, IDisposable
     
     private async Task ShowPendingUnlockAchievements()
     {
-        // Process achievements one at a time
-        while (pendingUnlockAchievements.Count > 0)
+        if (_showingUnlockToasts)
+            return;
+
+        _showingUnlockToasts = true;
+        try
         {
-            currentlyUnlockedCoin = pendingUnlockAchievements.Dequeue();
-            showUnlockAchievement = true;
-            
-            // Play coin unlock sound
-            try
+            while (pendingUnlockAchievements.Count > 0)
             {
-                await JSRuntime.InvokeVoidAsync("playCoinUnlockSound");
-            }
-            catch (JSException)
-            {
-                // Sound failed to play, continue anyway
-            }
-            
-            StateHasChanged();
-            
-            // Wait for user to dismiss this achievement
-            while (showUnlockAchievement)
-            {
-                await Task.Delay(100);
-            }
-            
-            // Small delay between multiple achievements
-            if (pendingUnlockAchievements.Count > 0)
-            {
-                await Task.Delay(300);
+                await EnterToastSlotAsync();
+                try
+                {
+                    currentlyUnlockedCoin = pendingUnlockAchievements.Dequeue();
+                    showUnlockAchievement = true;
+
+                    try
+                    {
+                        await JSRuntime.InvokeVoidAsync("playCoinUnlockSound");
+                    }
+                    catch (JSException)
+                    {
+                    }
+
+                    StateHasChanged();
+
+                    while (showUnlockAchievement)
+                    {
+                        await Task.Delay(100);
+                    }
+                }
+                finally
+                {
+                    currentlyUnlockedCoin = null;
+                    LeaveToastSlot();
+                }
+
+                if (pendingUnlockAchievements.Count > 0)
+                    await Task.Delay(300);
             }
         }
-        
-        currentlyUnlockedCoin = null;
+        finally
+        {
+            _showingUnlockToasts = false;
+        }
+    }
+
+    private void OnAchievementsUnlocked(IReadOnlyList<GameAchievement> achievements)
+    {
+        if (achievements == null || achievements.Count == 0)
+            return;
+
+        _ = InvokeAsync(async () =>
+        {
+            foreach (var achievement in achievements)
+                pendingGameAchievements.Enqueue(achievement);
+
+            await ShowPendingGameAchievements();
+        });
+    }
+
+    private async Task ShowPendingGameAchievements()
+    {
+        if (_showingGameAchievements)
+            return;
+
+        _showingGameAchievements = true;
+        try
+        {
+            while (pendingGameAchievements.Count > 0)
+            {
+                await EnterToastSlotAsync();
+                try
+                {
+                    currentlyUnlockedAchievement = pendingGameAchievements.Dequeue();
+                    showGameAchievement = true;
+
+                    try
+                    {
+                        await JSRuntime.InvokeVoidAsync("playCoinUnlockSound");
+                    }
+                    catch (JSException)
+                    {
+                    }
+
+                    StateHasChanged();
+
+                    var until = DateTime.UtcNow.AddSeconds(4);
+                    while (showGameAchievement && DateTime.UtcNow < until)
+                        await Task.Delay(100);
+                }
+                finally
+                {
+                    showGameAchievement = false;
+                    currentlyUnlockedAchievement = null;
+                    LeaveToastSlot();
+                    StateHasChanged();
+                }
+
+                if (pendingGameAchievements.Count > 0)
+                    await Task.Delay(300);
+            }
+        }
+        finally
+        {
+            _showingGameAchievements = false;
+        }
+    }
+
+    private void DismissGameAchievement()
+    {
+        showGameAchievement = false;
+        StateHasChanged();
+    }
+
+    private async Task EnterToastSlotAsync()
+    {
+        while (Interlocked.CompareExchange(ref _toastSlot, 1, 0) != 0)
+            await Task.Delay(50);
+    }
+
+    private void LeaveToastSlot()
+    {
+        Interlocked.Exchange(ref _toastSlot, 0);
+    }
+
+    private static string GetCoinEdgeScale(int i)
+    {
+        double t = i / (double)(CoinEdgeSlices - 1);
+        double distFromEnd = Math.Min(t, 1 - t);
+        double chamfer = Math.Clamp(distFromEnd / 0.12, 0, 1);
+        return (0.965 + 0.035 * chamfer).ToString("0.###", CultureInfo.InvariantCulture);
+    }
+
+    private static string FaceArtUrl(string? path)
+    {
+        var p = string.IsNullOrWhiteSpace(path) ? FallbackFaceArt : path.Trim().Replace('\\', '/').Replace("\"", "%22");
+        if (string.IsNullOrWhiteSpace(p) || p == "url(\"\")" || p == "none")
+            p = FallbackFaceArt;
+        return $"url(\"{p}\")";
+    }
+
+    private static string FaceArtStyle(string? path) => $"background-image: {FaceArtUrl(path)};";
+
+    private static string ResolveFacePath(string? path, string? fallback = null)
+    {
+        if (!string.IsNullOrWhiteSpace(path))
+            return path;
+        if (!string.IsNullOrWhiteSpace(fallback))
+            return fallback;
+        return FallbackFaceArt;
+    }
+
+    private void EnsureFaceArtPopulated()
+    {
+        faceShowing = ResolveFacePath(faceShowing, selectedHeadsImage);
+        backFaceShowing = ResolveFacePath(backFaceShowing, selectedTailsImage);
+    }
+
+    private void ApplyLandedFaces(bool isHeads, string landedCoinPath)
+    {
+        var landed = ResolveFacePath(landedCoinPath, isHeads ? selectedHeadsImage : selectedTailsImage);
+        faceShowing = landed;
+        backFaceShowing = isHeads
+            ? ResolveFacePath(backFaceShowing, selectedTailsImage)
+            : landed;
+    }
+
+    private static string FormatHudCount(int value)
+    {
+        if (value >= 1_000_000)
+        {
+            var millions = value / 1_000_000d;
+            return millions >= 10
+                ? $"{millions:0.#}M"
+                : $"{millions.ToString("0.##", CultureInfo.InvariantCulture)}M";
+        }
+
+        if (value >= 100_000)
+            return $"{(value / 1_000d).ToString("0.#", CultureInfo.InvariantCulture)}K";
+
+        return value.ToString("N0", CultureInfo.InvariantCulture);
+    }
+
+    private string GetStreakHeatClass()
+    {
+        if (currentStreak >= 1000) return "streak-absurd";
+        if (currentStreak >= 500) return "streak-mythic";
+        if (currentStreak >= 100) return "streak-legendary";
+        if (currentStreak >= 50) return "streak-inferno";
+        if (currentStreak >= 25) return "streak-blaze";
+        if (currentStreak >= 10) return "streak-hot";
+        if (currentStreak >= 5) return "streak-warm";
+        return string.Empty;
+    }
+
+    private async Task ClearStreakPulseAsync()
+    {
+        await Task.Delay(700);
+        showStreakPulse = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task InitPwaAsync()
+    {
+        try
+        {
+            pwaRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("pwa.register", pwaRef);
+            await RefreshPwaStateAsync();
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "PWA helpers unavailable");
+        }
+    }
+
+    private async Task RefreshPwaStateAsync()
+    {
+        try
+        {
+            isStandalonePwa = await JSRuntime.InvokeAsync<bool>("pwa.isStandalone");
+            canInstallPwa = await JSRuntime.InvokeAsync<bool>("pwa.canInstall");
+            isIosInstallHint = await JSRuntime.InvokeAsync<bool>("pwa.needsIosInstallHint");
+            var dismissed = await JSRuntime.InvokeAsync<bool>("pwa.isInstallDismissed");
+            showSettingsInstall = !isStandalonePwa;
+
+            if (isStandalonePwa || dismissed)
+            {
+                showInstallBanner = false;
+            }
+            else if (canInstallPwa || isIosInstallHint)
+            {
+                ScheduleInstallBanner();
+            }
+            else
+            {
+                showInstallBanner = false;
+            }
+
+            StateHasChanged();
+        }
+        catch (JSException)
+        {
+        }
+    }
+
+    private void ScheduleInstallBanner()
+    {
+        if (_disposed || isStandalonePwa)
+            return;
+
+        if (_installDelayElapsed)
+        {
+            _ = TryShowInstallBannerAsync();
+            return;
+        }
+
+        if (_installDelayStarted)
+            return;
+
+        _installDelayStarted = true;
+        _installDelayCts = new CancellationTokenSource();
+        _ = ShowInstallBannerDelayedAsync(_installDelayCts.Token);
+    }
+
+    private async Task ShowInstallBannerDelayedAsync(CancellationToken token)
+    {
+        try
+        {
+            await Task.Delay(InstallBannerDelayMs, token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        _installDelayElapsed = true;
+        await TryShowInstallBannerAsync();
+    }
+
+    private async Task TryShowInstallBannerAsync()
+    {
+        if (_disposed || isStandalonePwa || !_installDelayElapsed)
+        {
+            return;
+        }
+
+        try
+        {
+            var dismissed = await JSRuntime.InvokeAsync<bool>("pwa.isInstallDismissed");
+            if (dismissed)
+            {
+                showInstallBanner = false;
+                await InvokeAsync(StateHasChanged);
+                return;
+            }
+        }
+        catch (JSException)
+        {
+        }
+
+        if (!(canInstallPwa || isIosInstallHint))
+            return;
+
+        showInstallBanner = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public Task OnPwaInstallAvailable()
+    {
+        return InvokeAsync(() =>
+        {
+            canInstallPwa = true;
+            showSettingsInstall = !isStandalonePwa;
+            if (!isStandalonePwa)
+                ScheduleInstallBanner();
+            StateHasChanged();
+        });
+    }
+
+    [JSInvokable]
+    public Task OnPwaInstalled()
+    {
+        canInstallPwa = false;
+        isStandalonePwa = true;
+        showInstallBanner = false;
+        showSettingsInstall = false;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private async Task PromptPwaInstall()
+    {
+        try
+        {
+            if (isIosInstallHint && !canInstallPwa)
+            {
+                showSettingsModal = false;
+                showInstallBanner = true;
+                StateHasChanged();
+                return;
+            }
+
+            var accepted = await JSRuntime.InvokeAsync<bool>("pwa.promptInstall");
+            if (accepted)
+            {
+                showInstallBanner = false;
+                canInstallPwa = false;
+            }
+            StateHasChanged();
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "PWA install prompt failed");
+        }
+    }
+
+    private async Task DismissPwaInstall()
+    {
+        showInstallBanner = false;
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("pwa.dismissInstall");
+        }
+        catch (JSException)
+        {
+        }
+        StateHasChanged();
+    }
+
+    private string GetLandingFlashClass()
+    {
+        if (!showLandingFlash)
+            return string.Empty;
+
+        return lastResult == "tails" ? "landed land-tails" : "landed land-heads";
+    }
+
+    private string GetCoinGlowClass()
+    {
+        if (!showLandingFlash)
+            return string.Empty;
+
+        return lastResult == "tails" ? "land-tails" : "land-heads";
     }
     
     private void DismissUnlockAchievement()
@@ -767,17 +1208,17 @@ public partial class Home : ComponentBase, IDisposable
         string achievement = "";
         
         if (currentStreak == 5)
-            achievement = "?? 5 in a row!";
+            achievement = "5 in a row!";
         else if (currentStreak == 10)
-            achievement = "???? 10 streak! Incredible!";
+            achievement = "10 streak! Incredible!";
         else if (currentStreak == 20)
-            achievement = "?????? 20 STREAK! LEGENDARY!";
+            achievement = "20 STREAK! LEGENDARY!";
         else if (headsCount + tailsCount == 10)
-            achievement = "?? First 10 flips!";
+            achievement = "First 10 flips!";
         else if (headsCount + tailsCount == 50)
-            achievement = "? 50 flips milestone!";
+            achievement = "50 flips milestone!";
         else if (headsCount + tailsCount == 100)
-            achievement = "?? 100 flips! Master flipper!";
+            achievement = "100 flips! Master flipper!";
             
         if (!string.IsNullOrEmpty(achievement))
         {
@@ -815,6 +1256,7 @@ public partial class Home : ComponentBase, IDisposable
             isTailsRandom = true;
             // Set to Random.png to enable characteristic tracking for random coins
             selectedTailsImage = "/img/coins/Random.png";
+            backFaceShowing = selectedTailsImage;
         }
         
         await SaveCoinSelectionPreferencesAsync();
@@ -1027,7 +1469,9 @@ public partial class Home : ComponentBase, IDisposable
                 selectedTailsImage = preferences.SelectedTailsImage;
                 isHeadsRandom = preferences.IsHeadsRandom;
                 isTailsRandom = preferences.IsTailsRandom;
+                backFaceShowing = ResolveFacePath(selectedTailsImage, FallbackFaceArt);
             }
+            EnsureFaceArtPopulated();
         }
         catch (Exception ex)
         {
@@ -1330,6 +1774,7 @@ public partial class Home : ComponentBase, IDisposable
     /// </summary>
     private void ApplyComboStreakBonus(CoinEffect? headsEffect, CoinEffect? tailsEffect)
     {
+        comboBoosted = false;
         try
         {
             // Only apply if one side has combo and other has no effect
@@ -1363,6 +1808,7 @@ public partial class Home : ComponentBase, IDisposable
                     // Convert percentage to whole number: 0.03 * 100 = 3
                     int streakBonus = (int)Math.Round(headsEffect.ComboMultiplier * 100);
                     currentStreak += streakBonus;
+                    comboBoosted = true;
                     
                     Logger.LogInformation($"Combo (Additive) streak bonus: +{streakBonus} (new streak: {currentStreak})");
                 }
@@ -1371,6 +1817,7 @@ public partial class Home : ComponentBase, IDisposable
                     // DragonSamurai (Multiplicative 2x): multiplies current streak
                     int oldStreak = currentStreak;
                     currentStreak = (int)Math.Round(currentStreak * headsEffect.ComboMultiplier);
+                    comboBoosted = true;
                     
                     Logger.LogInformation($"Combo (Multiplicative) streak bonus: {oldStreak} * {headsEffect.ComboMultiplier} = {currentStreak}");
                 }
@@ -1390,6 +1837,7 @@ public partial class Home : ComponentBase, IDisposable
                     // Moai (Additive 0.03): adds 3 to streak
                     int streakBonus = (int)Math.Round(tailsEffect.ComboMultiplier * 100);
                     currentStreak += streakBonus;
+                    comboBoosted = true;
                     
                     Logger.LogInformation($"Combo (Additive) streak bonus: +{streakBonus} (new streak: {currentStreak})");
                 }
@@ -1398,6 +1846,7 @@ public partial class Home : ComponentBase, IDisposable
                     // DragonSamurai (Multiplicative 2x): multiplies current streak
                     int oldStreak = currentStreak;
                     currentStreak = (int)Math.Round(currentStreak * tailsEffect.ComboMultiplier);
+                    comboBoosted = true;
                     
                     Logger.LogInformation($"Combo (Multiplicative) streak bonus: {oldStreak} * {tailsEffect.ComboMultiplier} = {currentStreak}");
                 }
@@ -1521,11 +1970,22 @@ public partial class Home : ComponentBase, IDisposable
     {
         try
         {
+            _disposed = true;
+            _installDelayCts?.Cancel();
+            _installDelayCts?.Dispose();
+            _installDelayCts = null;
+
+            Account.Changed -= OnAccountChanged;
+            UnlockProgress.AchievementsUnlocked -= OnAchievementsUnlocked;
+
             // Stop auto-click timer
             StopAutoClick();
             
             // Stop super flip charging
             StopSuperFlipCharge();
+
+            pwaRef?.Dispose();
+            pwaRef = null;
             
             Logger.LogInformation("Home component disposed");
         }

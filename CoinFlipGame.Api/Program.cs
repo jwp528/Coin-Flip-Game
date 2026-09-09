@@ -1,32 +1,45 @@
-using CoinFlipGame.Api.Data;
+using Azure.Data.Tables;
+using CoinFlipGame.Api.Persistence;
 using CoinFlipGame.Api.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
     .ConfigureServices((context, services) =>
     {
-        // Get connection string from configuration (optional for Azure Static Web Apps)
-        var connectionString = context.Configuration.GetConnectionString("CoinFlipGameDb");
+        var configuration = context.Configuration;
 
-        // Only register DbContext if connection string is available
-        // This allows the API to work in Azure Static Web Apps without a database
-        if (!string.IsNullOrEmpty(connectionString))
-        {
-            services.AddDbContext<CoinFlipGameDbContext>(options =>
-                options.UseSqlServer(connectionString));
-        }
-
-        // Register memory cache for blob storage caching
         services.AddMemoryCache();
-
-        // Register Azure Blob Storage service (now with caching)
         services.AddSingleton<CoinStorageService>();
+
+        services.AddSingleton(_ =>
+        {
+            var connectionString = configuration["TablesStorageConnectionString"]
+                ?? configuration["AzureWebJobsStorage"]
+                ?? "UseDevelopmentStorage=true";
+            return new TableServiceClient(connectionString);
+        });
+
+        services.AddSingleton<TableStorageService>();
+        services.AddSingleton<PlayerAccountService>();
+        services.AddSingleton<PlayerProgressService>();
+        services.AddHttpClient(nameof(ExternalAuthService), client => client.Timeout = TimeSpan.FromSeconds(10));
+        services.AddSingleton<ExternalAuthService>();
     })
     .Build();
 
-host.Run();
+try
+{
+    var tables = host.Services.GetRequiredService<TableStorageService>();
+    await tables.EnsureTablesExistAsync();
+}
+catch (Exception ex)
+{
+    var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+    logger.LogError(ex, "Failed to ensure Azure Table Storage tables exist during startup; continuing without failing the host.");
+}
 
+host.Run();

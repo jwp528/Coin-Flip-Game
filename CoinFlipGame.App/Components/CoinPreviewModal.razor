@@ -14,19 +14,38 @@
         <div class="preview-content">
             <!-- TCG Card Layout: Coin at Top -->
             <div class="preview-coin-container">
+                <div class="preview-coin-stage"></div>
                 <div class="preview-coin"
                      @ref="previewCoinElement"
                      @onpointerdown="OnPointerDown"
                      @onpointermove="OnPointerMove"
                      @onpointerup="OnPointerUp"
                      @onpointercancel="OnPointerCancel"
-                     style="@GetCoinTransform()">
-                    <div class="preview-coin-face">
-                        <div class="preview-coin-shine" style="@GetShineTransform()"></div>
-                        @if (CoinImage != null)
-                        {
-                            <img src="@CoinImage.Path" alt="@CoinImage.DisplayName" draggable="false" />
-                        }
+                     style="@GetPreviewCoinStyle()">
+                    <div class="preview-coin-inner">
+                        <div class="preview-coin-thickness" aria-hidden="true">
+                            @for (var i = 0; i < CoinEdgeSlices; i++)
+                            {
+                                <span class="preview-coin-edge" style="--edge-i: @i; --edge-scale: @GetCoinEdgeScale(i);">
+                                    <span class="preview-coin-edge-fill"></span>
+                                </span>
+                            }
+                            <span class="preview-coin-rim-highlight preview-coin-rim-front"><span class="preview-coin-rim-fill"></span></span>
+                            <span class="preview-coin-rim-highlight preview-coin-rim-back"><span class="preview-coin-rim-fill"></span></span>
+                        </div>
+                        <div class="preview-coin-back">
+                            <div class="preview-coin-art">
+                                <div class="preview-coin-plate" aria-hidden="true"></div>
+                                <div class="preview-coin-face-art" style="@FaceArtStyle(CoinImage?.Path)" aria-hidden="true"></div>
+                            </div>
+                        </div>
+                        <div class="preview-coin-face">
+                            <div class="preview-coin-art">
+                                <div class="preview-coin-plate" aria-hidden="true"></div>
+                                <div class="preview-coin-face-art" style="@FaceArtStyle(CoinImage?.Path)" aria-hidden="true"></div>
+                                <div class="preview-coin-shine" style="@GetShineTransform()"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

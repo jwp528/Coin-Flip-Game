@@ -417,3 +417,9 @@ FodyWeavers.xsd
 *.msm
 *.msp
 /CoinFlipGame.ImageUploader/appsettings.Development.json
+
+# Azure Functions local secrets (use local.settings.example.json)
+**/local.settings.json
+
+# Azurite local emulator data
+.azurite/

@@ -6,67 +6,12 @@
     <title>Coin Flip Game</title>
 </HeadContent>
 
-<div class="coin-flip-game" 
+<div class="coin-flip-game @(showStreakPulse ? $"streak-pulse {streakPulseKind}" : "") @(isStandalonePwa ? "standalone-pwa" : "") @(showInstallBanner ? "has-install-sheet" : "")" 
      @onpointermove="OnPointerMove"
      @onpointerup="OnPointerUp"
      @onpointercancel="OnPointerCancel">
+    <div class="screen-pulse @(showStreakPulse ? streakPulseKind : "")" aria-hidden="true"></div>
     
-    <!-- Control Buttons - Header on Desktop -->
-    <div class="control-buttons-header">
-        <button class="control-btn" @onclick="ToggleSound" title="@(isSoundEnabled ? "Sound On" : "Sound Off")">
-            @if (isSoundEnabled)
-            {
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                </svg>
-            }
-            else
-            {
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                    <line x1="23" y1="9" x2="17" y2="15"></line>
-                    <line x1="17" y1="9" x2="23" y2="15"></line>
-                </svg>
-            }
-        </button>
-        <button class="control-btn @(!isHapticsSupported ? "has-warning" : "")" @onclick="ToggleHaptics" title="@(isHapticsEnabled ? "Haptics On" : "Haptics Off")">
-            @if (!isHapticsSupported)
-            {
-                <span class="warning-badge">!</span>
-            }
-            @if (isHapticsEnabled)
-            {
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 3v18h6l6-6V9L9 3H3z"></path>
-                    <path d="M21 12c0-2.5-1-4.5-3-6"></path>
-                    <path d="M18 12c0-1.5-.5-2.5-1.5-3.5"></path>
-                </svg>
-            }
-            else
-            {
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 3v18h6l6-6V9L9 3H3z"></path>
-                    <line x1="23" y1="9" x2="17" y2="15"></line>
-                    <line x1="17" y1="9" x2="23" y2="15"></line>
-                </svg>
-            }
-        </button>
-        <a class="control-btn" href="https://github.com/jwp528/Coin-Flip-Game" target="_blank" rel="noopener noreferrer" title="View on GitHub">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-            </svg>
-        </a>
-        <button class="control-btn" @onclick="OpenAboutModal" title="About">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-        </button>
-    </div>
-    
-    <!-- Mobile Game Style Stats -->
     <div class="stats-container">
         <!-- Heads Counter - Top Left -->
         <div class="stat-counter heads-counter" @onclick='() => OpenCoinSelector("heads")'>
@@ -74,7 +19,7 @@
                 <img src="@selectedHeadsImage" alt="Heads" class="counter-icon" />
                 <div class="counter-info">
                     <div class="counter-label">Heads</div>
-                    <span class="counter-value">@headsCount</span>
+                    <span class="counter-value">@FormatHudCount(headsCount)</span>
                 </div>
             </div>
         </div>
@@ -85,112 +30,130 @@
                 <img src="@selectedTailsImage" alt="Tails" class="counter-icon" />
                 <div class="counter-info">
                     <div class="counter-label">Tails</div>
-                    <span class="counter-value">@tailsCount</span>
+                    <span class="counter-value">@FormatHudCount(tailsCount)</span>
                 </div>
             </div>
         </div>
+
+        <button type="button" class="control-btn settings-btn hud-settings-btn" @onclick="OpenSettingsModal" title="Settings" aria-label="Settings">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+        </button>
         
-        <!-- Streak Counter - Top Center -->
-        @if (currentStreak > 2)
-        {
-            <div class="streak-counter">
-                <span class="streak-icon">🔥</span>
-                <span class="streak-value">@currentStreak</span>
-            </div>
-        }
+        <!-- Streak Counter - Top Center (stay in DOM; CSS hides when streak is low) -->
+        <div class="streak-counter @(currentStreak > 2 ? "" : "streak-idle") @(comboBoosted ? "combo-boost" : "") @GetStreakHeatClass()"
+             aria-hidden="@(currentStreak > 2 ? "false" : "true")">
+            <span class="streak-icon" aria-hidden="true">🔥</span>
+            <span class="streak-value">@FormatHudCount(currentStreak)</span>
+        </div>
     </div>
     
     <!-- Main Coin Container -->
     <div class="coin-container">
-        <div class="coin-glow"></div>
+        <div class="coin-stage"></div>
+        <div class="coin-glow @GetCoinGlowClass()"></div>
         
-        <!-- First-time user hint -->
+        <div @ref="coinElement" 
+             class="coin @flipResult @(isDragging ? "dragging" : "") @(isSuperFlipReady ? "super-flip-ready shake" : "") @GetLandingFlashClass()" 
+             @onclick="HandleClick"
+             @onpointerdown="OnPointerDown"
+             style="@GetCoinStyle()">
+            <div class="coin-inner">
+                <div class="coin-thickness" aria-hidden="true">
+                    @for (var i = 0; i < CoinEdgeSlices; i++)
+                    {
+                        <span class="coin-edge" style="--edge-i: @i; --edge-scale: @GetCoinEdgeScale(i);">
+                            <span class="coin-edge-fill"></span>
+                        </span>
+                    }
+                    <span class="coin-rim-highlight coin-rim-front"><span class="coin-rim-fill"></span></span>
+                    <span class="coin-rim-highlight coin-rim-back"><span class="coin-rim-fill"></span></span>
+                </div>
+                <div class="coin-back">
+                    <div class="coin-art">
+                        <div class="coin-plate" aria-hidden="true"></div>
+                        <div class="coin-face-art" style="@FaceArtStyle(backFaceShowing)" aria-hidden="true"></div>
+                        <div class="coin-inner-ring"></div>
+                        <div class="landing-flash-sweep"></div>
+                    </div>
+                    <div class="landing-flash-ring"></div>
+                </div>
+                <div class="coin-face">
+                    <div class="coin-art">
+                        <div class="coin-plate" aria-hidden="true"></div>
+                        <div class="coin-face-art" style="@FaceArtStyle(faceShowing)" aria-hidden="true"></div>
+                        <div class="coin-shine" style="@GetShineTransform()"></div>
+                        <div class="coin-inner-ring"></div>
+                        <div class="landing-flash-sweep"></div>
+                    </div>
+                    <div class="landing-flash-ring"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- First-time user hint — sits under the coin, not on top of it -->
         @if (showFirstTimeHint)
         {
             <div class="first-time-hint">
                 <div class="hint-content">
-                    <span class="hint-icon">👆</span>
-                    <span class="hint-text">Tap or drag to flip!</span>
+                    <span class="hint-text">Tap or drag to flip</span>
                 </div>
             </div>
         }
-        
-        <div @ref="coinElement" 
-             class="coin @flipResult @(isDragging ? "dragging" : "") @(isSuperFlipReady ? "super-flip-ready shake" : "")" 
-             @onclick="HandleClick"
-             @onpointerdown="OnPointerDown"
-             style="@GetCoinTransform()">
-            <div class="coin-face @(showLandingFlash ? "landing-flash" : "")">
-                <div class="coin-shine" style="@GetShineTransform()"></div>
-                <div class="coin-inner-ring"></div>
-                <img src="@faceShowing" alt="Coin" draggable="false" />
+    </div>
+    
+    @if (showInstallBanner)
+    {
+        <div class="pwa-install-sheet" role="dialog" aria-label="Install Coin Flip">
+            <div class="pwa-install-sheet-card">
+                <div class="pwa-install-handle" aria-hidden="true"></div>
+                <button type="button" class="pwa-install-dismiss" @onclick="DismissPwaInstall" aria-label="Dismiss">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+                <div class="pwa-install-sheet-body">
+                    <img src="/icons/icon-96x96.png" alt="" class="pwa-install-icon" width="56" height="56" />
+                    <div class="pwa-install-text">
+                        @if (isIosInstallHint)
+                        {
+                            <p class="pwa-install-title">Add to Home Screen</p>
+                            <p class="pwa-install-copy">Full-screen play. No Safari chrome.</p>
+                        }
+                        else
+                        {
+                            <p class="pwa-install-title">Install Coin Flip</p>
+                            <p class="pwa-install-copy">Full-screen game on your home screen.</p>
+                        }
+                    </div>
+                </div>
+                @if (isIosInstallHint)
+                {
+                    <ol class="pwa-install-ios-steps">
+                        <li>
+                            Tap
+                            <span class="pwa-ios-share" aria-hidden="true">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 16V4"></path>
+                                    <polyline points="8 8 12 4 16 8"></polyline>
+                                    <path d="M6 12v8h12v-8"></path>
+                                </svg>
+                            </span>
+                            <strong>Share</strong>
+                        </li>
+                        <li>Tap <strong>Add to Home Screen</strong></li>
+                    </ol>
+                }
+                else
+                {
+                    <button type="button" class="pwa-install-action" @onclick="PromptPwaInstall">Install</button>
+                }
             </div>
         </div>
-    </div>
-    
-    <!-- Control Buttons - Mobile (Bottom) - Hidden on desktop -->
-    <div class="control-buttons-mobile">
-        <button class="control-btn" @onclick="ToggleSound" title="@(isSoundEnabled ? "Sound On" : "Sound Off")">
-            @if (isSoundEnabled)
-            {
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                </svg>
-            }
-            else
-            {
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                    <line x1="23" y1="9" x2="17" y2="15"></line>
-                    <line x1="17" y1="9" x2="23" y2="15"></line>
-                </svg>
-            }
-        </button>
-        <button class="control-btn @(!isHapticsSupported ? "has-warning" : "")" @onclick="ToggleHaptics" title="@(isHapticsEnabled ? "Haptics On" : "Haptics Off")">
-            @if (!isHapticsSupported)
-            {
-                <span class="warning-badge">!</span>
-            }
-            @if (isHapticsEnabled)
-            {
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 3v18h6l6-6V9L9 3H3z"></path>
-                    <path d="M21 12c0-2.5-1-4.5-3-6"></path>
-                    <path d="M18 12c0-1.5-.5-2.5-1.5-3.5"></path>
-                </svg>
-            }
-            else
-            {
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 3v18h6l6-6V9L9 3H3z"></path>
-                    <line x1="23" y1="9" x2="17" y2="15"></line>
-                    <line x1="17" y1="9" x2="23" y2="15"></line>
-                </svg>
-            }
-        </button>
-        <a class="control-btn" href="https://github.com/jwp528/Coin-Flip-Game" target="_blank" rel="noopener noreferrer" title="View on GitHub">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-            </svg>
-        </a>
-        <button class="control-btn" @onclick="OpenAboutModal" title="About">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-        </button>
-    </div>
-    
-    <!-- Developer Credit Footer -->
-    <div class="developer-credit">
-        <span class="credit-text">Developed By:</span>
-        <a href="https://www.joshparsons.ca" target="_blank" rel="noopener noreferrer" class="developer-link">
-            <img src="/img/coins/logo.png" alt="JP Logo" class="developer-logo" />
-            <span class="developer-name">Josh Parsons</span>
-        </a>
-    </div>
+    }
 </div>
 
 <!-- Coin Drawer - Bottom Sheet -->
@@ -211,6 +174,22 @@
     CoinImage="@previewCoin"
     OnClose="@CloseCoinPreview" />
 
+<!-- Settings Modal -->
+<SettingsModal
+    IsVisible="@showSettingsModal"
+    OnClose="@CloseSettingsModal"
+    IsSoundEnabled="@isSoundEnabled"
+    OnToggleSound="@ToggleSound"
+    IsHapticsEnabled="@isHapticsEnabled"
+    IsHapticsSupported="@isHapticsSupported"
+    OnToggleHaptics="@ToggleHaptics"
+    OnOpenAbout="@OpenAboutFromSettings"
+    ShowInstallApp="@showSettingsInstall"
+    InstallAppLabel="@(isIosInstallHint ? "Add to Home Screen" : "Install app")"
+    InstallAppHint="@(isStandalonePwa ? "Installed" : isIosInstallHint ? "Safari → Share → Add to Home Screen" : "Play full-screen on your home screen")"
+    CanInstallApp="@canInstallPwa"
+    OnInstallApp="@PromptPwaInstall" />
+
 <!-- About Modal -->
 <AboutModal 
     IsVisible="@showAboutModal"
@@ -223,7 +202,7 @@
     OnClose="@CloseHapticNotSupportedModal"
     UserAgent="@userAgent" />
 
-<!-- Passive Coin Unlock Notification - Bottom of Screen -->
+<!-- Passive Coin Unlock / Game Achievement Notification - Bottom of Screen -->
 @if (showUnlockAchievement && currentlyUnlockedCoin != null)
 {
     <div class="coin-unlock-notification @GetRarityClass(currentlyUnlockedCoin.UnlockCondition?.Rarity ?? UnlockRarity.Common)" 
@@ -237,6 +216,22 @@
             <div class="coin-unlock-name">@currentlyUnlockedCoin.DisplayName</div>
         </div>
         <span class="coin-unlock-sparkle">✨</span>
+    </div>
+}
+else if (showGameAchievement && currentlyUnlockedAchievement != null)
+{
+    <div class="coin-unlock-notification game-achievement-toast @GetRarityClass(currentlyUnlockedAchievement.Rarity)"
+         @onclick="DismissGameAchievement">
+        <span class="coin-unlock-sparkle">@currentlyUnlockedAchievement.Icon</span>
+        <div class="coin-unlock-icon-wrapper achievement-icon-wrap">
+            <span class="achievement-icon">@currentlyUnlockedAchievement.Icon</span>
+        </div>
+        <div class="coin-unlock-content">
+            <div class="coin-unlock-label">Achievement Unlocked!</div>
+            <div class="coin-unlock-name">@currentlyUnlockedAchievement.Title</div>
+            <div class="coin-unlock-desc">@currentlyUnlockedAchievement.Description</div>
+        </div>
+        <span class="coin-unlock-sparkle">@currentlyUnlockedAchievement.Icon</span>
     </div>
 }
 

@@ -9,13 +9,13 @@ public class AppVersion
     /// <summary>
     /// Current application version
     /// </summary>
-    public const string Version = "1.6.0";
+    public const string Version = "1.5.25";
     
     /// <summary>
     /// Build timestamp - updated on each build
     /// Format: yyyyMMddHHmmss
     /// </summary>
-    public const string BuildTime = "20250120000000";
+    public const string BuildTime = "20260909220000";
     
     /// <summary>
     /// Gets the cache busting query parameter

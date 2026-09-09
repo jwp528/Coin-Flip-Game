@@ -1,23 +1,43 @@
 {
-"$schema": "https://json.schemastore.org/staticwebapp.config.json",
-"routes": [
-  {
-    "route": "/api/*",
-    "allowedRoles": ["anonymous"]
-  }
-],
+  "$schema": "https://json.schemastore.org/staticwebapp.config.json",
+  "routes": [
+    {
+      "route": "/api/*",
+      "allowedRoles": ["anonymous"]
+    }
+  ],
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/img/*.{png,jpg,gif,svg}", "/css/*", "/js/*", "/_framework/*", "/api/*"]
+    "exclude": [
+      "/img/*.{png,jpg,gif,svg,webp}",
+      "/icons/*.{png,jpg,gif,svg,webp}",
+      "/screenshots/*.{png,jpg,gif,svg,webp}",
+      "/sounds/*.{mp3,wav,ogg}",
+      "/css/*",
+      "/js/*",
+      "/bootstrap/*",
+      "/_framework/*",
+      "/api/*",
+      "/manifest.json",
+      "/service-worker.js",
+      "/service-worker.published.js",
+      "/*.css",
+      "/*.js",
+      "/*.png",
+      "/*.ico",
+      "/*.json"
+    ]
   },
   "mimeTypes": {
     ".json": "application/json",
+    ".webmanifest": "application/manifest+json",
     ".js": "text/javascript",
     ".css": "text/css",
     ".png": "image/png",
     ".jpg": "image/jpeg",
     ".svg": "image/svg+xml",
-    ".wasm": "application/wasm"
+    ".wasm": "application/wasm",
+    ".mp3": "audio/mpeg"
   },
   "globalHeaders": {
     "Cache-Control": "no-cache"

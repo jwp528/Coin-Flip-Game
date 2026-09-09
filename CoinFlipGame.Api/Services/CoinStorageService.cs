@@ -113,7 +113,7 @@ public class CoinStorageService
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
             var blobNames = new List<string>();
 
-            await foreach (var blobItem in containerClient.GetBlobsAsync(prefix: prefix, cancellationToken: cancellationToken))
+            await foreach (var blobItem in containerClient.GetBlobsAsync(BlobTraits.None, BlobStates.None, prefix, cancellationToken))
             {
                 blobNames.Add(blobItem.Name);
             }

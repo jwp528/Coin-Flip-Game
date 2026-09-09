@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using CoinFlipGame.App;
 using CoinFlipGame.App.Services;
 using Blazored.LocalStorage;
 using Microsoft.Extensions.Configuration;
@@ -11,7 +10,6 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-// Configure API HttpClient
 var apiBaseUrl = builder.Configuration.GetValue<string>("ApiSettings:BaseUrl");
 if (string.IsNullOrEmpty(apiBaseUrl))
 {
@@ -19,15 +17,33 @@ if (string.IsNullOrEmpty(apiBaseUrl))
     apiBaseUrl = builder.HostEnvironment.BaseAddress;
 }
 
-builder.Services.AddScoped(sp => 
+var apiRoot = ResolveApiRoot(apiBaseUrl);
+
+builder.Services.AddScoped(sp =>
 {
     var httpClient = new HttpClient { BaseAddress = new Uri(apiBaseUrl) };
     return new ApiVersionService(httpClient);
 });
 
 builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddScoped<AccountSessionStore>();
+builder.Services.AddScoped<DeviceIdService>();
+builder.Services.AddScoped<ExternalSignInService>();
+builder.Services.AddScoped(sp => new CoinFlipApiClient(
+    new HttpClient { BaseAddress = new Uri(apiRoot) },
+    sp.GetRequiredService<AccountSessionStore>(),
+    sp.GetRequiredService<DeviceIdService>()));
 builder.Services.AddScoped<CoinService>();
-builder.Services.AddScoped<UnlockProgressService>(); // Scoped to allow consumption of scoped ILocalStorageService
-builder.Services.AddScoped<UpdateService>(); // Service for app updates and cache management
+builder.Services.AddScoped<UnlockProgressService>();
+builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<UpdateService>();
 
 await builder.Build().RunAsync();
+
+static string ResolveApiRoot(string apiBaseUrl)
+{
+    var trimmed = apiBaseUrl.TrimEnd('/');
+    if (trimmed.EndsWith("/api", StringComparison.OrdinalIgnoreCase))
+        return trimmed + "/";
+    return trimmed + "/api/";
+}

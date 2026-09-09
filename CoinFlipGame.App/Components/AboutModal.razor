@@ -53,6 +53,30 @@
                 </a>
             </div>
             
+            @if (Account.Enabled)
+            {
+                <div class="about-account-section">
+                    <h3 class="about-account-title">Account</h3>
+                    @if (Account.IsSignedIn)
+                    {
+                        <p class="about-account-status">Signed in as <strong>@(Account.Profile?.DisplayName ?? "Player")</strong>. Progress syncs across devices using the same Google or Apple account as Cribbage Trainer.</p>
+                        <div class="about-account-actions">
+                            <button class="btn-account" @onclick="HandleLink" disabled="@accountBusy">Link another sign-in</button>
+                            <button class="btn-account-secondary" @onclick="HandleSignOut" disabled="@accountBusy">Sign out</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="about-account-status">Sign in with Google or Apple to save unlocks to the cloud. Guest play stays on this device only.</p>
+                        <button class="btn-account" @onclick="HandleSignIn" disabled="@accountBusy">Sign in</button>
+                    }
+                    @if (!string.IsNullOrEmpty(accountMessage))
+                    {
+                        <div class="about-account-message">@accountMessage</div>
+                    }
+                </div>
+            }
+
             <div class="about-actions-grid">
                 <div class="about-cache-section">
                     <div class="cache-section-header">
@@ -67,7 +91,7 @@
                         @if (isClearingCache)
                         {
                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            <span>Clearing Cache...</span>
+                            <span>Checking...</span>
                         }
                         else
                         {

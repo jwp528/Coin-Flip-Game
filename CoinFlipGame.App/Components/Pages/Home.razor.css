@@ -1,7 +1,11 @@
-/* Coin Flip Game Styles */
+/* Coin Flip Game — play surface
+   Flat HUD, coin as hero. Flip keyframes/timing are unchanged. */
+
 .coin-flip-game {
     width: 100vw;
     height: 100vh;
+    height: 100dvh;
+    height: 100svh;
     position: fixed;
     top: 0;
     left: 0;
@@ -9,116 +13,140 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: 
-        radial-gradient(ellipse at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 70%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-        linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+    background:
+        radial-gradient(ellipse at 50% 40%, rgba(255, 196, 56, 0.12) 0%, transparent 44%),
+        radial-gradient(ellipse at 12% 14%, rgba(251, 191, 36, 0.14) 0%, transparent 42%),
+        radial-gradient(ellipse at 86% 16%, rgba(167, 139, 250, 0.18) 0%, transparent 46%),
+        radial-gradient(ellipse at 78% 84%, rgba(232, 121, 249, 0.16) 0%, transparent 48%),
+        linear-gradient(180deg, #0a1020 0%, #12182b 52%, #1a1030 100%);
     overflow: hidden;
     touch-action: none;
     user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+}
+
+.coin-flip-game.standalone-pwa {
+    height: 100dvh;
+    height: 100svh;
 }
 
 .coin-flip-game::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: 
-        repeating-linear-gradient(45deg, transparent, transparent 100px, rgba(255, 255, 255, 0.02) 100px, rgba(255, 255, 255, 0.02) 200px),
-        repeating-linear-gradient(-45deg, transparent, transparent 100px, rgba(255, 255, 255, 0.02) 100px, rgba(255, 255, 255, 0.02) 200px);
-    opacity: 0.5;
+    inset: 0;
+    background-image:
+        radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+    opacity: 0.4;
     pointer-events: none;
+    z-index: 0;
 }
 
 .coin-flip-game::after {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(255, 215, 0, 0.08) 0%, transparent 70%);
-    border-radius: 50%;
+    inset: -28%;
+    background:
+        radial-gradient(ellipse at 28% 32%, rgba(255, 191, 71, 0.16) 0%, transparent 38%),
+        radial-gradient(ellipse at 74% 68%, rgba(168, 85, 247, 0.18) 0%, transparent 40%);
+    animation: washDrift 22s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes washDrift {
+    0% { transform: translate3d(-3%, -2%, 0) scale(1); }
+    100% { transform: translate3d(4%, 3%, 0) scale(1.06); }
+}
+
+.screen-pulse {
+    position: absolute;
+    inset: 0;
     pointer-events: none;
     z-index: 1;
+    opacity: 0;
 }
 
-/* Stats Display */
-.stats {
-    position: absolute;
-    top: 40px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 60px;
-    z-index: 10;
+.screen-pulse.pulse-warm {
+    background: radial-gradient(ellipse at 50% 42%, rgba(251, 146, 60, 0.32) 0%, transparent 62%);
+    animation: screenPulse 0.7s ease-out;
 }
 
-.stat-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    padding: 20px 40px;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    transition: all 0.3s ease;
+.screen-pulse.pulse-hot {
+    background: radial-gradient(ellipse at 50% 42%, rgba(249, 115, 22, 0.38) 0%, rgba(239, 68, 68, 0.18) 42%, transparent 68%);
+    animation: screenPulse 0.75s ease-out;
 }
 
-.stat-item:hover {
-    background: rgba(255, 255, 255, 0.08);
-    transform: translateY(-2px);
-    box-shadow: 
-        0 12px 40px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+.screen-pulse.pulse-legendary {
+    background: radial-gradient(ellipse at 50% 42%, rgba(251, 191, 36, 0.4) 0%, rgba(168, 85, 247, 0.22) 46%, transparent 70%);
+    animation: screenPulse 0.85s ease-out;
 }
 
-.stat-label {
-    font-size: 9px;
-    color: rgba(255, 255, 255, 0.7);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 600;
+@keyframes screenPulse {
+    0% { opacity: 0; }
+    30% { opacity: 1; }
+    100% { opacity: 0; }
 }
 
-.stat-value {
-    font-size: 28px;
-    font-weight: 800;
-    background: linear-gradient(135deg, #ffffff 0%, #e0e7ff 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-shadow: 0 2px 20px rgba(255, 255, 255, 0.3);
-    line-height: 1;
-}
+/* ---------- Coin stage ---------- */
 
-/* Coin Container & Coin */
 .coin-container {
     width: 100%;
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    perspective: 1000px;
+    perspective: 820px;
     pointer-events: none;
     z-index: 2;
 }
 
+.coin-stage {
+    position: absolute;
+    width: min(300px, 62vw);
+    height: 42px;
+    top: calc(50% + 118px);
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background:
+        radial-gradient(ellipse 50% 48% at 50% 50%, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.28) 46%, transparent 74%),
+        radial-gradient(ellipse, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.05) 44%, transparent 72%);
+    filter: blur(10px);
+    pointer-events: none;
+    opacity: 0.92;
+    transition: transform 0.28s ease, opacity 0.28s ease, width 0.28s ease, height 0.28s ease, filter 0.28s ease;
+}
+
+.coin-container:has(.flip-heads) .coin-stage,
+.coin-container:has(.flip-tails) .coin-stage {
+    transform: translateX(-50%) scale(0.52);
+    opacity: 0.28;
+    filter: blur(14px);
+}
+
+.coin-container:has(.coin.landed) .coin-stage {
+    transform: translateX(-50%) scale(1.18);
+    width: min(340px, 68vw);
+    height: 52px;
+    opacity: 1;
+    filter: blur(7px);
+}
+
+.coin-container:has(.coin.land-tails) .coin-stage {
+    background:
+        radial-gradient(ellipse 50% 48% at 50% 50%, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.28) 46%, transparent 74%),
+        radial-gradient(ellipse, rgba(192, 132, 252, 0.28) 0%, rgba(168, 85, 247, 0.08) 44%, transparent 72%);
+}
+
 .coin-glow {
     position: absolute;
-    width: 300px;
-    height: 300px;
+    width: 280px;
+    height: 280px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(255, 215, 0, 0.2) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.18) 0%, transparent 68%);
     pointer-events: none;
     animation: glowPulse 3s ease-in-out infinite;
 }
@@ -126,19 +154,25 @@
 @keyframes glowPulse {
     0%, 100% {
         transform: scale(1);
-        opacity: 0.4;
+        opacity: 0.45;
     }
     50% {
-        transform: scale(1.2);
-        opacity: 0.6;
+        transform: scale(1.16);
+        opacity: 0.7;
     }
 }
 
 .coin {
+    --coin-thickness: 32px;
+    --coin-half: 16px;
+    --coin-edge-last: 32;
+    --heads-art: url("/img/coins/logo.png");
+    --tails-art: url("/img/coins/Random.png");
     width: 200px;
     height: 200px;
     position: relative;
     transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
     transform-origin: center center;
     will-change: transform;
     cursor: grab;
@@ -146,7 +180,40 @@
     user-select: none;
     touch-action: none;
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    filter: drop-shadow(0 10px 40px rgba(255, 215, 0, 0.3)) drop-shadow(0 20px 60px rgba(0, 0, 0, 0.5));
+    /* No filter here — filter flattens preserve-3d and hides edge thickness */
+}
+
+.coin-inner {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    transform: rotateX(20deg) rotateY(-16deg);
+    animation: coinIdleSway 7s ease-in-out infinite;
+}
+
+@keyframes coinIdleSway {
+    0%, 100% { transform: rotateX(20deg) rotateY(-16deg); }
+    50% { transform: rotateX(14deg) rotateY(12deg); }
+}
+
+.coin.dragging .coin-inner,
+.coin.flip-heads .coin-inner,
+.coin.flip-tails .coin-inner,
+.coin.shake .coin-inner {
+    animation: none;
+    transform: rotateX(20deg) rotateY(-16deg);
+}
+
+.coin.landed .coin-inner {
+    animation: coinLandSquash 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes coinLandSquash {
+    0% { transform: rotateX(20deg) rotateY(-16deg) scale3d(1, 1, 1); }
+    22% { transform: rotateX(20deg) rotateY(-16deg) scale3d(1.14, 0.78, 1); }
+    52% { transform: rotateX(20deg) rotateY(-16deg) scale3d(0.94, 1.1, 1); }
+    100% { transform: rotateX(20deg) rotateY(-16deg) scale3d(1, 1, 1); }
 }
 
 .coin.dragging {
@@ -154,9 +221,8 @@
     transition: none;
 }
 
-.coin:hover:not(.flip-heads):not(.flip-tails):not(.dragging) {
+.coin:hover:not(.flip-heads):not(.flip-tails):not(.dragging):not(.landed) {
     transform: scale(1.08);
-    filter: drop-shadow(0 15px 50px rgba(255, 215, 0, 0.5)) drop-shadow(0 25px 70px rgba(0, 0, 0, 0.6));
 }
 
 .coin:active:not(.flip-heads):not(.flip-tails) {
@@ -175,152 +241,173 @@
     animation-name: coinFlipWeightedTails;
 }
 
-/* Coin Face & Edge Styling */
-.coin-face {
+.coin-face,
+.coin-back {
+    /* 3D pose only. Blink drops border-radius on translateZ layers, so faces
+       must not paint gold/gradients here — that becomes the square slab. */
     position: absolute;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
-    box-shadow: 
-        0 8px 32px rgba(255, 215, 0, 0.4),
-        0 4px 16px rgba(0, 0, 0, 0.3),
-        inset 0 2px 4px rgba(255, 255, 255, 0.6),
-        inset 0 -2px 4px rgba(0, 0, 0, 0.2);
-    border: 2px solid #e6c200;
-    overflow: hidden;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    overflow: visible;
+    transform-style: flat;
+    -webkit-transform-style: flat;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.coin-face {
+    transform: translateZ(calc(var(--coin-half) + 0.5px));
     transition: opacity 0.1s;
 }
 
-/* Coin depth layers - creating realistic 3D thickness with multiple layers */
-/* Deepest layer - darkest edge */
-.coin::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    transform: translate(-50%, -50%) translateZ(-16px);
-    background: linear-gradient(90deg, 
-        #4a3c00 0%,
-        #5d4a00 10%,
-        #6b5700 20%,
-        #8b7500 35%,
-        #a68a05 50%,
-        #8b7500 65%,
-        #6b5700 80%,
-        #5d4a00 90%,
-        #4a3c00 100%);
-    transform-style: preserve-3d;
-    z-index: -3;
-    box-shadow: 
-        inset 0 0 25px rgba(0, 0, 0, 0.6),
-        0 0 15px rgba(0, 0, 0, 0.4);
-}
-
-/* Second depth layer - mid-dark edge */
-.coin::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    transform: translate(-50%, -50%) translateZ(-12px);
-    background: linear-gradient(135deg, 
-        #6b5700 0%,
-        #8b7500 15%,
-        #b8960b 30%,
-        #daa520 45%,
-        #f0d060 50%,
-        #daa520 55%,
-        #b8960b 70%,
-        #8b7500 85%,
-        #6b5700 100%);
-    transform-style: preserve-3d;
-    z-index: -2;
-    box-shadow: 
-        inset 0 0 20px rgba(0, 0, 0, 0.4),
-        0 0 12px rgba(0, 0, 0, 0.3);
-}
-
-/* Add intermediate layers using pseudo-elements on the face */
-.coin-face::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    transform: translateZ(-8px);
-    background: linear-gradient(180deg, 
-        #a68a05 0%,
-        #b8960b 15%,
-        #daa520 30%,
-        #ffed4e 45%,
-        #ffd700 50%,
-        #ffed4e 55%,
-        #daa520 70%,
-        #b8960b 85%,
-        #a68a05 100%);
-    transform-style: preserve-3d;
-    z-index: -1;
-    box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.25);
-}
-
-/* Lightest intermediate layer */
-.coin-face::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    transform: translateZ(-4px);
-    background: linear-gradient(90deg, 
-        #c9a502 0%,
-        #daa520 20%,
-        #ffed4e 40%,
-        #ffd700 50%,
-        #ffed4e 60%,
-        #daa520 80%,
-        #c9a502 100%);
-    transform-style: preserve-3d;
-    z-index: -1;
-    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Landing flash effect - higher z-index to show above depth layers */
-.coin-face.landing-flash {
-    position: relative;
-}
-
-.coin-face.landing-flash::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(45deg, 
-        transparent 0%, 
-        transparent 40%, 
-        rgba(255, 255, 255, 0.9) 50%, 
-        transparent 60%, 
-        transparent 100%);
-    border-radius: 50%;
-    animation: flashSweep 0.5s ease-out;
+.coin-back {
+    /* Sit just outside the back-most edge disc so the stacked rim cannot cover tails art */
+    transform: translateZ(calc(var(--coin-half) * -1 - 0.5px)) rotateX(180deg);
     pointer-events: none;
-    z-index: 100;
-    transform: none !important; /* Override depth transform */
+}
+
+.coin-art {
+    /* Untransformed clip host. No mask-image — Blink hid replaced <img>
+       content under 3D / backface-visibility ancestors. Face art is a
+       CSS background on .coin-face-art, gold lives on .coin-plate. */
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    clip-path: circle(50%);
+    -webkit-clip-path: circle(50%);
+    font-size: 0;
+    line-height: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    transform: none;
+}
+
+.coin-plate {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+    border: 2px solid #e6c200;
+    box-shadow:
+        inset 0 2px 4px rgba(255, 255, 255, 0.6),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+}
+
+.coin-thickness {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    pointer-events: none;
+}
+
+.coin-edge {
+    position: absolute;
+    inset: 0;
+    transform: translateZ(calc((var(--edge-i) * var(--coin-thickness) / var(--coin-edge-last)) - var(--coin-half))) scale(var(--edge-scale, 1));
+    background: none;
+    pointer-events: none;
+}
+
+.coin-edge-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    clip-path: circle(50%);
+    -webkit-clip-path: circle(50%);
+    background:
+        radial-gradient(circle at 28% 22%, rgba(255, 250, 230, 0.42) 0%, transparent 36%),
+        conic-gradient(from 198deg,
+            #1a1200 0deg,
+            #5c4308 22deg,
+            #c9a227 48deg,
+            #fff6c8 70deg,
+            #e6c200 96deg,
+            #6b5208 128deg,
+            #2a1c00 158deg,
+            #d4af37 196deg,
+            #ffe566 228deg,
+            #8b6914 268deg,
+            #3d2e00 304deg,
+            #c9a227 336deg,
+            #1a1200 360deg);
+    box-shadow:
+        inset 0 0 14px rgba(0, 0, 0, 0.5),
+        inset 0 0 4px rgba(255, 255, 255, 0.18),
+        0 0 0 0.7px rgba(70, 52, 0, 0.95);
+}
+
+.coin-edge:nth-child(-n+8) .coin-edge-fill {
+    background:
+        radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.28) 0%, transparent 68%),
+        conic-gradient(from 198deg,
+            #120c00 0deg,
+            #3d2e00 30deg,
+            #8b6914 70deg,
+            #c9a227 110deg,
+            #4a3800 160deg,
+            #a67c00 220deg,
+            #6b5208 280deg,
+            #120c00 360deg);
+}
+
+.coin-rim-highlight {
+    position: absolute;
+    inset: 0;
+    background: none;
+    pointer-events: none;
+}
+
+.coin-rim-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    clip-path: circle(50%);
+    -webkit-clip-path: circle(50%);
+    background: transparent;
+    pointer-events: none;
+}
+
+.coin-rim-front {
+    transform: translateZ(calc(var(--coin-half) - 0.4px));
+}
+
+.coin-rim-front .coin-rim-fill {
+    border: 2px solid rgba(255, 248, 220, 0.62);
+    box-shadow:
+        0 0 10px rgba(255, 236, 170, 0.45),
+        inset 0 0 8px rgba(255, 255, 255, 0.22);
+}
+
+.coin-rim-back {
+    transform: translateZ(calc(var(--coin-half) * -1 + 0.4px));
+}
+
+.coin-rim-back .coin-rim-fill {
+    border: 2px solid rgba(166, 124, 0, 0.7);
+    box-shadow:
+        0 0 6px rgba(0, 0, 0, 0.35),
+        inset 0 0 8px rgba(0, 0, 0, 0.28);
+}
+
+.coin-inner-ring {
+    position: absolute;
+    inset: 7%;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow: inset 0 0 0 1px rgba(90, 70, 0, 0.25);
+    pointer-events: none;
+    z-index: 2;
 }
 
 .coin-shine {
@@ -347,1764 +434,186 @@
     animation: shineFlipWeighted 0.6s cubic-bezier(0.33, 0.0, 0.2, 1) forwards;
 }
 
-.coin-face img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    user-select: none;
-    -webkit-user-drag: none;
-    pointer-events: none;
-    position: relative;
+.coin-face-art {
+    /* CSS background, not <img>: Blink drops replaced content under 3D. */
+    position: absolute;
+    inset: 0;
     z-index: 1;
-}
-
-/* Premium Stats Display */
-.stats-container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: auto;
-    z-index: 100;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: transparent;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    transform: none;
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
     pointer-events: none;
 }
 
-/* Individual Stat Counters */
-.stat-counter {
+.coin-face .coin-face-art {
+    background-image: var(--heads-art);
+}
+
+.coin-back .coin-face-art {
+    background-image: var(--tails-art);
+}
+
+/* Landing flash — ring sits outside the art clip so it can expand */
+.landing-flash-sweep,
+.landing-flash-ring {
     position: absolute;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(12px);
-    border-radius: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    pointer-events: auto;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.stat-counter:hover {
-    background: rgba(0, 0, 0, 0.6);
-    border-color: rgba(255, 215, 0, 0.3);
-    transform: scale(1.02);
-}
-
-.stat-counter:active {
-    transform: scale(0.98);
-}
-
-/* Control Buttons - Header (Desktop) */
-.control-buttons-header {
-    position: absolute;
-    top: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 16px;
-    z-index: 100;
-}
-
-/* Control Buttons - Mobile (Bottom) - Hidden on desktop */
-.control-buttons-mobile {
-    display: none;
-}
-
-.control-btn {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: rgba(255, 255, 255, 0.8);
-    position: relative;
-}
-
-.control-btn:hover {
-    background: rgba(0, 0, 0, 0.7);
-    border-color: rgba(255, 215, 0, 0.3);
-    color: #ffd700;
-    transform: scale(1.05);
-}
-
-.control-btn.has-warning {
-    border-color: rgba(239, 68, 68, 0.4);
-}
-
-.control-btn.has-warning:hover {
-    border-color: rgba(239, 68, 68, 0.6);
-}
-
-.warning-badge {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    width: 20px;
-    height: 20px;
-    background: #ef4444;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 14px;
-    font-weight: 700;
-    border: 2px solid rgba(0, 0, 0, 0.5);
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
-    animation: warningPulse 2s ease-in-out infinite;
-}
-
-@keyframes warningPulse {
-    0%, 100% {
-        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
-    }
-    50% {
-        box-shadow: 0 2px 12px rgba(239, 68, 68, 0.7);
-    }
-}
-
-.control-btn svg {
-    width: 24px;
-    height: 24px;
-}
-
-/* Developer Credit Footer */
-.developer-credit {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 24px;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(12px);
-    border-radius: 28px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: 100;
-}
-
-.credit-text {
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.7);
-    font-weight: 500;
-    white-space: nowrap;
-}
-
-.developer-link {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    color: rgba(255, 255, 255, 0.95);
-    text-decoration: none;
-    transition: all 0.3s ease;
-    padding: 4px 8px;
-    border-radius: 20px;
-}
-
-.developer-link:hover {
-    color: #ffd700;
-    background: rgba(255, 215, 0, 0.1);
-    transform: scale(1.05);
-}
-
-.developer-logo {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    object-fit: contain;
-    flex-shrink: 0;
-}
-
-.developer-name {
-    font-weight: 600;
-    font-size: 0.95rem;
-    white-space: nowrap;
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-    .developer-credit {
-        bottom: 16px;
-        padding: 10px 20px;
-        gap: 10px;
-        max-width: calc(100% - 40px);
-    }
-    
-    .credit-text {
-        font-size: 0.8rem;
-    }
-    
-    .developer-logo {
-        width: 24px;
-        height: 24px;
-    }
-    
-    .developer-name {
-        font-size: 0.85rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .developer-credit {
-        bottom: 87px;
-        padding: 8px 16px;
-        gap: 8px;
-        flex-wrap: nowrap;
-    }
-    
-    .credit-text {
-        font-size: 0.75rem;
-    }
-    
-    .developer-logo {
-        width: 22px;
-        height: 22px;
-    }
-    
-    .developer-name {
-        font-size: 0.8rem;
-    }
-}
-
-@media (max-width: 360px) {
-    .developer-credit {
-        bottom: 87px;
-        padding: 6px 14px;
-        gap: 6px;
-        max-width: calc(100% - 28px);
-    }
-    
-    .credit-text {
-        font-size: 0.7rem;
-    }
-    
-    .developer-logo {
-        width: 20px;
-        height: 20px;
-    }
-    
-    .developer-name {
-        font-size: 0.75rem;
-    }
-}
-
-/* Heads Counter - Top Left */
-.heads-counter {
-    top: 24px;
-    left: 24px;
-}
-
-/* Tails Counter - Top Right */
-.tails-counter {
-    top: 24px;
-    right: 24px;
-}
-
-/* Streak Counter - Top Center */
-.streak-counter {
-    position: absolute;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: rgba(251, 146, 60, 0.15);
-    backdrop-filter: blur(12px);
-    border-radius: 24px;
-    border: 2px solid rgba(251, 146, 60, 0.5);
     pointer-events: none;
-    box-shadow: 
-        0 4px 20px rgba(251, 146, 60, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    animation: streakPulse 2s ease-in-out infinite;
+    opacity: 0;
 }
 
-.streak-icon {
-    font-size: 24px;
-    line-height: 1;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-    animation: streakFlicker 1.5s ease-in-out infinite;
-}
-
-.streak-value {
-    font-size: 22px;
-    font-weight: 900;
-    color: white;
-    text-shadow: 
-        0 2px 4px rgba(0, 0, 0, 0.7),
-        0 0 12px rgba(251, 146, 60, 0.6);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.5px;
-    line-height: 1;
-}
-
-@keyframes streakPulse {
-    0%, 100% {
-        box-shadow: 
-            0 4px 20px rgba(251, 146, 60, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        transform: translateX(-50%) scale(1);
-    }
-    50% {
-        box-shadow: 
-            0 6px 30px rgba(251, 146, 60, 0.5),
-            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-        transform: translateX(-50%) scale(1.05);
-    }
-}
-
-@keyframes streakFlicker {
-    0%, 100% {
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-        transform: scale(1);
-    }
-    50% {
-        filter: drop-shadow(0 2px 8px rgba(251, 146, 60, 0.6));
-        transform: scale(1.1);
-    }
-}
-
-/* Counter Content Layout */
-.counter-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-/* Counter Icon - LARGER SIZE */
-.counter-icon {
-    width: 60px;
-    height: 60px;
+.landing-flash-sweep {
+    inset: 0;
     border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(255, 215, 0, 0.7);
-    box-shadow: 
-        0 0 8px rgba(255, 215, 0, 0.4),
-        inset 0 1px 2px rgba(255, 255, 255, 0.3);
-    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
-    padding: 2px;
-    flex-shrink: 0;
+    background: linear-gradient(45deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(255, 255, 255, 0.92) 50%,
+        transparent 60%,
+        transparent 100%);
+    z-index: 6;
 }
 
-/* Counter Info */
-.counter-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    align-items: flex-start;
-}
-
-/* Counter Label - NEW */
-.counter-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.6);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    line-height: 1;
-}
-
-/* Counter Value */
-.counter-value {
-    font-size: 26px;
-    font-weight: 900;
-    color: white;
-    text-shadow: 
-        0 2px 4px rgba(0, 0, 0, 0.7),
-        0 0 12px rgba(255, 255, 255, 0.3);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.5px;
-    line-height: 1;
-}
-
-/* First Time Hint */
-.first-time-hint {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    animation: hintBounce 2s ease-in-out infinite;
-    z-index: 10;
-    max-width: 90%;
-}
-
-.hint-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
-    background: linear-gradient(135deg, rgba(129, 140, 248, 0.95) 0%, rgba(192, 132, 252, 0.95) 100%);
-    border-radius: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 
-        0 4px 20px rgba(129, 140, 248, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.hint-icon {
-    font-size: 28px;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-    animation: pointDown 1s ease-in-out infinite;
-}
-
-.hint-text {
-    font-size: 1rem;
-    font-weight: 700;
-    color: white;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    white-space: nowrap;
-}
-
-@keyframes hintBounce {
-    0%, 100% {
-        transform: translateX(-50%) translateY(0);
-    }
-    50% {
-        transform: translateX(-50%) translateY(-10px);
-    }
-}
-
-@keyframes pointDown {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(5px);
-    }
-}
-
-/* Mobile Responsive - Game Style */
-@media (max-width: 768px) {
-    /* Hide desktop header buttons on mobile */
-    .control-buttons-header {
-        display: none;
-    }
-    
-    /* Show mobile bottom buttons */
-    .control-buttons-mobile {
-        display: flex;
-        position: absolute;
-        bottom: 150px;
-        left: 50%;
-        transform: translateX(-50%);
-        gap: 16px;
-        z-index: 100;
-    }
-    
-    .control-btn {
-        width: 48px;
-        height: 48px;
-    }
-    
-    .control-btn svg {
-        width: 22px;
-        height: 22px;
-    }
-    
-    .stat-counter {
-        padding: 8px 14px;
-        border-radius: 20px;
-    }
-    
-    .heads-counter {
-        top: 16px;
-        left: 16px;
-    }
-    
-    .tails-counter {
-        top: 16px;
-        right: 16px;
-    }
-    
-    .streak-counter {
-        top: 16px;
-        padding: 6px 14px;
-        gap: 6px;
-    }
-    
-    .streak-icon {
-        font-size: 20px;
-    }
-    
-    .streak-value {
-        font-size: 20px;
-    }
-    
-    .counter-icon {
-        width: 52px;
-        height: 52px;
-    }
-    
-    .counter-label {
-        font-size: 10px;
-    }
-    
-    .counter-value {
-        font-size: 24px;
-    }
-    
-    .developer-credit {
-        bottom: 16px;
-        padding: 10px 20px;
-        max-width: calc(100% - 32px);
-    }
-    
-    .credit-text {
-        font-size: 0.85rem;
-    }
-    
-    .developer-logo {
-        width: 28px;
-        height: 28px;
-    }
-    
-    .developer-name {
-        font-size: 0.9rem;
-    }
-    
-    .first-time-hint {
-        top: 50%;
-        max-width: calc(100% - 40px);
-    }
-    
-    .hint-icon {
-        font-size: 24px;
-    }
-    
-    .hint-text {
-        font-size: 0.9rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .control-buttons-mobile {
-        bottom: 150px;
-        gap: 12px;
-    }
-    
-    .control-btn {
-        width: 44px;
-        height: 44px;
-    }
-    
-    .control-btn svg {
-        width: 20px;
-        height: 20px;
-    }
-    
-    .stat-counter {
-        padding: 6px 12px;
-        gap: 8px;
-    }
-    
-    .heads-counter {
-        top: 12px;
-        left: 12px;
-    }
-    
-    .tails-counter {
-        top: 12px;
-        right: 12px;
-    }
-    
-    .streak-counter {
-        top: 12px;
-        padding: 5px 12px;
-        gap: 6px;
-    }
-    
-    .streak-icon {
-        font-size: 18px;
-    }
-    
-    .streak-value {
-        font-size: 18px;
-    }
-    
-    .counter-icon {
-        width: 44px;
-        height: 44px;
-        border-width: 2px;
-    }
-    
-    .counter-label {
-        font-size: 9px;
-    }
-    
-    .counter-value {
-        font-size: 22px;
-    }
-    
-    .developer-credit {
-        bottom: 87px;
-        padding: 8px 16px;
-        gap: 8px;
-        flex-wrap: nowrap;
-    }
-    
-    .credit-text {
-        font-size: 0.75rem;
-    }
-    
-    .developer-logo {
-        width: 24px;
-        height: 24px;
-    }
-    
-    .developer-name {
-        font-size: 0.85rem;
-    }
-}
-
-@media (max-width: 360px) {
-    .control-buttons-mobile {
-        bottom: 150px;
-    }
-    
-    .counter-content {
-        gap: 8px;
-    }
-    
-    .streak-counter {
-        top: 10px;
-        padding: 4px 10px;
-        gap: 5px;
-    }
-    
-    .streak-icon {
-        font-size: 16px;
-    }
-    
-    .streak-value {
-        font-size: 16px;
-    }
-    
-    .counter-icon {
-        width: 38px;
-        height: 38px;
-    }
-    
-    .counter-label {
-        font-size: 8px;
-    }
-    
-    .counter-value {
-        font-size: 20px;
-    }
-    
-    .developer-credit {
-        padding: 6px 12px;
-        gap: 6px;
-    }
-    
-    .credit-text {
-        font-size: 0.7rem;
-    }
-    
-    .developer-logo {
-        width: 22px;
-        height: 22px;
-    }
-    
-    .developer-name {
-        font-size: 0.8rem;
-    }
-}
-
-/* Heads Counter - Top Left */
-.heads-counter {
-    top: 24px;
-    left: 24px;
-}
-
-/* Tails Counter - Top Right */
-.tails-counter {
-    top: 24px;
-    right: 24px;
-}
-
-/* Streak Counter - Top Center */
-.streak-counter {
-    position: absolute;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: rgba(251, 146, 60, 0.15);
-    backdrop-filter: blur(12px);
-    border-radius: 24px;
-    border: 2px solid rgba(251, 146, 60, 0.5);
-    pointer-events: none;
-    box-shadow: 
-        0 4px 20px rgba(251, 146, 60, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    animation: streakPulse 2s ease-in-out infinite;
-}
-
-.streak-icon {
-    font-size: 24px;
-    line-height: 1;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-    animation: streakFlicker 1.5s ease-in-out infinite;
-}
-
-.streak-value {
-    font-size: 22px;
-    font-weight: 900;
-    color: white;
-    text-shadow: 
-        0 2px 4px rgba(0, 0, 0, 0.7),
-        0 0 12px rgba(251, 146, 60, 0.6);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.5px;
-    line-height: 1;
-}
-
-@keyframes streakPulse {
-    0%, 100% {
-        box-shadow: 
-            0 4px 20px rgba(251, 146, 60, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        transform: translateX(-50%) scale(1);
-    }
-    50% {
-        box-shadow: 
-            0 6px 30px rgba(251, 146, 60, 0.5),
-            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-        transform: translateX(-50%) scale(1.05);
-    }
-}
-
-@keyframes streakFlicker {
-    0%, 100% {
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-        transform: scale(1);
-    }
-    50% {
-        filter: drop-shadow(0 2px 8px rgba(251, 146, 60, 0.6));
-        transform: scale(1.1);
-    }
-}
-
-/* Counter Content Layout */
-.counter-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-/* Counter Icon - LARGER SIZE */
-.counter-icon {
-    width: 60px;
-    height: 60px;
+.landing-flash-ring {
+    inset: -10px;
     border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(255, 215, 0, 0.7);
-    box-shadow: 
-        0 0 8px rgba(255, 215, 0, 0.4),
-        inset 0 1px 2px rgba(255, 255, 255, 0.3);
-    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
-    padding: 2px;
-    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.95);
+    z-index: 5;
 }
 
-/* Counter Info */
-.counter-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    align-items: flex-start;
+.coin.landed .landing-flash-sweep {
+    animation: flashSweep 0.5s ease-out;
 }
 
-/* Counter Label - NEW */
-.counter-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.6);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    line-height: 1;
+.coin.landed .landing-flash-ring {
+    animation: landRing 0.5s ease-out;
 }
 
-/* Counter Value */
-.counter-value {
-    font-size: 26px;
-    font-weight: 900;
-    color: white;
-    text-shadow: 
-        0 2px 4px rgba(0, 0, 0, 0.7),
-        0 0 12px rgba(255, 255, 255, 0.3);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.5px;
-    line-height: 1;
+.coin.landed.land-heads .landing-flash-ring {
+    border-color: rgba(255, 215, 0, 0.95);
+    animation: landRingHeads 0.5s ease-out;
 }
 
-/* First Time Hint */
-.first-time-hint {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    animation: hintBounce 2s ease-in-out infinite;
-    z-index: 10;
-    max-width: 90%;
+.coin.landed.land-tails .landing-flash-ring {
+    border-color: rgba(232, 121, 249, 0.95);
+    animation: landRingTails 0.5s ease-out;
 }
 
-.hint-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
-    background: linear-gradient(135deg, rgba(129, 140, 248, 0.95) 0%, rgba(192, 132, 252, 0.95) 100%);
-    border-radius: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 
-        0 4px 20px rgba(129, 140, 248, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+.coin.land-heads .landing-flash-sweep {
+    background: linear-gradient(45deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(255, 248, 200, 0.95) 50%,
+        transparent 60%,
+        transparent 100%);
 }
 
-.hint-icon {
-    font-size: 28px;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-    animation: pointDown 1s ease-in-out infinite;
+.coin.land-tails .landing-flash-sweep {
+    background: linear-gradient(45deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(245, 208, 254, 0.95) 50%,
+        transparent 60%,
+        transparent 100%);
 }
 
-.hint-text {
-    font-size: 1rem;
-    font-weight: 700;
-    color: white;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    white-space: nowrap;
+.coin-container:has(.coin.landed) .coin-glow {
+    animation: none;
 }
 
-@keyframes hintBounce {
-    0%, 100% {
-        transform: translateX(-50%) translateY(0);
-    }
-    50% {
-        transform: translateX(-50%) translateY(-10px);
-    }
+.coin-glow.land-heads {
+    background: radial-gradient(circle, rgba(255, 215, 0, 0.58) 0%, transparent 68%);
+    animation: glowLandPulse 0.5s ease-out;
 }
 
-@keyframes pointDown {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(5px);
-    }
+.coin-glow.land-tails {
+    background: radial-gradient(circle, rgba(192, 132, 252, 0.6) 0%, transparent 68%);
+    animation: glowLandPulse 0.5s ease-out;
 }
 
-/* Mobile Responsive - Game Style */
-@media (max-width: 768px) {
-    /* Hide desktop header buttons on mobile */
-    .control-buttons-header {
-        display: none;
-    }
-    
-    /* Show mobile bottom buttons */
-    .control-buttons-mobile {
-        display: flex;
-        position: absolute;
-        bottom: 150px;
-        left: 50%;
-        transform: translateX(-50%);
-        gap: 16px;
-        z-index: 100;
-    }
-    
-    .control-btn {
-        width: 48px;
-        height: 48px;
-    }
-    
-    .control-btn svg {
-        width: 22px;
-        height: 22px;
-    }
-    
-    .stat-counter {
-        padding: 8px 14px;
-        border-radius: 20px;
-    }
-    
-    .heads-counter {
-        top: 16px;
-        left: 16px;
-    }
-    
-    .tails-counter {
-        top: 16px;
-        right: 16px;
-    }
-    
-    .streak-counter {
-        top: 16px;
-        padding: 6px 14px;
-        gap: 6px;
-    }
-    
-    .streak-icon {
-        font-size: 20px;
-    }
-    
-    .streak-value {
-        font-size: 20px;
-    }
-    
-    .counter-icon {
-        width: 52px;
-        height: 52px;
-    }
-    
-    .counter-label {
-        font-size: 10px;
-    }
-    
-    .counter-value {
-        font-size: 24px;
-    }
-    
-    .developer-credit {
-        bottom: 16px;
-        padding: 10px 20px;
-        max-width: calc(100% - 32px);
-    }
-    
-    .credit-text {
-        font-size: 0.85rem;
-    }
-    
-    .developer-logo {
-        width: 28px;
-        height: 28px;
-    }
-    
-    .developer-name {
-        font-size: 0.9rem;
-    }
-    
-    .first-time-hint {
-        top: 50%;
-        max-width: calc(100% - 40px);
-    }
-    
-    .hint-icon {
-        font-size: 24px;
-    }
-    
-    .hint-text {
-        font-size: 0.9rem;
-    }
+@keyframes glowLandPulse {
+    0% { transform: scale(0.92); opacity: 0.55; }
+    35% { transform: scale(1.22); opacity: 0.95; }
+    100% { transform: scale(1); opacity: 0.55; }
 }
 
-@media (max-width: 480px) {
-    .control-buttons-mobile {
-        bottom: 150px;
-        gap: 12px;
-    }
-    
-    .control-btn {
-        width: 44px;
-        height: 44px;
-    }
-    
-    .control-btn svg {
-        width: 20px;
-        height: 20px;
-    }
-    
-    .stat-counter {
-        padding: 6px 12px;
-        gap: 8px;
-    }
-    
-    .heads-counter {
-        top: 12px;
-        left: 12px;
-    }
-    
-    .tails-counter {
-        top: 12px;
-        right: 12px;
-    }
-    
-    .streak-counter {
-        top: 12px;
-        padding: 5px 12px;
-        gap: 6px;
-    }
-    
-    .streak-icon {
-        font-size: 18px;
-    }
-    
-    .streak-value {
-        font-size: 18px;
-    }
-    
-    .counter-icon {
-        width: 44px;
-        height: 44px;
-        border-width: 2px;
-    }
-    
-    .counter-label {
-        font-size: 9px;
-    }
-    
-    .counter-value {
-        font-size: 22px;
-    }
-    
-    .developer-credit {
-        bottom: 87px;
-        padding: 8px 16px;
-        gap: 8px;
-        flex-wrap: nowrap;
-    }
-    
-    .credit-text {
-        font-size: 0.75rem;
-    }
-    
-    .developer-logo {
-        width: 24px;
-        height: 24px;
-    }
-    
-    .developer-name {
-        font-size: 0.85rem;
-    }
-}
-
-@media (max-width: 360px) {
-    .control-buttons-mobile {
-        bottom: 150px;
-    }
-    
-    .counter-content {
-        gap: 8px;
-    }
-    
-    .streak-counter {
-        top: 10px;
-        padding: 4px 10px;
-        gap: 5px;
-    }
-    
-    .streak-icon {
-        font-size: 16px;
-    }
-    
-    .streak-value {
-        font-size: 16px;
-    }
-    
-    .counter-icon {
-        width: 38px;
-        height: 38px;
-    }
-    
-    .counter-label {
-        font-size: 8px;
-    }
-    
-    .counter-value {
-        font-size: 20px;
-    }
-    
-    .developer-credit {
-        padding: 6px 12px;
-        gap: 6px;
-    }
-    
-    .credit-text {
-        font-size: 0.7rem;
-    }
-    
-    .developer-logo {
-        width: 22px;
-        height: 22px;
-    }
-    
-    .developer-name {
-        font-size: 0.8rem;
-    }
-}
-
-/* Heads Counter - Top Left */
-.heads-counter {
-    top: 24px;
-    left: 24px;
-}
-
-/* Tails Counter - Top Right */
-.tails-counter {
-    top: 24px;
-    right: 24px;
-}
-
-/* Streak Counter - Top Center */
-.streak-counter {
-    position: absolute;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: rgba(251, 146, 60, 0.15);
-    backdrop-filter: blur(12px);
-    border-radius: 24px;
-    border: 2px solid rgba(251, 146, 60, 0.5);
-    pointer-events: none;
-    box-shadow: 
-        0 4px 20px rgba(251, 146, 60, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    animation: streakPulse 2s ease-in-out infinite;
-}
-
-.streak-icon {
-    font-size: 24px;
-    line-height: 1;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-    animation: streakFlicker 1.5s ease-in-out infinite;
-}
-
-.streak-value {
-    font-size: 22px;
-    font-weight: 900;
-    color: white;
-    text-shadow: 
-        0 2px 4px rgba(0, 0, 0, 0.7),
-        0 0 12px rgba(251, 146, 60, 0.6);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.5px;
-    line-height: 1;
-}
-
-@keyframes streakPulse {
-    0%, 100% {
-        box-shadow: 
-            0 4px 20px rgba(251, 146, 60, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        transform: translateX(-50%) scale(1);
-    }
-    50% {
-        box-shadow: 
-            0 6px 30px rgba(251, 146, 60, 0.5),
-            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-        transform: translateX(-50%) scale(1.05);
-    }
-}
-
-@keyframes streakFlicker {
-    0%, 100% {
-        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-        transform: scale(1);
-    }
-    50% {
-        filter: drop-shadow(0 2px 8px rgba(251, 146, 60, 0.6));
-        transform: scale(1.1);
-    }
-}
-
-/* Counter Content Layout */
-.counter-content {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-/* Counter Icon - LARGER SIZE */
-.counter-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(255, 215, 0, 0.7);
-    box-shadow: 
-        0 0 8px rgba(255, 215, 0, 0.4),
-        inset 0 1px 2px rgba(255, 255, 255, 0.3);
-    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
-    padding: 2px;
-    flex-shrink: 0;
-}
-
-/* Counter Info */
-.counter-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    align-items: flex-start;
-}
-
-/* Counter Label - NEW */
-.counter-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.6);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    line-height: 1;
-}
-
-/* Counter Value */
-.counter-value {
-    font-size: 26px;
-    font-weight: 900;
-    color: white;
-    text-shadow: 
-        0 2px 4px rgba(0, 0, 0, 0.7),
-        0 0 12px rgba(255, 255, 255, 0.3);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.5px;
-    line-height: 1;
-}
-
-/* First Time Hint */
-.first-time-hint {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    animation: hintBounce 2s ease-in-out infinite;
-    z-index: 10;
-    max-width: 90%;
-}
-
-.hint-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
-    background: linear-gradient(135deg, rgba(129, 140, 248, 0.95) 0%, rgba(192, 132, 252, 0.95) 100%);
-    border-radius: 16px;
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 
-        0 4px 20px rgba(129, 140, 248, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-
-.hint-icon {
-    font-size: 28px;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-    animation: pointDown 1s ease-in-out infinite;
-}
-
-.hint-text {
-    font-size: 1rem;
-    font-weight: 700;
-    color: white;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    white-space: nowrap;
-}
-
-@keyframes hintBounce {
-    0%, 100% {
-        transform: translateX(-50%) translateY(0);
-    }
-    50% {
-        transform: translateX(-50%) translateY(-10px);
-    }
-}
-
-@keyframes pointDown {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(5px);
-    }
-}
-
-/* Mobile Responsive - Game Style */
-@media (max-width: 768px) {
-    /* Hide desktop header buttons on mobile */
-    .control-buttons-header {
-        display: none;
-    }
-    
-    /* Show mobile bottom buttons */
-    .control-buttons-mobile {
-        display: flex;
-        position: absolute;
-        bottom: 150px;
-        left: 50%;
-        transform: translateX(-50%);
-        gap: 16px;
-        z-index: 100;
-    }
-    
-    .control-btn {
-        width: 48px;
-        height: 48px;
-    }
-    
-    .control-btn svg {
-        width: 22px;
-        height: 22px;
-    }
-    
-    .stat-counter {
-        padding: 8px 14px;
-        border-radius: 20px;
-    }
-    
-    .heads-counter {
-        top: 16px;
-        left: 16px;
-    }
-    
-    .tails-counter {
-        top: 16px;
-        right: 16px;
-    }
-    
-    .streak-counter {
-        top: 16px;
-        padding: 6px 14px;
-        gap: 6px;
-    }
-    
-    .streak-icon {
-        font-size: 20px;
-    }
-    
-    .streak-value {
-        font-size: 20px;
-    }
-    
-    .counter-icon {
-        width: 52px;
-        height: 52px;
-    }
-    
-    .counter-label {
-        font-size: 10px;
-    }
-    
-    .counter-value {
-        font-size: 24px;
-    }
-    
-    .developer-credit {
-        bottom: 16px;
-        padding: 10px 20px;
-        max-width: calc(100% - 32px);
-    }
-    
-    .credit-text {
-        font-size: 0.85rem;
-    }
-    
-    .developer-logo {
-        width: 28px;
-        height: 28px;
-    }
-    
-    .developer-name {
-        font-size: 0.9rem;
-    }
-    
-    .first-time-hint {
-        top: 50%;
-        max-width: calc(100% - 40px);
-    }
-    
-    .hint-icon {
-        font-size: 24px;
-    }
-    
-    .hint-text {
-        font-size: 0.9rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .control-buttons-mobile {
-        bottom: 150px;
-        gap: 12px;
-    }
-    
-    .control-btn {
-        width: 44px;
-        height: 44px;
-    }
-    
-    .control-btn svg {
-        width: 20px;
-        height: 20px;
-    }
-    
-    .stat-counter {
-        padding: 6px 12px;
-        gap: 8px;
-    }
-    
-    .heads-counter {
-        top: 12px;
-        left: 12px;
-    }
-    
-    .tails-counter {
-        top: 12px;
-        right: 12px;
-    }
-    
-    .streak-counter {
-        top: 12px;
-        padding: 5px 12px;
-        gap: 6px;
-    }
-    
-    .streak-icon {
-        font-size: 18px;
-    }
-    
-    .streak-value {
-        font-size: 18px;
-    }
-    
-    .counter-icon {
-        width: 44px;
-        height: 44px;
-        border-width: 2px;
-    }
-    
-    .counter-label {
-        font-size: 9px;
-    }
-    
-    .counter-value {
-        font-size: 22px;
-    }
-    
-    .developer-credit {
-        bottom: 87px;
-        padding: 8px 16px;
-        gap: 8px;
-        flex-wrap: nowrap;
-    }
-    
-    .credit-text {
-        font-size: 0.75rem;
-    }
-    
-    .developer-logo {
-        width: 24px;
-        height: 24px;
-    }
-    
-    .developer-name {
-        font-size: 0.85rem;
-    }
-}
-
-@media (max-width: 360px) {
-    .control-buttons-mobile {
-        bottom: 150px;
-    }
-    
-    .counter-content {
-        gap: 8px;
-    }
-    
-    .streak-counter {
-        top: 10px;
-        padding: 4px 10px;
-        gap: 5px;
-    }
-    
-    .streak-icon {
-        font-size: 16px;
-    }
-    
-    .streak-value {
-        font-size: 16px;
-    }
-    
-    .counter-icon {
-        width: 38px;
-        height: 38px;
-    }
-    
-    .counter-label {
-        font-size: 8px;
-    }
-    
-    .counter-value {
-        font-size: 20px;
-    }
-    
-    .developer-credit {
-        padding: 6px 12px;
-        gap: 6px;
-    }
-    
-    .credit-text {
-        font-size: 0.7rem;
-    }
-    
-    .developer-logo {
-        width: 22px;
-        height: 22px;
-    }
-    
-    .developer-name {
-        font-size: 0.8rem;
-    }
-}
-
-/* Coin Flip Animations - FASTER & SMOOTHER (BOTTOM OVER TOP) */
-@keyframes coinFlipWeighted {
-    0% { 
-        transform: translateY(0) rotateX(0deg) rotateY(0deg);
-    }
-    10% {
-        transform: translateY(-70px) rotateX(200deg) rotateY(-20deg);
-    }
-    20% {
-        transform: translateY(-130px) rotateX(400deg) rotateY(-12deg);
+@keyframes landGlowPulse {
+    0% {
+        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.95)) drop-shadow(0 10px 40px rgba(255, 215, 0, 0.4));
     }
     35% {
-        transform: translateY(-170px) rotateX(700deg) rotateY(-5deg);
+        filter: drop-shadow(0 0 36px rgba(255, 215, 0, 1)) drop-shadow(0 18px 56px rgba(255, 215, 0, 0.7));
     }
-    50% {
-        transform: translateY(-185px) rotateX(1000deg) rotateY(0deg);
-    }
-    65% {
-        transform: translateY(-170px) rotateX(1300deg) rotateY(5deg);
-    }
-    80% {
-        transform: translateY(-80px) rotateX(1600deg) rotateY(8deg);
-    }
-    90% {
-        transform: translateY(-20px) rotateX(1740deg) rotateY(3deg);
-    }
-    97% {
-        transform: translateY(-3px) rotateX(1790deg) rotateY(1deg);
-    }
-    100% { 
-        transform: translateY(0) rotateX(1800deg) rotateY(0deg);
+    100% {
+        filter: drop-shadow(0 10px 40px rgba(255, 215, 0, 0.3)) drop-shadow(0 20px 60px rgba(0, 0, 0, 0.5));
     }
 }
 
-@keyframes coinFlipWeightedTails {
-    0% { 
-        transform: translateY(0) rotateX(0deg) rotateY(0deg);
-    }
-    10% {
-        transform: translateY(-70px) rotateX(200deg) rotateY(-20deg);
-    }
-    20% {
-        transform: translateY(-130px) rotateX(400deg) rotateY(-12deg);
+@keyframes landGlowPulseHeads {
+    0% {
+        filter: drop-shadow(0 0 10px rgba(255, 248, 200, 0.95)) drop-shadow(0 10px 40px rgba(255, 215, 0, 0.45));
     }
     35% {
-        transform: translateY(-170px) rotateX(700deg) rotateY(-5deg);
+        filter: drop-shadow(0 0 40px rgba(251, 191, 36, 1)) drop-shadow(0 18px 56px rgba(245, 158, 11, 0.75));
     }
-    50% {
-        transform: translateY(-185px) rotateX(1000deg) rotateY(0deg);
-    }
-    65% {
-        transform: translateY(-170px) rotateX(1300deg) rotateY(5deg);
-    }
-    80% {
-        transform: translateY(-80px) rotateX(1600deg) rotateY(8deg);
-    }
-    90% {
-        transform: translateY(-20px) rotateX(1920deg) rotateY(3deg);
-    }
-    97% {
-        transform: translateY(-3px) rotateX(1970deg) rotateY(1deg);
-    }
-    100% { 
-        transform: translateY(0) rotateX(1980deg) rotateY(0deg);
+    100% {
+        filter: drop-shadow(0 10px 40px rgba(255, 215, 0, 0.3)) drop-shadow(0 20px 60px rgba(0, 0, 0, 0.5));
     }
 }
 
-/* Super Flip Animations - Ultra Realistic & Fast */
-.coin.super-flip {
-    animation: coinSuperFlipRealistic 0.75s cubic-bezier(0.25, 0.1, 0.25, 1) forwards !important;
-    filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1)) !important;
-}
-
-@keyframes coinSuperFlipRealistic {
-    /* Initial launch - explosive upward force */
-    0% { 
-        transform: translateY(0) rotateX(0deg) rotateY(0deg) scale(1);
-    }
-    /* Rapid acceleration phase */
-    5% {
-        transform: translateY(-120px) rotateX(450deg) rotateY(-30deg) scale(1.08);
-    }
-    /* Peak velocity */
-    10% {
-        transform: translateY(-280px) rotateX(900deg) rotateY(-20deg) scale(1.12);
-    }
-    /* Maximum height - floating moment */
-    20% {
-        transform: translateY(-450px) rotateX(1800deg) rotateY(-10deg) scale(1.18);
+@keyframes landGlowPulseTails {
+    0% {
+        filter: drop-shadow(0 0 10px rgba(245, 208, 254, 0.95)) drop-shadow(0 10px 40px rgba(192, 132, 252, 0.5));
     }
     35% {
-        transform: translateY(-520px) rotateX(2700deg) rotateY(0deg) scale(1.2);
+        filter: drop-shadow(0 0 40px rgba(232, 121, 249, 1)) drop-shadow(0 18px 56px rgba(168, 85, 247, 0.75));
     }
-    /* Apex - brief pause */
-    40% {
-        transform: translateY(-530px) rotateX(3150deg) rotateY(5deg) scale(1.22);
-    }
-    /* Begin descent - gravity kicks in */
-    45% {
-        transform: translateY(-520px) rotateX(3600deg) rotateY(8deg) scale(1.2);
-    }
-    /* Accelerating downward */
-    55% {
-        transform: translateY(-420px) rotateX(4050deg) rotateY(12deg) scale(1.15);
-    }
-    65% {
-        transform: translateY(-280px) rotateX(4500deg) rotateY(15deg) scale(1.1);
-    }
-    /* Rapid descent */
-    75% {
-        transform: translateY(-140px) rotateX(4950deg) rotateY(18deg) scale(1.05);
-    }
-    /* Final approach */
-    85% {
-        transform: translateY(-40px) rotateX(5310deg) rotateY(10deg) scale(1.02);
-    }
-    /* Slight bounce */
-    92% {
-        transform: translateY(-8px) rotateX(5390deg) rotateY(3deg) scale(1.01);
-    }
-    /* Settle */
-    97% {
-        transform: translateY(-2px) rotateX(5395deg) rotateY(1deg) scale(1);
-    }
-    /* Final position */
-    100% { 
-        transform: translateY(0) rotateX(5400deg) rotateY(0deg) scale(1);
+    100% {
+        filter: drop-shadow(0 10px 40px rgba(192, 132, 252, 0.35)) drop-shadow(0 20px 60px rgba(0, 0, 0, 0.5));
     }
 }
 
-/* Alternative super flip for tails - slightly different physics */
-.coin.flip-tails.super-flip {
-    animation: coinSuperFlipRealisticTails 0.75s cubic-bezier(0.25, 0.1, 0.25, 1) forwards !important;
-}
-
-@keyframes coinSuperFlipRealisticTails {
-    0% { 
-        transform: translateY(0) rotateX(0deg) rotateY(0deg) scale(1);
+@keyframes landRing {
+    0% {
+        transform: scale(0.92);
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.55);
     }
-    5% {
-        transform: translateY(-120px) rotateX(450deg) rotateY(-30deg) scale(1.08);
-    }
-    10% {
-        transform: translateY(-280px) rotateX(900deg) rotateY(-20deg) scale(1.12);
-    }
-    20% {
-        transform: translateY(-450px) rotateX(1800deg) rotateY(-10deg) scale(1.18);
-    }
-    35% {
-        transform: translateY(-520px) rotateX(2700deg) rotateY(0deg) scale(1.2);
-    }
-    40% {
-        transform: translateY(-530px) rotateX(3150deg) rotateY(5deg) scale(1.22);
-    }
-    45% {
-        transform: translateY(-520px) rotateX(3690deg) rotateY(8deg) scale(1.2);
-    }
-    55% {
-        transform: translateY(-420px) rotateX(4140deg) rotateY(12deg) scale(1.15);
-    }
-    65% {
-        transform: translateY(-280px) rotateX(4590deg) rotateY(15deg) scale(1.1);
-    }
-    75% {
-        transform: translateY(-140px) rotateX(5040deg) rotateY(18deg) scale(1.05);
-    }
-    85% {
-        transform: translateY(-40px) rotateX(5400deg) rotateY(10deg) scale(1.02);
-    }
-    92% {
-        transform: translateY(-8px) rotateX(5480deg) rotateY(3deg) scale(1.01);
-    }
-    97% {
-        transform: translateY(-2px) rotateX(5485deg) rotateY(1deg) scale(1);
-    }
-    100% { 
-        transform: translateY(0) rotateX(5490deg) rotateY(0deg) scale(1);
+    100% {
+        transform: scale(1.38);
+        opacity: 0;
+        box-shadow: 0 0 24px 8px rgba(255, 215, 0, 0);
     }
 }
 
-/* Enhanced motion blur effect during super flip */
-.coin.super-flip .coin-face {
-    animation: superFlipMotionBlur 0.75s ease-out forwards;
-}
-
-@keyframes superFlipMotionBlur {
-    0%, 100% {
-        filter: blur(0px);
+@keyframes landRingHeads {
+    0% {
+        transform: scale(0.92);
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.65);
     }
-    15%, 85% {
-        filter: blur(2px);
-    }
-    40%, 45% {
-        filter: blur(0px);
+    100% {
+        transform: scale(1.38);
+        opacity: 0;
+        box-shadow: 0 0 24px 8px rgba(251, 191, 36, 0);
     }
 }
 
-/* Shake animation for charged coin */
-.coin.shake {
-    animation: coinShake 0.3s ease-in-out infinite;
-}
-
-@keyframes coinShake {
-    0%, 100% {
-        transform: translateX(-2px) rotate(-1deg);
+@keyframes landRingTails {
+    0% {
+        transform: scale(0.92);
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(232, 121, 249, 0.65);
     }
-    25% {
-        transform: translateX(2px) rotate(1deg);
-    }
-    50% {
-        transform: translateX(-2px) rotate(-1deg);
-    }
-    75% {
-        transform: translateX(2px) rotate(1deg);
-    }
-}
-
-/* Super flip glow effect */
-.coin.super-flip-ready {
-    filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.8)) drop-shadow(0 10px 40px rgba(255, 215, 0, 0.4));
-    animation: superFlipGlow 1s ease-in-out infinite;
-}
-
-@keyframes superFlipGlow {
-    0%, 100% {
-        filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.8)) drop-shadow(0 10px 40px rgba(255, 215, 0, 0.4));
-    }
-    50% {
-        filter: drop-shadow(0 0 50px rgba(255, 215, 0, 1)) drop-shadow(0 15px 60px rgba(255, 215, 0, 0.6));
+    100% {
+        transform: scale(1.38);
+        opacity: 0;
+        box-shadow: 0 0 24px 8px rgba(232, 121, 249, 0);
     }
 }
 
@@ -2120,193 +629,449 @@
     }
 }
 
-@keyframes shineFlipWeighted {
-    0% {
-        transform: translate3d(20%, -20%, 0);
-        opacity: 0.8;
-    }
-    25% {
-        transform: translate3d(-25%, 25%, 0);
-        opacity: 1;
-    }
-    50% {
-        transform: translate3d(25%, 30%, 0);
-        opacity: 0.9;
-    }
-    75% {
-        transform: translate3d(-20%, -25%, 0);
-        opacity: 1;
-    }
-    100% {
-        transform: translate3d(20%, -20%, 0);
-        opacity: 0.8;
-    }
-}
+/* ---------- Stats HUD ---------- */
 
-@keyframes fadeInUp {
-    0% {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes floatPrompt {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-}
-
-@keyframes pulse {
-    0%, 100% {
-        opacity: 0.6;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 1;
-        transform: scale(1.1);
-    }
-}
-
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Achievement Label - Simple Passive Notification */
-.achievement-label {
+.stats-container {
     position: absolute;
-    bottom: 120px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 28px;
-    background: rgba(16, 185, 129, 0.12);
-    backdrop-filter: blur(10px);
-    border-radius: 50px;
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    box-shadow: 
-        0 4px 16px rgba(16, 185, 129, 0.15),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    z-index: 5;
-    animation: achievementFadeIn 0.3s ease-out;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    z-index: 100;
     pointer-events: none;
 }
 
-.achievement-icon {
-    font-size: 1.5rem;
-    line-height: 1;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+.stat-counter {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px 6px 6px;
+    background: rgba(11, 18, 32, 0.42);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    pointer-events: auto;
+    cursor: pointer;
+    transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    touch-action: manipulation;
 }
 
-.achievement-text {
-    font-size: 15px;
+.stat-counter:hover {
+    background: rgba(11, 18, 32, 0.62);
+    transform: scale(1.03);
+}
+
+.stat-counter:active {
+    transform: scale(0.97);
+}
+
+.heads-counter {
+    top: calc(16px + env(safe-area-inset-top, 0px));
+    left: calc(16px + env(safe-area-inset-left, 0px));
+    border-color: rgba(251, 191, 36, 0.48);
+    background: rgba(42, 28, 8, 0.48);
+    box-shadow: 0 0 18px rgba(245, 158, 11, 0.18);
+}
+
+.heads-counter:hover {
+    border-color: rgba(251, 191, 36, 0.82);
+    background: rgba(54, 34, 8, 0.68);
+}
+
+.heads-counter .counter-label {
+    color: #fbbf24;
+}
+
+.heads-counter .counter-value {
+    color: #fde68a;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55), 0 0 12px rgba(251, 191, 36, 0.38);
+}
+
+.heads-counter .counter-icon {
+    border-color: rgba(251, 191, 36, 0.92);
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
+}
+
+.tails-counter {
+    top: calc(16px + env(safe-area-inset-top, 0px));
+    right: calc(16px + env(safe-area-inset-right, 0px));
+    padding: 6px 6px 6px 14px;
+    border-color: rgba(192, 132, 252, 0.5);
+    background: rgba(28, 16, 42, 0.5);
+    box-shadow: 0 0 18px rgba(168, 85, 247, 0.2);
+}
+
+.tails-counter:hover {
+    border-color: rgba(232, 121, 249, 0.85);
+    background: rgba(40, 18, 56, 0.7);
+}
+
+.tails-counter .counter-content {
+    flex-direction: row-reverse;
+}
+
+.tails-counter .counter-info {
+    align-items: flex-end;
+    padding-right: 0;
+    padding-left: 4px;
+}
+
+.tails-counter .counter-label {
+    color: #e879f9;
+}
+
+.tails-counter .counter-value {
+    color: #f5d0fe;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55), 0 0 12px rgba(192, 132, 252, 0.42);
+}
+
+.tails-counter .counter-icon {
+    border-color: rgba(216, 180, 254, 0.92);
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.52);
+    background: linear-gradient(135deg, #c084fc 0%, #e879f9 50%, #a855f7 100%);
+}
+
+.counter-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.counter-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 215, 0, 0.75);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.35);
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+    flex-shrink: 0;
+}
+
+.counter-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    align-items: flex-start;
+    padding-right: 4px;
+}
+
+.counter-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.58);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    line-height: 1;
+}
+
+.counter-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.55);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.6px;
+    line-height: 1;
+}
+
+.streak-counter {
+    position: absolute;
+    top: calc(78px + env(safe-area-inset-top, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: linear-gradient(90deg, rgba(249, 115, 22, 0.38), rgba(239, 68, 68, 0.26));
+    border: 1px solid rgba(251, 146, 60, 0.62);
+    border-radius: 999px;
+    box-shadow: 0 0 22px rgba(249, 115, 22, 0.5), 0 0 10px rgba(239, 68, 68, 0.28);
+    pointer-events: none;
+    isolation: isolate;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+/* Emoji + filter/transform animation vanishes between frames on mobile Blink. Glow only. */
+.streak-counter::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: -1;
+    box-shadow: 0 0 18px rgba(249, 115, 22, 0.55), 0 0 8px rgba(251, 146, 60, 0.35);
+    animation: streakHeat 2.4s ease-in-out infinite;
+}
+
+.streak-counter.streak-idle {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.streak-counter.streak-idle::before,
+.streak-counter.streak-idle .streak-icon::before {
+    animation: none;
+}
+
+.streak-icon {
+    position: relative;
+    display: inline-block;
+    font-size: 22px;
+    line-height: 1;
+    transform: none;
+    filter: none;
+}
+
+.streak-icon::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1.4em;
+    height: 1.4em;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(251, 146, 60, 0.72) 0%, rgba(239, 68, 68, 0.18) 55%, transparent 72%);
+    pointer-events: none;
+    z-index: -1;
+    animation: streakGlow 2.4s ease-in-out infinite;
+}
+
+.streak-value {
+    font-size: 22px;
+    font-weight: 900;
+    color: #fff7ed;
+    text-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.7),
+        0 0 14px rgba(251, 146, 60, 0.75);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.5px;
+    line-height: 1;
+    white-space: nowrap;
+    max-width: 46vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.streak-counter.streak-warm {
+    box-shadow: 0 0 28px rgba(249, 115, 22, 0.72), 0 0 12px rgba(251, 146, 60, 0.4);
+}
+
+.streak-counter.streak-hot {
+    background: linear-gradient(90deg, rgba(249, 115, 22, 0.58), rgba(239, 68, 68, 0.42));
+    border-color: rgba(253, 186, 116, 0.9);
+    box-shadow: 0 0 34px rgba(249, 115, 22, 0.88), 0 0 16px rgba(250, 204, 21, 0.5);
+}
+
+.streak-counter.streak-hot .streak-icon::before {
+    background: radial-gradient(circle, rgba(251, 146, 60, 0.9) 0%, rgba(250, 204, 21, 0.28) 55%, transparent 72%);
+}
+
+.streak-counter.streak-blaze {
+    background: linear-gradient(90deg, rgba(249, 115, 22, 0.62), rgba(239, 68, 68, 0.5));
+    border-color: rgba(251, 146, 60, 0.95);
+    box-shadow: 0 0 36px rgba(249, 115, 22, 0.9), 0 0 18px rgba(239, 68, 68, 0.45);
+}
+
+.streak-counter.streak-inferno {
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.58), rgba(249, 115, 22, 0.5), rgba(250, 204, 21, 0.38));
+    border-color: rgba(252, 165, 165, 0.95);
+    box-shadow: 0 0 38px rgba(239, 68, 68, 0.85), 0 0 16px rgba(250, 204, 21, 0.45);
+}
+
+.streak-counter.streak-legendary {
+    background: linear-gradient(90deg, rgba(251, 191, 36, 0.55), rgba(239, 68, 68, 0.45), rgba(168, 85, 247, 0.42));
+    border-color: rgba(253, 224, 71, 0.95);
+    box-shadow:
+        0 0 36px rgba(251, 191, 36, 0.85),
+        0 0 22px rgba(168, 85, 247, 0.55);
+}
+
+.streak-counter.streak-mythic {
+    background: linear-gradient(90deg, rgba(168, 85, 247, 0.55), rgba(236, 72, 153, 0.42), rgba(251, 191, 36, 0.5));
+    border-color: rgba(216, 180, 254, 0.95);
+    box-shadow:
+        0 0 40px rgba(168, 85, 247, 0.85),
+        0 0 18px rgba(251, 191, 36, 0.5);
+}
+
+.streak-counter.streak-absurd {
+    background: linear-gradient(90deg, rgba(251, 191, 36, 0.7), rgba(239, 68, 68, 0.55), rgba(56, 189, 248, 0.5), rgba(168, 85, 247, 0.55));
+    border-color: #fff;
+    box-shadow:
+        0 0 44px rgba(251, 191, 36, 0.95),
+        0 0 22px rgba(56, 189, 248, 0.55);
+}
+
+.streak-counter.combo-boost .streak-value {
+    color: #fde047;
+    text-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.7),
+        0 0 16px rgba(250, 204, 21, 0.95);
+    animation: comboPop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes streakHeat {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+@keyframes streakGlow {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 0.95; }
+}
+
+@keyframes comboPop {
+    0% { transform: scale(0.86); }
+    55% { transform: scale(1.18); }
+    100% { transform: scale(1); }
+}
+
+/* ---------- Controls ---------- */
+
+.control-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background: rgba(11, 18, 32, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.18s ease, border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+    color: rgba(255, 255, 255, 0.78);
+    position: relative;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    text-decoration: none;
+}
+
+.control-btn:hover {
+    background: rgba(11, 18, 32, 0.65);
+    transform: scale(1.06);
+}
+
+.control-btn:active {
+    transform: scale(0.94);
+}
+
+.control-btn.settings-btn {
+    border-color: rgba(251, 191, 36, 0.28);
+    color: #fde68a;
+}
+
+.control-btn.settings-btn:hover {
+    border-color: rgba(251, 191, 36, 0.7);
+    color: #ffd700;
+    box-shadow: 0 0 14px rgba(251, 191, 36, 0.28);
+}
+
+.control-btn svg {
+    width: 22px;
+    height: 22px;
+}
+
+.hud-settings-btn {
+    position: absolute;
+    top: calc(16px + env(safe-area-inset-top, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 101;
+    pointer-events: auto;
+}
+
+.hud-settings-btn:hover {
+    transform: translateX(-50%) scale(1.06);
+}
+
+.hud-settings-btn:active {
+    transform: translateX(-50%) scale(0.94);
+}
+
+
+
+/* ---------- First-time hint ---------- */
+
+.first-time-hint {
+    position: absolute;
+    top: calc(50% + 132px);
+    left: 50%;
+    transform: translateX(-50%);
+    animation: hintFloat 2.2s ease-in-out infinite;
+    z-index: 10;
+    pointer-events: none;
+    max-width: min(90vw, 280px);
+}
+
+.hint-content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    background: rgba(11, 18, 32, 0.55);
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.hint-text {
+    font-size: 0.92rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.95);
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-    letter-spacing: 0.3px;
+    color: rgba(255, 255, 255, 0.92);
+    letter-spacing: 0.2px;
     white-space: nowrap;
 }
 
-@keyframes achievementFadeIn {
-    from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(15px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
+@keyframes hintFloat {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-8px); }
 }
 
-/* Mobile adjustments for achievement label */
-@media (max-width: 768px) {
-    .achievement-label {
-        bottom: 100px;
-        padding: 12px 24px;
-        gap: 10px;
-    }
-    
-    .achievement-icon {
-        font-size: 1.35rem;
-    }
-    
-    .achievement-text {
-        font-size: 14px;
-    }
-}
+/* ---------- Unlock toast ---------- */
 
-@media (max-width: 480px) {
-    .achievement-label {
-        bottom: 90px;
-        padding: 10px 20px;
-        gap: 8px;
-        max-width: 90%;
-    }
-    
-    .achievement-icon {
-        font-size: 1.25rem;
-    }
-    
-    .achievement-text {
-        font-size: 13px;
-        white-space: normal;
-        text-align: center;
-    }
-}
-
-/* Remove old toast styles */
-.achievement-toast-container,
-.achievement-toast-container .toast,
-.achievement-toast-container .toast-body,
-.achievement-emoji,
-.achievement-message,
-.achievement-toast-container .btn-close-white {
-    /* Removed - no longer using Bootstrap toasts */
-}
-
-@keyframes slideInFromBottom {
-    /* Removed - no longer needed */
-}
-
-/* Coin Unlock Notification - Passive Bottom Notification */
 .coin-unlock-notification {
     position: fixed;
-    bottom: 24px;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
     left: 50%;
     transform: translateX(-50%);
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 24px;
-    background: rgba(139, 92, 246, 0.15);
-    backdrop-filter: blur(12px);
-    border-radius: 50px;
-    border: 1px solid rgba(139, 92, 246, 0.4);
-    box-shadow: 
-        0 4px 20px rgba(139, 92, 246, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    padding: 10px 20px 10px 10px;
+    background: rgba(17, 24, 39, 0.78);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
     z-index: 1000;
-    animation: coinUnlockSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation: coinUnlockSlideUp 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
     pointer-events: auto;
     cursor: pointer;
-    transition: all 0.2s ease;
+    overflow: hidden;
+    touch-action: manipulation;
+}
+
+.coin-unlock-notification::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.18) 45%, transparent 70%);
+    transform: translateX(-120%);
+    animation: unlockShimmer 1.8s ease-in-out 0.2s infinite;
+    pointer-events: none;
 }
 
 .coin-unlock-notification:hover {
-    background: rgba(139, 92, 246, 0.2);
-    border-color: rgba(139, 92, 246, 0.5);
-    transform: translateX(-50%) scale(1.02);
+    transform: translateX(-50%) scale(1.03);
 }
 
 .coin-unlock-icon-wrapper {
@@ -2316,51 +1081,69 @@
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 215, 0, 0.5);
     overflow: hidden;
     flex-shrink: 0;
+    border: 2px solid rgba(255, 215, 0, 0.65);
+    box-shadow: 0 0 14px rgba(255, 215, 0, 0.45);
 }
 
 .coin-unlock-icon {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    animation: coinUnlockIconPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s;
+    animation: coinUnlockIconPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
 }
 
 .coin-unlock-content {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
+    min-width: 0;
 }
 
 .coin-unlock-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.62);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.4px;
 }
 
 .coin-unlock-name {
     font-size: 15px;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.98);
+    font-weight: 800;
+    color: #fff;
     text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
-.coin-unlock-sparkle {
-    font-size: 20px;
+.coin-unlock-desc {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.25;
+    max-width: 220px;
+}
+
+.achievement-icon-wrap {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.achievement-icon {
+    font-size: 22px;
     line-height: 1;
-    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
-    animation: coinUnlockSparkle 1s ease-in-out infinite;
+    animation: coinUnlockIconPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+}
+
+.coin-unlock-sparkle {
+    font-size: 16px;
+    line-height: 1;
+    animation: coinUnlockSparkle 1.1s ease-in-out infinite;
 }
 
 @keyframes coinUnlockSlideUp {
     from {
         opacity: 0;
-        transform: translateX(-50%) translateY(100px);
+        transform: translateX(-50%) translateY(80px);
     }
     to {
         opacity: 1;
@@ -2370,11 +1153,11 @@
 
 @keyframes coinUnlockIconPop {
     0% {
-        transform: scale(0) rotate(-180deg);
+        transform: scale(0) rotate(-160deg);
         opacity: 0;
     }
-    60% {
-        transform: scale(1.15) rotate(10deg);
+    65% {
+        transform: scale(1.12) rotate(8deg);
     }
     100% {
         transform: scale(1) rotate(0deg);
@@ -2385,233 +1168,134 @@
 @keyframes coinUnlockSparkle {
     0%, 100% {
         transform: scale(1) rotate(0deg);
-        filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+        filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.7));
     }
     50% {
-        transform: scale(1.2) rotate(180deg);
-        filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.9));
+        transform: scale(1.25) rotate(18deg);
+        filter: drop-shadow(0 0 12px rgba(255, 215, 0, 1));
     }
 }
 
-/* Rarity-based styling */
+@keyframes unlockShimmer {
+    0% { transform: translateX(-120%); }
+    40%, 100% { transform: translateX(120%); }
+}
+
 .coin-unlock-notification.common {
-    background: rgba(139, 92, 246, 0.15);
-    border-color: rgba(139, 92, 246, 0.4);
-    box-shadow: 
-        0 4px 20px rgba(139, 92, 246, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(192, 132, 252, 0.72);
+    box-shadow: 0 8px 28px rgba(139, 92, 246, 0.42), 0 0 18px rgba(167, 139, 250, 0.28);
+}
+
+.coin-unlock-notification.common .coin-unlock-icon-wrapper {
+    border-color: rgba(167, 139, 250, 0.9);
+    box-shadow: 0 0 14px rgba(167, 139, 250, 0.55);
 }
 
 .coin-unlock-notification.uncommon {
-    background: rgba(59, 130, 246, 0.15);
-    border-color: rgba(59, 130, 246, 0.4);
-    box-shadow: 
-        0 4px 20px rgba(59, 130, 246, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(56, 189, 248, 0.78);
+    box-shadow: 0 8px 28px rgba(14, 165, 233, 0.48), 0 0 18px rgba(56, 189, 248, 0.32);
+}
+
+.coin-unlock-notification.uncommon .coin-unlock-icon-wrapper {
+    border-color: rgba(56, 189, 248, 0.92);
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.55);
 }
 
 .coin-unlock-notification.rare {
-    background: rgba(168, 85, 247, 0.18);
-    border-color: rgba(168, 85, 247, 0.5);
-    box-shadow: 
-        0 4px 24px rgba(168, 85, 247, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    animation: coinUnlockSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), rarePulse 2s ease-in-out infinite;
+    border: 2px solid rgba(192, 132, 252, 0.95);
+    box-shadow: 0 8px 32px rgba(168, 85, 247, 0.55), 0 0 22px rgba(192, 132, 252, 0.4);
+    animation: coinUnlockSlideUp 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), rarePulse 1.8s ease-in-out infinite;
+}
+
+.coin-unlock-notification.rare .coin-unlock-icon-wrapper {
+    border-color: rgba(216, 180, 254, 1);
+    box-shadow: 0 0 16px rgba(168, 85, 247, 0.7);
 }
 
 .coin-unlock-notification.legendary {
-    background: linear-gradient(135deg, rgba(251, 146, 60, 0.2) 0%, rgba(239, 68, 68, 0.2) 100%);
-    border: 2px solid rgba(251, 146, 60, 0.6);
-    box-shadow: 
-        0 6px 32px rgba(251, 146, 60, 0.4),
-        0 0 40px rgba(239, 68, 68, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    animation: coinUnlockSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), legendaryGlow 1.5s ease-in-out infinite;
+    border: 2px solid rgba(251, 191, 36, 0.95);
+    box-shadow:
+        0 8px 36px rgba(251, 146, 60, 0.58),
+        0 0 32px rgba(239, 68, 68, 0.32);
+    animation: coinUnlockSlideUp 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), legendaryGlow 1.4s ease-in-out infinite;
+}
+
+.coin-unlock-notification.legendary .coin-unlock-icon-wrapper {
+    border-color: rgba(251, 191, 36, 1);
+    box-shadow: 0 0 18px rgba(251, 146, 60, 0.75);
+}
+
+.coin-unlock-notification.legendary .coin-unlock-label {
+    color: #fdba74;
 }
 
 @keyframes rarePulse {
-    0%, 100% {
-        box-shadow: 
-            0 4px 24px rgba(168, 85, 247, 0.3),
-            inset 0 1px 0 rgba(255, 255, 255, 0.15);
-    }
-    50% {
-        box-shadow: 
-            0 6px 32px rgba(168, 85, 247, 0.5),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    }
+    0%, 100% { box-shadow: 0 8px 28px rgba(168, 85, 247, 0.4); }
+    50% { box-shadow: 0 10px 40px rgba(168, 85, 247, 0.7); }
 }
 
 @keyframes legendaryGlow {
     0%, 100% {
-        box-shadow: 
-            0 6px 32px rgba(251, 146, 60, 0.4),
-            0 0 40px rgba(239, 68, 68, 0.2),
-            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        box-shadow:
+            0 8px 32px rgba(251, 146, 60, 0.45),
+            0 0 24px rgba(239, 68, 68, 0.2);
     }
     50% {
-        box-shadow: 
-            0 8px 40px rgba(251, 146, 60, 0.6),
-            0 0 60px rgba(239, 68, 68, 0.4),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        box-shadow:
+            0 10px 44px rgba(251, 146, 60, 0.75),
+            0 0 48px rgba(239, 68, 68, 0.4);
     }
 }
 
-/* Mobile adjustments for coin unlock notification */
-@media (max-width: 768px) {
-    .coin-unlock-notification {
-        bottom: 20px;
-        padding: 10px 20px;
-        gap: 10px;
-        max-width: 90%;
-    }
-    
-    .coin-unlock-icon-wrapper {
-        width: 40px;
-        height: 40px;
-    }
-    
-    .coin-unlock-label {
-        font-size: 10px;
-    }
-    
-    .coin-unlock-name {
-        font-size: 14px;
-    }
-    
-    .coin-unlock-sparkle {
-        font-size: 18px;
-    }
+/* ---------- Super flip (keep existing behavior) ---------- */
+
+.coin.super-flip {
+    animation: coinSuperFlipRealistic 0.75s cubic-bezier(0.25, 0.1, 0.25, 1) forwards !important;
 }
 
-@media (max-width: 480px) {
-    .coin-unlock-notification {
-        bottom: 16px;
-        padding: 8px 16px;
-        gap: 8px;
-    }
-    
-    .coin-unlock-icon-wrapper {
-        width: 36px;
-        height: 36px;
-    }
-    
-    .coin-unlock-label {
-        font-size: 9px;
-    }
-    
-    .coin-unlock-name {
-        font-size: 13px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 180px;
-    }
-    
-    .coin-unlock-sparkle {
-        font-size: 16px;
-    }
+.coin.flip-tails.super-flip {
+    animation: coinSuperFlipRealisticTails 0.75s cubic-bezier(0.25, 0.1, 0.25, 1) forwards !important;
 }
 
-@media (max-width: 360px) {
-    .coin-unlock-notification {
-        padding: 6px 12px;
-        gap: 6px;
-    }
-    
-    .coin-unlock-icon-wrapper {
-        width: 32px;
-        height: 32px;
-    }
-    
-    .coin-unlock-label {
-        font-size: 8px;
-    }
-    
-    .coin-unlock-name {
-        font-size: 12px;
-    }
+.coin.super-flip .coin-face .coin-art,
+.coin.super-flip .coin-back .coin-art {
+    animation: superFlipMotionBlur 0.75s ease-out forwards;
 }
 
-/* Super Flip Charging Indicator */
+.coin.shake {
+    animation: coinShake 0.3s ease-in-out infinite;
+}
+
+.coin-container:has(.super-flip-ready) .coin-glow,
+.coin-container:has(.super-flip) .coin-glow {
+    background: radial-gradient(circle, rgba(34, 211, 238, 0.55) 0%, rgba(167, 139, 250, 0.32) 46%, transparent 70%);
+    animation: glowPulse 0.8s ease-in-out infinite;
+}
+
 .super-flip-indicator {
     position: absolute;
     bottom: 150px;
     left: 50%;
     transform: translateX(-50%);
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 165, 0, 0.15) 100%);
+    background: rgba(255, 215, 0, 0.12);
     backdrop-filter: blur(10px);
-    padding: 12px 24px;
-    border-radius: 50px;
-    border: 2px solid rgba(255, 215, 0, 0.5);
-    box-shadow: 
-        0 4px 20px rgba(255, 215, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    padding: 10px 22px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 215, 0, 0.45);
     z-index: 10;
-    animation: superFlipIndicatorSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     pointer-events: none;
 }
 
 .super-flip-indicator.ready {
-    background: linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 165, 0, 0.3) 100%);
-    border-color: rgba(255, 215, 0, 0.9);
-    box-shadow: 
-        0 6px 30px rgba(255, 215, 0, 0.6),
-        0 0 40px rgba(255, 215, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    animation: superFlipIndicatorSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), superFlipReadyPulse 1s ease-in-out infinite;
-}
-
-@keyframes superFlipIndicatorSlideUp {
-    from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-    }
-}
-
-@keyframes superFlipReadyPulse {
-    0%, 100% {
-        box-shadow: 
-            0 6px 30px rgba(255, 215, 0, 0.6),
-            0 0 40px rgba(255, 215, 0, 0.4),
-            inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    }
-    50% {
-        box-shadow: 
-            0 8px 40px rgba(255, 215, 0, 0.8),
-            0 0 60px rgba(255, 215, 0, 0.6),
-            inset 0 1px 0 rgba(255, 255, 255, 0.4);
-    }
+    animation: superFlipReadyPulse 1s ease-in-out infinite;
 }
 
 .super-flip-text {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 900;
     color: #fff;
-    text-shadow: 
-        0 0 10px rgba(255, 215, 0, 0.8),
-        0 2px 4px rgba(0, 0, 0, 0.5);
     letter-spacing: 2px;
     text-transform: uppercase;
-    animation: superFlipTextGlow 0.5s ease-in-out infinite alternate;
-}
-
-@keyframes superFlipTextGlow {
-    from {
-        text-shadow: 
-            0 0 10px rgba(255, 215, 0, 0.8),
-            0 2px 4px rgba(0, 0, 0, 0.5);
-    }
-    to {
-        text-shadow: 
-            0 0 20px rgba(255, 215, 0, 1),
-            0 0 30px rgba(255, 165, 0, 0.8),
-            0 2px 4px rgba(0, 0, 0, 0.5);
-    }
 }
 
 .super-flip-progress {
@@ -2622,20 +1306,17 @@
 }
 
 .super-flip-label {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 700;
     color: rgba(255, 255, 255, 0.95);
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-    letter-spacing: 1px;
 }
 
 .super-flip-bar {
     width: 200px;
-    height: 8px;
+    height: 6px;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 4px;
     overflow: hidden;
-    border: 1px solid rgba(255, 215, 0, 0.3);
 }
 
 .super-flip-fill {
@@ -2643,56 +1324,502 @@
     background: linear-gradient(90deg, #ffd700 0%, #ffa500 100%);
     border-radius: 4px;
     transition: width 0.1s linear;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
 }
 
-/* Mobile adjustments for super flip indicator */
+/* ---------- Flip keyframes (timing unchanged) ---------- */
+
+@keyframes coinFlipWeighted {
+    0% { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
+    10% { transform: translateY(-70px) rotateX(200deg) rotateY(-20deg); }
+    20% { transform: translateY(-130px) rotateX(400deg) rotateY(-12deg); }
+    35% { transform: translateY(-170px) rotateX(700deg) rotateY(-5deg); }
+    50% { transform: translateY(-185px) rotateX(1000deg) rotateY(0deg); }
+    65% { transform: translateY(-170px) rotateX(1300deg) rotateY(5deg); }
+    80% { transform: translateY(-80px) rotateX(1600deg) rotateY(8deg); }
+    90% { transform: translateY(-20px) rotateX(1740deg) rotateY(3deg); }
+    97% { transform: translateY(-3px) rotateX(1790deg) rotateY(1deg); }
+    100% { transform: translateY(0) rotateX(1800deg) rotateY(0deg); }
+}
+
+@keyframes coinFlipWeightedTails {
+    0% { transform: translateY(0) rotateX(0deg) rotateY(0deg); }
+    10% { transform: translateY(-70px) rotateX(200deg) rotateY(-20deg); }
+    20% { transform: translateY(-130px) rotateX(400deg) rotateY(-12deg); }
+    35% { transform: translateY(-170px) rotateX(700deg) rotateY(-5deg); }
+    50% { transform: translateY(-185px) rotateX(1000deg) rotateY(0deg); }
+    65% { transform: translateY(-170px) rotateX(1300deg) rotateY(5deg); }
+    80% { transform: translateY(-80px) rotateX(1600deg) rotateY(8deg); }
+    90% { transform: translateY(-20px) rotateX(1920deg) rotateY(3deg); }
+    97% { transform: translateY(-3px) rotateX(1970deg) rotateY(1deg); }
+    100% { transform: translateY(0) rotateX(1980deg) rotateY(0deg); }
+}
+
+@keyframes coinSuperFlipRealistic {
+    0% { transform: translateY(0) rotateX(0deg) rotateY(0deg) scale(1); }
+    5% { transform: translateY(-120px) rotateX(450deg) rotateY(-30deg) scale(1.08); }
+    10% { transform: translateY(-280px) rotateX(900deg) rotateY(-20deg) scale(1.12); }
+    20% { transform: translateY(-450px) rotateX(1800deg) rotateY(-10deg) scale(1.18); }
+    35% { transform: translateY(-520px) rotateX(2700deg) rotateY(0deg) scale(1.2); }
+    40% { transform: translateY(-530px) rotateX(3150deg) rotateY(5deg) scale(1.22); }
+    45% { transform: translateY(-520px) rotateX(3600deg) rotateY(8deg) scale(1.2); }
+    55% { transform: translateY(-420px) rotateX(4050deg) rotateY(12deg) scale(1.15); }
+    65% { transform: translateY(-280px) rotateX(4500deg) rotateY(15deg) scale(1.1); }
+    75% { transform: translateY(-140px) rotateX(4950deg) rotateY(18deg) scale(1.05); }
+    85% { transform: translateY(-40px) rotateX(5310deg) rotateY(10deg) scale(1.02); }
+    92% { transform: translateY(-8px) rotateX(5390deg) rotateY(3deg) scale(1.01); }
+    97% { transform: translateY(-2px) rotateX(5395deg) rotateY(1deg) scale(1); }
+    100% { transform: translateY(0) rotateX(5400deg) rotateY(0deg) scale(1); }
+}
+
+@keyframes coinSuperFlipRealisticTails {
+    0% { transform: translateY(0) rotateX(0deg) rotateY(0deg) scale(1); }
+    5% { transform: translateY(-120px) rotateX(450deg) rotateY(-30deg) scale(1.08); }
+    10% { transform: translateY(-280px) rotateX(900deg) rotateY(-20deg) scale(1.12); }
+    20% { transform: translateY(-450px) rotateX(1800deg) rotateY(-10deg) scale(1.18); }
+    35% { transform: translateY(-520px) rotateX(2700deg) rotateY(0deg) scale(1.2); }
+    40% { transform: translateY(-530px) rotateX(3150deg) rotateY(5deg) scale(1.22); }
+    45% { transform: translateY(-520px) rotateX(3690deg) rotateY(8deg) scale(1.2); }
+    55% { transform: translateY(-420px) rotateX(4140deg) rotateY(12deg) scale(1.15); }
+    65% { transform: translateY(-280px) rotateX(4590deg) rotateY(15deg) scale(1.1); }
+    75% { transform: translateY(-140px) rotateX(5040deg) rotateY(18deg) scale(1.05); }
+    85% { transform: translateY(-40px) rotateX(5400deg) rotateY(10deg) scale(1.02); }
+    92% { transform: translateY(-8px) rotateX(5480deg) rotateY(3deg) scale(1.01); }
+    97% { transform: translateY(-2px) rotateX(5485deg) rotateY(1deg) scale(1); }
+    100% { transform: translateY(0) rotateX(5490deg) rotateY(0deg) scale(1); }
+}
+
+@keyframes superFlipMotionBlur {
+    0%, 100% { filter: blur(0px); }
+    15%, 85% { filter: blur(2px); }
+    40%, 45% { filter: blur(0px); }
+}
+
+@keyframes coinShake {
+    0%, 100% { transform: translateX(-2px) rotate(-1deg); }
+    25% { transform: translateX(2px) rotate(1deg); }
+    50% { transform: translateX(-2px) rotate(-1deg); }
+    75% { transform: translateX(2px) rotate(1deg); }
+}
+
+@keyframes superFlipGlow {
+    0%, 100% {
+        filter: drop-shadow(0 0 24px rgba(34, 211, 238, 0.85)) drop-shadow(0 8px 28px rgba(167, 139, 250, 0.5));
+    }
+    50% {
+        filter: drop-shadow(0 0 48px rgba(56, 189, 248, 1)) drop-shadow(0 12px 40px rgba(192, 132, 252, 0.75));
+    }
+}
+
+@keyframes shineFlipWeighted {
+    0% { transform: translate3d(20%, -20%, 0); opacity: 0.8; }
+    25% { transform: translate3d(-25%, 25%, 0); opacity: 1; }
+    50% { transform: translate3d(25%, 30%, 0); opacity: 0.9; }
+    75% { transform: translate3d(-20%, -25%, 0); opacity: 1; }
+    100% { transform: translate3d(20%, -20%, 0); opacity: 0.8; }
+}
+
+@keyframes superFlipReadyPulse {
+    0%, 100% {
+        box-shadow: 0 6px 30px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.4);
+    }
+    50% {
+        box-shadow: 0 8px 40px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.6);
+    }
+}
+
+/* ---------- Responsive ---------- */
+
 @media (max-width: 768px) {
+    .control-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .control-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .hud-settings-btn {
+        top: calc(12px + env(safe-area-inset-top, 0px));
+    }
+
+    .heads-counter {
+        top: calc(12px + env(safe-area-inset-top, 0px));
+        left: calc(12px + env(safe-area-inset-left, 0px));
+    }
+
+    .tails-counter {
+        top: calc(12px + env(safe-area-inset-top, 0px));
+        right: calc(12px + env(safe-area-inset-right, 0px));
+    }
+
+    .streak-counter {
+        top: calc(68px + env(safe-area-inset-top, 0px));
+        padding: 4px 10px;
+        max-width: calc(100vw - 132px);
+    }
+
+    .coin {
+        /* Visible rim, slightly thinner than desktop 32px so Blink is
+           less likely to composite the stacked edge discs over tails. */
+        --coin-thickness: 24px;
+        --coin-half: 12px;
+    }
+
+    .coin-face {
+        transform: translateZ(calc(var(--coin-half) + 2px));
+    }
+
+    .coin-back {
+        transform: translateZ(calc(var(--coin-half) * -1 - 2px)) rotateX(180deg);
+    }
+
+    .counter-icon {
+        width: 44px;
+        height: 44px;
+    }
+
+    .counter-value {
+        font-size: 22px;
+    }
+
+    .first-time-hint {
+        top: calc(50% + 118px);
+    }
+
+    .coin-unlock-notification {
+        bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+        max-width: calc(100% - 24px);
+    }
+
     .super-flip-indicator {
-        bottom: 120px;
-        padding: 10px 20px;
-    }
-    
-    .super-flip-text {
-        font-size: 1rem;
-    }
-    
-    .super-flip-label {
-        font-size: 0.85rem;
-    }
-    
-    .super-flip-bar {
-        width: 180px;
+        bottom: calc(18px + env(safe-area-inset-bottom, 0px));
     }
 }
 
 @media (max-width: 480px) {
-    .super-flip-indicator {
-        bottom: 100px;
-        padding: 8px 16px;
-        max-width: 90%;
+    .control-btn {
+        width: 42px;
+        height: 42px;
     }
-    
-    .super-flip-text {
-        font-size: 0.9rem;
-        letter-spacing: 1px;
+
+    .stat-counter {
+        padding: 4px 10px 4px 4px;
     }
-    
-    .super-flip-label {
-        font-size: 0.8rem;
+
+    .tails-counter {
+        padding: 4px 4px 4px 10px;
     }
-    
-    .super-flip-bar {
-        width: 150px;
-        height: 6px;
+
+    .counter-content {
+        gap: 8px;
+    }
+
+    .counter-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .counter-label {
+        font-size: 9px;
+    }
+
+    .counter-value {
+        font-size: 20px;
+    }
+
+    .streak-icon {
+        font-size: 18px;
+    }
+
+    .streak-value {
+        font-size: 16px;
+        max-width: 42vw;
+        letter-spacing: -0.8px;
+    }
+
+    .coin {
+        width: 170px;
+        height: 170px;
+    }
+
+    .coin-glow {
+        width: 230px;
+        height: 230px;
+    }
+
+    .coin-stage {
+        top: calc(50% + 102px);
+        height: 36px;
+    }
+
+    .first-time-hint {
+        top: calc(50% + 104px);
+    }
+
+    .hint-text {
+        font-size: 0.85rem;
+    }
+
+    .coin-unlock-notification {
+        padding: 8px 14px 8px 8px;
+        gap: 8px;
+    }
+
+    .coin-unlock-icon-wrapper {
+        width: 36px;
+        height: 36px;
+    }
+
+    .coin-unlock-name {
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 160px;
+    }
+
+    .coin-unlock-desc {
+        font-size: 10px;
+        max-width: 160px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 
-@keyframes flashSweep {
-    0% {
-        background-position: 0% 50%;
+.pwa-install-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 240;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    padding: 0 16px max(12px, env(safe-area-inset-bottom, 0px));
+}
+
+.pwa-install-sheet-card {
+    pointer-events: auto;
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    background: rgba(12, 18, 32, 0.94);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(251, 191, 36, 0.38);
+    border-radius: 20px;
+    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45);
+    color: #fff;
+    padding: 16px 16px 14px;
+    animation: pwaSheetUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pwa-install-handle {
+    display: none;
+    width: 36px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.28);
+    margin: 0 auto 12px;
+}
+
+.pwa-install-sheet-body {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-right: 44px;
+}
+
+.pwa-install-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.pwa-install-text {
+    min-width: 0;
+    flex: 1;
+}
+
+.pwa-install-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #fff;
+    line-height: 1.2;
+}
+
+.pwa-install-copy {
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.pwa-install-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 48px;
+    margin-top: 14px;
+    border: 0;
+    border-radius: 14px;
+    padding: 12px 16px;
+    background: #fbbf24;
+    color: #0f172a;
+    font-weight: 800;
+    font-size: 1.05rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.pwa-install-action:active {
+    transform: scale(0.98);
+}
+
+.pwa-install-dismiss {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.pwa-install-dismiss svg {
+    width: 20px;
+    height: 20px;
+}
+
+.pwa-install-ios-steps {
+    list-style: none;
+    margin: 14px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    counter-reset: ios-step;
+}
+
+.pwa-install-ios-steps li {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 44px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+    line-height: 1.3;
+}
+
+.pwa-install-ios-steps li::before {
+    content: counter(ios-step);
+    counter-increment: ios-step;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(251, 191, 36, 0.2);
+    color: #fde68a;
+    font-size: 0.8rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.pwa-ios-share {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    color: #60a5fa;
+}
+
+.pwa-ios-share svg {
+    width: 22px;
+    height: 22px;
+}
+
+.coin-flip-game.has-install-sheet .coin-unlock-notification {
+    bottom: calc(168px + env(safe-area-inset-bottom, 0px));
+}
+
+@keyframes pwaSheetUp {
+    from {
+        transform: translateY(110%);
+        opacity: 0.4;
     }
-    100% {
-        background-position: 100% 50%;
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .pwa-install-sheet {
+        padding: 0;
+    }
+
+    .pwa-install-sheet-card {
+        max-width: none;
+        border-radius: 20px 20px 0 0;
+        border-bottom: 0;
+        padding: 10px 16px max(
+            18px,
+            calc(16px + env(safe-area-inset-bottom, 0px)),
+            calc(20px + env(safe-area-inset-bottom, 0px) + (100vh - 100svh))
+        );
+    }
+
+    .pwa-install-handle {
+        display: block;
+    }
+
+    .coin-flip-game.has-install-sheet .coin-unlock-notification {
+        bottom: max(
+            calc(176px + env(safe-area-inset-bottom, 0px)),
+            calc(176px + env(safe-area-inset-bottom, 0px) + (100vh - 100svh))
+        );
+    }
+}
+
+@media (max-width: 360px) {
+    .counter-icon {
+        width: 34px;
+        height: 34px;
+    }
+
+    .counter-value {
+        font-size: 18px;
+    }
+
+    .coin {
+        width: 150px;
+        height: 150px;
     }
 }

@@ -6,7 +6,6 @@
     width: 100vw;
     height: 100vh;
     background: rgba(0, 0, 0, 0.92);
-    backdrop-filter: blur(16px);
     z-index: 3000;
     display: flex;
     justify-content: center;
@@ -22,6 +21,9 @@
 }
 
 .coin-preview-modal {
+    position: relative;
+    z-index: 1;
+    isolation: isolate;
     background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(51, 65, 85, 0.95) 100%);
     border-radius: 24px;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -31,7 +33,6 @@
     max-width: 600px;
     width: 90%;
     padding: 40px;
-    position: relative;
     transform: scale(0.9);
     transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -286,150 +287,209 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    perspective: 1000px;
+    perspective: 820px;
     touch-action: none;
     user-select: none;
+    position: relative;
+}
+
+.preview-coin-stage {
+    position: absolute;
+    width: min(280px, 70%);
+    height: 36px;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background:
+        radial-gradient(ellipse 50% 48% at 50% 50%, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.24) 46%, transparent 74%),
+        radial-gradient(ellipse, rgba(255, 215, 0, 0.22) 0%, transparent 70%);
+    filter: blur(10px);
+    pointer-events: none;
 }
 
 .preview-coin {
+    --coin-thickness: 32px;
+    --coin-half: 16px;
+    --coin-edge-last: 32;
+    --heads-art: url("/img/coins/logo.png");
+    --tails-art: url("/img/coins/logo.png");
     width: 240px;
     height: 240px;
     position: relative;
     transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
     cursor: grab;
     transition: transform 0.1s ease-out;
-    filter: drop-shadow(0 10px 40px rgba(255, 215, 0, 0.3)) drop-shadow(0 20px 60px rgba(0, 0, 0, 0.5));
     margin: 0 auto;
+    /* No filter here — filter flattens preserve-3d and hides edge thickness */
+}
+
+.preview-coin-inner {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
 }
 
 .preview-coin:active {
     cursor: grabbing;
 }
 
-.preview-coin-face {
+.preview-coin-face,
+.preview-coin-back {
+    /* 3D pose only. Blink drops border-radius on translateZ layers, so faces
+       must not paint gold/gradients here — that becomes the square slab. */
     position: absolute;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    overflow: visible;
+    transform-style: flat;
+    -webkit-transform-style: flat;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.preview-coin-face {
+    transform: translateZ(calc(var(--coin-half) + 0.5px));
+}
+
+.preview-coin-back {
+    transform: translateZ(calc(var(--coin-half) * -1 - 0.5px)) rotateX(180deg);
+    pointer-events: none;
+}
+
+.preview-coin-art {
+    /* Untransformed clip host. No mask-image. Face art is a CSS
+       background on .preview-coin-face-art; gold lives on .preview-coin-plate. */
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    clip-path: circle(50%);
+    -webkit-clip-path: circle(50%);
+    font-size: 0;
+    line-height: 0;
+    background: none;
+    border: 0;
+    box-shadow: none;
+    transform: none;
+}
+
+.preview-coin-plate {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    box-sizing: border-box;
+    border-radius: 50%;
     background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
-    box-shadow: 
-        0 8px 32px rgba(255, 215, 0, 0.4),
-        0 4px 16px rgba(0, 0, 0, 0.3),
+    border: 2px solid #e6c200;
+    box-shadow:
         inset 0 2px 4px rgba(255, 255, 255, 0.6),
         inset 0 -2px 4px rgba(0, 0, 0, 0.2);
-    border: 2px solid #e6c200;
+    pointer-events: none;
+}
+
+.preview-coin-thickness {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    pointer-events: none;
+}
+
+.preview-coin-edge {
+    position: absolute;
+    inset: 0;
+    transform: translateZ(calc((var(--edge-i) * var(--coin-thickness) / var(--coin-edge-last)) - var(--coin-half))) scale(var(--edge-scale, 1));
+    background: none;
+    pointer-events: none;
+}
+
+.preview-coin-edge-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
     overflow: hidden;
-    transform-style: preserve-3d;  /* Critical for depth layers to work */
+    clip-path: circle(50%);
+    -webkit-clip-path: circle(50%);
+    background:
+        radial-gradient(circle at 28% 22%, rgba(255, 250, 230, 0.42) 0%, transparent 36%),
+        conic-gradient(from 198deg,
+            #1a1200 0deg,
+            #5c4308 22deg,
+            #c9a227 48deg,
+            #fff6c8 70deg,
+            #e6c200 96deg,
+            #6b5208 128deg,
+            #2a1c00 158deg,
+            #d4af37 196deg,
+            #ffe566 228deg,
+            #8b6914 268deg,
+            #3d2e00 304deg,
+            #c9a227 336deg,
+            #1a1200 360deg);
+    box-shadow:
+        inset 0 0 14px rgba(0, 0, 0, 0.5),
+        inset 0 0 4px rgba(255, 255, 255, 0.18),
+        0 0 0 0.7px rgba(70, 52, 0, 0.95);
 }
 
-/* Coin depth layers - creating realistic 3D thickness with multiple layers */
-/* Deepest layer - darkest edge */
-.preview-coin::before {
-    content: '';
+.preview-coin-edge:nth-child(-n+8) .preview-coin-edge-fill {
+    background:
+        radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.28) 0%, transparent 68%),
+        conic-gradient(from 198deg,
+            #120c00 0deg,
+            #3d2e00 30deg,
+            #8b6914 70deg,
+            #c9a227 110deg,
+            #4a3800 160deg,
+            #a67c00 220deg,
+            #6b5208 280deg,
+            #120c00 360deg);
+}
+
+.preview-coin-rim-highlight {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    transform: translate(-50%, -50%) translateZ(-16px);
-    background: linear-gradient(90deg, 
-        #4a3c00 0%,
-        #5d4a00 10%,
-        #6b5700 20%,
-        #8b7500 35%,
-        #a68a05 50%,
-        #8b7500 65%,
-        #6b5700 80%,
-        #5d4a00 90%,
-        #4a3c00 100%);
-    transform-style: preserve-3d;
-    z-index: -3;
-    box-shadow: 
-        inset 0 0 25px rgba(0, 0, 0, 0.6),
-        0 0 15px rgba(0, 0, 0, 0.4);
+    inset: 0;
+    background: none;
     pointer-events: none;
 }
 
-/* Second depth layer - mid-dark edge */
-.preview-coin::after {
-    content: '';
+.preview-coin-rim-fill {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     border-radius: 50%;
-    transform: translate(-50%, -50%) translateZ(-12px);
-    background: linear-gradient(135deg, 
-        #6b5700 0%,
-        #8b7500 15%,
-        #b8960b 30%,
-        #daa520 45%,
-        #f0d060 50%,
-        #daa520 55%,
-        #b8960b 70%,
-        #8b7500 85%,
-        #6b5700 100%);
-    transform-style: preserve-3d;
-    z-index: -2;
-    box-shadow: 
-        inset 0 0 20px rgba(0, 0, 0, 0.4),
-        0 0 12px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    clip-path: circle(50%);
+    -webkit-clip-path: circle(50%);
+    background: transparent;
     pointer-events: none;
 }
 
-/* Add intermediate layers using pseudo-elements on the face */
-.preview-coin-face::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    transform: translateZ(-8px);
-    background: linear-gradient(180deg, 
-        #a68a05 0%,
-        #b8960b 15%,
-        #daa520 30%,
-        #ffed4e 45%,
-        #ffd700 50%,
-        #ffed4e 55%,
-        #daa520 70%,
-        #b8960b 85%,
-        #a68a05 100%);
-    transform-style: preserve-3d;
-    z-index: -1;
-    box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.25);
-    pointer-events: none;
+.preview-coin-rim-front {
+    transform: translateZ(calc(var(--coin-half) - 0.4px));
 }
 
-/* Lightest intermediate layer */
-.preview-coin-face::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    transform: translateZ(-4px);
-    background: linear-gradient(90deg, 
-        #c9a502 0%,
-        #daa520 20%,
-        #ffed4e 40%,
-        #ffd700 50%,
-        #ffed4e 60%,
-        #daa520 80%,
-        #c9a502 100%);
-    transform-style: preserve-3d;
-    z-index: -1;
-    box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.15);
-    pointer-events: none;
+.preview-coin-rim-front .preview-coin-rim-fill {
+    border: 2px solid rgba(255, 248, 220, 0.62);
+    box-shadow:
+        0 0 10px rgba(255, 236, 170, 0.45),
+        inset 0 0 8px rgba(255, 255, 255, 0.22);
+}
+
+.preview-coin-rim-back {
+    transform: translateZ(calc(var(--coin-half) * -1 + 0.4px));
+}
+
+.preview-coin-rim-back .preview-coin-rim-fill {
+    border: 2px solid rgba(166, 124, 0, 0.7);
+    box-shadow:
+        0 0 6px rgba(0, 0, 0, 0.35),
+        inset 0 0 8px rgba(0, 0, 0, 0.28);
 }
 
 .preview-coin-shine {
@@ -450,19 +510,47 @@
     will-change: transform;
 }
 
-.preview-coin-face img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    user-select: none;
-    -webkit-user-drag: none;
-    pointer-events: none;
-    position: relative;
+.preview-coin-face-art {
+    position: absolute;
+    inset: 0;
     z-index: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: transparent;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    transform: none;
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+    pointer-events: none;
+}
+
+.preview-coin-face .preview-coin-face-art {
+    background-image: var(--heads-art);
+}
+
+.preview-coin-back .preview-coin-face-art {
+    background-image: var(--tails-art);
 }
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
+    .preview-coin {
+        /* Visible rim, slightly thinner than desktop 32px so Blink is
+           less likely to composite the stacked edge discs over tails. */
+        --coin-thickness: 24px;
+        --coin-half: 12px;
+    }
+
+    .preview-coin-face {
+        transform: translateZ(calc(var(--coin-half) + 2px));
+    }
+
+    .preview-coin-back {
+        transform: translateZ(calc(var(--coin-half) * -1 - 2px)) rotateX(180deg);
+    }
+
     .coin-preview-modal {
         width: 100%;
         height: 100%;
